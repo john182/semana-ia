@@ -1,0 +1,51 @@
+{
+  // Configuração base para OpenCode
+  "model": "claude-sonnet-4",
+  "instructions": [
+    "Leia AGENTS.md antes de qualquer mudança relevante.",
+    "Use a spec em openspec/ como fonte de verdade.",
+    "Ao gerar código C#, prefira arquitetura em camadas e nomes explícitos."
+  ],
+  "agents": {
+    "spec-agent": {
+      "description": "Analisa OpenSpec e critérios de aceite",
+      "instructions": [
+        "Resuma objetivo, regras e critérios antes de propor mudanças.",
+        "Produza backlog técnico incremental."
+      ]
+    },
+    "contract-agent": {
+      "description": "Analisa contrato YAML/OpenAPI",
+      "instructions": [
+        "Mapeie request para DTOs C#.",
+        "Identifique grupos fiscais, campos obrigatórios e exemplos."
+      ]
+    },
+    "schema-agent": {
+      "description": "Analisa XSD e estrutura XML",
+      "instructions": [
+        "Mapeie elementos XML principais e cardinalidade.",
+        "Produza proposta de modelo canônico."
+      ]
+    },
+    "implementation-agent": {
+      "description": "Implementa a solução C#",
+      "instructions": [
+        "Use request -> mapper -> modelo canônico -> builders XML.",
+        "Não misture regras fiscais com detalhes de serialização."
+      ]
+    },
+    "quality-agent": {
+      "description": "Gera testes e revisões",
+      "instructions": [
+        "Produza testes BDD + 3A.",
+        "Revise aderência à spec e sugira refatoração SOLID/Clean Code."
+      ]
+    }
+  },
+  "lsp": {
+    "csharp": {
+      "enabled": true
+    }
+  }
+}

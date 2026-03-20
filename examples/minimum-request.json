@@ -1,0 +1,35 @@
+{
+  "borrower": {
+    "name": "CONSUMIDOR MINIMO LTDA",
+    "federalTaxNumber": 191,
+    "address": {
+      "country": "BRA",
+      "postalCode": "01000-000",
+      "street": "RUA DAS FLORES",
+      "number": "100",
+      "district": "CENTRO",
+      "city": {
+        "code": "3550308"
+      },
+      "state": "SP"
+    }
+  },
+  "externalId": "NFSE-MIN-V4-0001",
+  "federalServiceCode": "01.01",
+  "description": "Consulting and Advisory Service (Minimum Example V4).",
+  "servicesAmount": 1000.00,
+  "issuedOn": "2026-01-20T10:00:00-03:00",
+  "taxationType": "WithinCity",
+  "location": {
+    "country": "BRA",
+    "postalCode": "01000-000",
+    "street": "RUA DA PRESTACAO",
+    "number": "50",
+    "district": "CENTRO",
+    "city": {
+      "code": "3550308"
+    },
+    "state": "SP"
+  },
+  "nbsCode": "101010100"
+}
