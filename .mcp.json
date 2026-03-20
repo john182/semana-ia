@@ -1,0 +1,8 @@
+{
+  "servers": {
+    "spec-assistant": {
+      "command": "node",
+      "args": ["./ia/mcp-spec-server/dist/index.js"]
+    }
+  }
+}
