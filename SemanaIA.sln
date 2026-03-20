@@ -1,0 +1,40 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SemanaIA.ServiceInvoice.Api", "src\SemanaIA.ServiceInvoice.Api\SemanaIA.ServiceInvoice.Api.csproj", "{E9C43FCC-DEDB-4236-BBBC-E5741C9CBFA0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SemanaIA.ServiceInvoice.Domain", "src\SemanaIA.ServiceInvoice.Domain\SemanaIA.ServiceInvoice.Domain.csproj", "{D65786B7-AE32-4B42-939E-8BEAB9EAE477}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SemanaIA.ServiceInvoice.Application", "src\SemanaIA.ServiceInvoice.Application\SemanaIA.ServiceInvoice.Application.csproj", "{FB815012-431D-4D18-B86C-F1B38C329746}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SemanaIA.ServiceInvoice.Infrastructure", "src\SemanaIA.ServiceInvoice.Infrastructure\SemanaIA.ServiceInvoice.Infrastructure.csproj", "{1EAFBEFF-2704-4CED-A2E6-9BEFF5AEBB1C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SemanaIA.ServiceInvoice.XmlGeneration", "src\SemanaIA.ServiceInvoice.XmlGeneration\SemanaIA.ServiceInvoice.XmlGeneration.csproj", "{DF7BB703-E964-4506-B6FB-D5043CAB2423}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{E9C43FCC-DEDB-4236-BBBC-E5741C9CBFA0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E9C43FCC-DEDB-4236-BBBC-E5741C9CBFA0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E9C43FCC-DEDB-4236-BBBC-E5741C9CBFA0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E9C43FCC-DEDB-4236-BBBC-E5741C9CBFA0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D65786B7-AE32-4B42-939E-8BEAB9EAE477}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D65786B7-AE32-4B42-939E-8BEAB9EAE477}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D65786B7-AE32-4B42-939E-8BEAB9EAE477}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D65786B7-AE32-4B42-939E-8BEAB9EAE477}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FB815012-431D-4D18-B86C-F1B38C329746}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FB815012-431D-4D18-B86C-F1B38C329746}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FB815012-431D-4D18-B86C-F1B38C329746}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FB815012-431D-4D18-B86C-F1B38C329746}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1EAFBEFF-2704-4CED-A2E6-9BEFF5AEBB1C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1EAFBEFF-2704-4CED-A2E6-9BEFF5AEBB1C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1EAFBEFF-2704-4CED-A2E6-9BEFF5AEBB1C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1EAFBEFF-2704-4CED-A2E6-9BEFF5AEBB1C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DF7BB703-E964-4506-B6FB-D5043CAB2423}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DF7BB703-E964-4506-B6FB-D5043CAB2423}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DF7BB703-E964-4506-B6FB-D5043CAB2423}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DF7BB703-E964-4506-B6FB-D5043CAB2423}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal

@@ -1,0 +1,14 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\SemanaIA.ServiceInvoice.Domain\SemanaIA.ServiceInvoice.Domain.csproj" />
+      <ProjectReference Include="..\SemanaIA.ServiceInvoice.Infrastructure\SemanaIA.ServiceInvoice.Infrastructure.csproj" />
+    </ItemGroup>
+
+</Project>
