@@ -10,6 +10,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SemanaIA.ServiceInvoice.Inf
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SemanaIA.ServiceInvoice.XmlGeneration", "src\SemanaIA.ServiceInvoice.XmlGeneration\SemanaIA.ServiceInvoice.XmlGeneration.csproj", "{DF7BB703-E964-4506-B6FB-D5043CAB2423}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SemanaIA.ServiceInvoice.UnitTests", "tests\SemanaIA.ServiceInvoice.UnitTests\SemanaIA.ServiceInvoice.UnitTests.csproj", "{B0D0023C-4D7C-4C51-B6DF-5AE16DF95AB7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -36,5 +38,9 @@ Global
 		{DF7BB703-E964-4506-B6FB-D5043CAB2423}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DF7BB703-E964-4506-B6FB-D5043CAB2423}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DF7BB703-E964-4506-B6FB-D5043CAB2423}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B0D0023C-4D7C-4C51-B6DF-5AE16DF95AB7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B0D0023C-4D7C-4C51-B6DF-5AE16DF95AB7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B0D0023C-4D7C-4C51-B6DF-5AE16DF95AB7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B0D0023C-4D7C-4C51-B6DF-5AE16DF95AB7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
