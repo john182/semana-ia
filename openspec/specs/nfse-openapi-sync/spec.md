@@ -1,69 +1,91 @@
 # Spec: nfse-openapi-sync
 
-## Objective
-Synchronize the NFSe request YAML/OpenAPI contract with the .NET Swagger/OpenAPI documentation exposed by the API.
+## Objetivo
+Definir a capacidade do projeto de manter a documentação Swagger/OpenAPI da NFS-e sincronizada com a especificação funcional localizada em `specs/openapi/nfse-request.yaml`.
 
-## Problem
-Today the request documentation was authored in YAML/Swagger Editor and the .NET application has a separate proof of concept for exposing the same contract in Swagger. This creates duplication and drift risk between:
-- the YAML contract
-- the .NET request DTOs
-- the Swagger examples and descriptions
+Essa spec descreve o comportamento esperado da sincronização entre:
+- o contrato YAML/OpenAPI
+- os DTOs C# usados na API
+- os exemplos exibidos no Swagger
+- os filtros e configurações de documentação
 
-## Outcome
-The project must support a workflow where the YAML is treated as the primary documentation source and the .NET API reflects that specification through generated or synchronized Swagger artifacts.
+## Contexto
+O projeto possui um arquivo YAML em `specs/openapi/nfse-request.yaml` que representa o contrato HTTP da requisição de NFS-e, incluindo:
+- schema principal do request
+- descrições de campos
+- enums
+- exemplos mínimo, intermediário e completo
+- grupos complexos e objetos aninhados
 
-## In Scope
-- Read `specs/openapi/nfse-request.yaml`
-- Map YAML schemas to .NET request DTOs
-- Generate or update Swagger examples
-- Generate or update field descriptions and schema metadata
-- Support minimal, intermediate and complete examples in Swagger
-- Detect drift between YAML and .NET DTOs
+A documentação Swagger no projeto .NET deve refletir esse contrato de forma consistente, reduzindo divergência entre documentação e implementação.
 
-## Out of Scope
-- Full runtime validation of every business rule in the request
-- XML generation from XSD
-- Municipality/provider-specific NFSe implementations
+## Fonte de verdade
+A fonte primária de verdade para o contrato HTTP desta capacidade é:
 
-## Inputs
-- `specs/openapi/nfse-request.yaml`
-- existing .NET request models
-- existing Swagger filters and example factory
+`specs/openapi/nfse-request.yaml`
 
-## Outputs
-- Updated request DTOs or synchronization report
-- Swagger examples factory
-- Swagger operation/schema filters
-- Documentation consistency checks
+Quando houver divergência entre o YAML e os DTOs/documentação do Swagger, o YAML deve ser considerado a referência funcional, salvo decisão explícita registrada em change/proposal.
 
-## Functional Requirements
-1. The system must read the NFSe YAML/OpenAPI file from `specs/openapi/nfse-request.yaml`.
-2. The API must expose request documentation consistent with the YAML contract.
-3. The API must display examples for at least:
-   - minimal request
-   - intermediate request
-   - complete request
-4. The synchronization flow must identify contract differences between YAML and .NET code.
-5. The generated or synchronized documentation must preserve descriptions that help the serializer/XML workflow.
+## Escopo
+Esta spec cobre:
+- DTOs C# de request relacionados à NFS-e
+- organização e modelagem de subobjetos do request
+- exemplos apresentados no Swagger
+- descrições e metadados exibidos na documentação
+- filtros e configuração de OpenAPI/Swagger necessários para expor corretamente o contrato
 
-## Non-Functional Requirements
-- Must be deterministic in CI
-- Must support incremental updates without rewriting unrelated files
-- Must be easy to review in pull requests
+## Fora de escopo
+Esta spec não cobre:
+- geração do serializer XML da NFS-e
+- leitura de XSD para geração de XML
+- assinatura digital
+- geração em build
+- regras completas de serialização XML
+- processamento multiagente
+- scheduling
 
-## Suggested Deliverables
-- `src/SemanaIA.ServiceInvoice.Api/Requests/*`
-- `src/SemanaIA.ServiceInvoice.Api/Swagger/Examples/NfseRequestExamplesFactory.cs`
-- `src/SemanaIA.ServiceInvoice.Api/Swagger/Filters/*`
-- build/sync command or report
+## Requisitos funcionais
 
-## Acceptance Criteria
-- Swagger shows the NFSe request with examples derived from the YAML contract.
-- At least one automated comparison exists between YAML and .NET models.
-- The synchronization workflow can be demonstrated live during the POC.
+### RF-001 — Sincronização do contrato
+O projeto deve possuir DTOs C# que representem de forma fiel o contrato descrito em `specs/openapi/nfse-request.yaml`.
 
-## Demo Narrative
-1. Update the YAML.
-2. Run the sync workflow.
-3. Show the Swagger UI reflecting the new documentation.
-4. Show the diff in generated or synchronized artifacts.
+### RF-002 — Cobertura dos grupos do request
+Os grupos relevantes descritos no YAML devem estar refletidos no modelo C#, incluindo campos raiz e objetos aninhados necessários para a documentação Swagger.
+
+### RF-003 — Exemplos de documentação
+O Swagger deve expor exemplos representativos do request, incluindo pelo menos:
+- exemplo mínimo
+- exemplo intermediário
+- exemplo completo
+
+### RF-004 — Documentação legível
+Os campos expostos no Swagger devem possuir nomes, descrições e estrutura compatíveis com o contrato YAML, respeitando a semântica da integração NFS-e.
+
+### RF-005 — Evolução incremental
+A sincronização pode ser implementada em fases, desde que cada fase preserve coerência entre o contrato documentado e os DTOs efetivamente expostos.
+
+## Requisitos não funcionais
+
+### RNF-001 — Clareza
+A modelagem dos DTOs deve priorizar legibilidade e organização, evitando concentrar todo o contrato em uma única classe excessivamente grande.
+
+### RNF-002 — Manutenibilidade
+Objetos complexos devem ser extraídos para tipos próprios, facilitando manutenção da documentação e futuras evoluções.
+
+### RNF-003 — Rastreabilidade
+Mudanças significativas nessa capacidade devem ser registradas via proposals/changes do OpenSpec.
+
+## Estratégia de evolução
+A evolução desta capacidade deve ocorrer por changes menores, por exemplo:
+- completar DTOs base do request
+- adicionar grupos faltantes
+- alinhar examples factory com o YAML
+- ajustar descrições/documentação do Swagger
+- adicionar grupos avançados como IBS/CBS
+
+## Critérios de aceitação da capacidade
+A capacidade `nfse-openapi-sync` será considerada atendida quando:
+1. o YAML estiver presente no repositório
+2. os DTOs do request refletirem os grupos necessários do contrato
+3. o Swagger exibir corretamente os exemplos esperados
+4. houver uma trilha clara de evolução via OpenSpec para mudanças futuras
