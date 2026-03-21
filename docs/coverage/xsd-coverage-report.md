@@ -12,11 +12,13 @@
 | Métrica | Valor |
 |---------|-------|
 | Total de blocos XSD analisados | 78 |
-| Cobertos (✅) | 52 |
-| Parciais (⚠️) | 12 |
-| Faltantes (❌) | 14 |
-| Cobertura geral | **67%** |
-| Cobertura obrigatórios | **85%** |
+| Cobertos (✅) | 58 |
+| Parciais (⚠️) | 9 |
+| Faltantes (❌) | 11 |
+| Cobertura geral | **74%** |
+| Cobertura obrigatórios | **92%** |
+
+> Atualizado 2026-03-21: +documentos de dedução (TCDocDedRed), +indTotTrib, fix endExt, +gDif IBSCBS. tpRetPisCofins mantido em 1/2 (XSD v1.01 permite apenas esses valores; lógica 0-9 é de XSD mais recente usado na produção).
 
 ---
 

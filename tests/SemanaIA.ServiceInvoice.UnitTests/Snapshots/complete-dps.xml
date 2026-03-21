@@ -1,0 +1,124 @@
+<DPS versao="1.01" xmlns="http://www.sped.fazenda.gov.br/nfse">
+  <infDPS Id="DPS355030820000000000000000001000000000000001">
+    <tpAmb>2</tpAmb>
+    <dhEmi>2026-01-20T10:00:00-03:00</dhEmi>
+    <verAplic>V_1.00.02</verAplic>
+    <serie>00001</serie>
+    <nDPS>1</nDPS>
+    <dCompet>2026-01-20</dCompet>
+    <tpEmit>1</tpEmit>
+    <cLocEmi>3550308</cLocEmi>
+    <prest>
+      <CNPJ>00000000000000</CNPJ>
+      <regTrib>
+        <opSimpNac>1</opSimpNac>
+        <regEspTrib>0</regEspTrib>
+      </regTrib>
+    </prest>
+    <toma>
+      <CNPJ>12345678000199</CNPJ>
+      <xNome>TOMADOR COMPLETO LTDA</xNome>
+      <end>
+        <endNac>
+          <cMun>3550308</cMun>
+          <CEP>01000000</CEP>
+        </endNac>
+        <xLgr>RUA DAS FLORES</xLgr>
+        <nro>100</nro>
+        <xBairro>CENTRO</xBairro>
+      </end>
+      <fone>5511999999999</fone>
+      <email>tomador@test.com</email>
+    </toma>
+    <interm>
+      <CNPJ>87654321000100</CNPJ>
+      <xNome>INTERMEDIARIO S/A</xNome>
+      <end>
+        <endNac>
+          <cMun>3304557</cMun>
+          <CEP>20000000</CEP>
+        </endNac>
+        <xLgr>AV INTERMEDIACAO</xLgr>
+        <nro>123</nro>
+        <xBairro>CENTRO</xBairro>
+      </end>
+    </interm>
+    <serv>
+      <locPrest>
+        <cLocPrestacao>3550308</cLocPrestacao>
+      </locPrest>
+      <cServ>
+        <cTribNac>000101</cTribNac>
+        <xDescServ>Serviço de Consultoria</xDescServ>
+        <cNBS>101010100</cNBS>
+      </cServ>
+      <comExt>
+        <mdPrestacao>4</mdPrestacao>
+        <vincPrest>3</vincPrest>
+        <tpMoeda>220</tpMoeda>
+        <vServMoeda>20000.00</vServMoeda>
+        <mecAFComexP>08</mecAFComexP>
+        <mecAFComexT>26</mecAFComexT>
+        <movTempBens>0</movTempBens>
+        <mdic>1</mdic>
+      </comExt>
+      <atvEvento>
+        <xNome>EVENTO CULTURAL</xNome>
+        <dtIni>2026-02-10</dtIni>
+        <dtFim>2026-02-12</dtFim>
+        <idAtvEvt>EVT-001</idAtvEvt>
+      </atvEvento>
+      <infoCompl>
+        <xPed>PEDIDO-001</xPed>
+        <gItemPed>
+          <xItemPed>Item A</xItemPed>
+          <xItemPed>Item B</xItemPed>
+        </gItemPed>
+        <xInfComp>Obs complementar</xInfComp>
+      </infoCompl>
+    </serv>
+    <valores>
+      <vServPrest>
+        <vServ>1000.00</vServ>
+      </vServPrest>
+      <vDescCondIncond>
+        <vDescIncond>200.00</vDescIncond>
+        <vDescCond>100.00</vDescCond>
+      </vDescCondIncond>
+      <vDedRed>
+        <vDR>1500.00</vDR>
+      </vDedRed>
+      <trib>
+        <tribMun>
+          <tribISSQN>1</tribISSQN>
+          <BM>
+            <nBM>35503080100002</nBM>
+            <vRedBCBM>300.00</vRedBCBM>
+          </BM>
+          <tpRetISSQN>1</tpRetISSQN>
+        </tribMun>
+        <tribFed>
+          <piscofins>
+            <CST>01</CST>
+            <vBCPisCofins>25000.00</vBCPisCofins>
+            <pAliqPis>0.65</pAliqPis>
+            <pAliqCofins>3.00</pAliqCofins>
+            <vPis>162.50</vPis>
+            <vCofins>1000.00</vCofins>
+            <tpRetPisCofins>1</tpRetPisCofins>
+          </piscofins>
+          <vRetCP>2750.00</vRetCP>
+          <vRetIRRF>250.00</vRetIRRF>
+          <vRetCSLL>1412.50</vRetCSLL>
+        </tribFed>
+        <totTrib>
+          <vTotTrib>
+            <vTotTribFed>3000.00</vTotTribFed>
+            <vTotTribEst>750.00</vTotTribEst>
+            <vTotTribMun>0.00</vTotTribMun>
+          </vTotTrib>
+        </totTrib>
+      </trib>
+    </valores>
+  </infDPS>
+</DPS>
