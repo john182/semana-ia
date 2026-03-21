@@ -102,9 +102,9 @@ public class NationalDpsXBuilderXmlBuilder
                 {
                     tribMun.tribISSQN(model.Values.TaxationType switch
                     {
-                        "Export" => "3",
-                        "Immune" => "2",
-                        "Free" => "4",
+                        TaxationType.Export => "3",
+                        TaxationType.Immune => "2",
+                        TaxationType.Free => "4",
                         _ => "1"
                     });
                     tribMun.tpRetISSQN(1);

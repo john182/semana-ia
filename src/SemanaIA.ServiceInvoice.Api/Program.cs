@@ -1,7 +1,7 @@
 using System.Reflection;
 using SemanaIA.ServiceInvoice.Api.Swagger.Filters;
 using SemanaIA.ServiceInvoice.Application;
-using SemanaIA.ServiceInvoice.XmlGeneration.Services;
+using SemanaIA.ServiceInvoice.XmlGeneration.Manual;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,7 +16,7 @@ builder.Services.AddSwaggerGen(o =>
 });
 
 builder.Services.AddScoped<GenerateNfseXmlUseCase>();
-builder.Services.AddScoped<NationalNfseXmlSerializer>();
+builder.Services.AddScoped<NationalDpsManualSerializer>();
 
 var app = builder.Build();
 
@@ -24,3 +24,5 @@ app.UseSwagger();
 app.UseSwaggerUI();
 app.MapControllers();
 app.Run();
+
+public partial class Program;
