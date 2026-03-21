@@ -1,0 +1,17 @@
+{
+  "provider": "gissonline",
+  "version": "2.04",
+  "description": "Regras complementares do GISSOnline — a maioria das regras é inferida do XSD",
+  "constants": {
+    "namespace": "http://www.giss.com.br/enviar-lote-rps-envio-v2_04.xsd",
+    "tiposNamespace": "http://www.giss.com.br/tipos-v2_04.xsd"
+  },
+  "defaults": {
+  },
+  "enums": {
+  },
+  "formatting": {
+  },
+  "conditionals": {
+  }
+}
