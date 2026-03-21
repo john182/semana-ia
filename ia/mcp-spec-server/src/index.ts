@@ -1,119 +1,349 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import path from "node:path";
+import { McpServer, ResourceTemplate } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { z } from "zod";
 
-type ToolRequest = {
-  tool: string;
-  args?: Record<string, unknown>;
-};
+const server = new McpServer({
+  name: "spec-assistant",
+  version: "1.2.0"
+});
 
-function readSpecFile(fileName: string): string {
-  const specPath = path.join(process.cwd(), "openspec", fileName);
-  return readFileSync(specPath, "utf-8");
+function projectRoot(): string {
+  return process.cwd();
 }
 
-function getSpec(featureId: string) {
-  const spec = readSpecFile("nfse-serializer.spec.md");
-  return { featureId, spec };
+function changeRoot(changeName: string): string {
+  return path.join(projectRoot(), "openspec", "changes", changeName);
 }
 
-function listAcceptanceCriteria(featureId: string) {
-  const criteria = readSpecFile("acceptance-criteria.md");
-  return { featureId, criteria };
+function ensureExists(targetPath: string, label: string): void {
+  if (!existsSync(targetPath)) {
+    throw new Error(`${label} not found: ${targetPath}`);
+  }
 }
 
-function suggestCommitMessage(featureId: string, changesSummary: string) {
+function readUtf8File(targetPath: string): string {
+  ensureExists(targetPath, "File");
+  return readFileSync(targetPath, "utf-8");
+}
+
+function safeReadIfExists(targetPath: string): string | null {
+  if (!existsSync(targetPath)) {
+    return null;
+  }
+
+  return readFileSync(targetPath, "utf-8");
+}
+
+function listFilesRecursively(baseDir: string): string[] {
+  if (!existsSync(baseDir)) {
+    return [];
+  }
+
+  const entries = readdirSync(baseDir);
+  const files: string[] = [];
+
+  for (const entry of entries) {
+    const fullPath = path.join(baseDir, entry);
+    const relativePath = path.relative(projectRoot(), fullPath);
+    const entryStat = statSync(fullPath);
+
+    if (entryStat.isDirectory()) {
+      files.push(...listFilesRecursively(fullPath));
+      continue;
+    }
+
+    files.push(relativePath);
+  }
+
+  return files.sort();
+}
+
+function getChangeArtifacts(changeName: string) {
+  const root = changeRoot(changeName);
+
+  ensureExists(root, "Change directory");
+
   return {
-    featureId,
-    conventionalCommit: `feat(${featureId.toLowerCase()}): ${changesSummary}`
+    root,
+    proposalPath: path.join(root, "proposal.md"),
+    tasksPath: path.join(root, "tasks.md"),
+    specsDir: path.join(root, "specs")
   };
 }
 
-function generateBddTests(featureId: string, targetLanguage: string) {
+function formatTextResult(title: string, payload: unknown) {
   return {
-    featureId,
-    targetLanguage,
-    testingConventions: {
-      framework: "xUnit",
-      assertions: "Shouldly",
-      forbidAssertions: ["Assert.Equal", "Assert.NotNull", "Assert.Null", "Assert.StartsWith", "Assert.Contains"],
-      namingPattern: "Given_<context>_Should_<expected_behavior>",
-      structure: ["Arrange", "Act", "Assert"]
-    },
-    requiredScenarios: [
-      "documento mínimo válido",
-      "documento completo com todos os blocos opcionais",
-      "tomador com CPF",
-      "tomador com CNPJ",
-      "endereço nacional",
-      "endereço estrangeiro",
-      "totais aproximados por valor",
-      "totais aproximados por percentual",
-      "sem totais aproximados"
-    ],
-    examples: [
+    content: [
       {
-        testName: "Given_MinimalValidDocument_Should_GenerateValidDpsStructure"
-      },
-      {
-        testName: "Given_CompleteDocument_Should_ContainAllOptionalBlocks"
+        type: "text" as const,
+        text: `# ${title}\n\n${JSON.stringify(payload, null, 2)}`
       }
     ]
   };
 }
 
-function reviewCodeAgainstSpec(featureId: string, changedFiles: string[]) {
-  return {
-    featureId,
-    changedFiles,
-    checklist: [
-      "Há modelo canônico intermediário?",
-      "Regras de negócio estão separadas da montagem XML?",
-      "O endpoint da API está alinhado à spec?",
-      "Há testes BDD + 3A cobrindo o fluxo mínimo?"
-    ]
-  };
-}
+function toSpecAssistantUri(kind: string, changeName: string, extraPath?: string): string {
+  const encodedChange = encodeURIComponent(changeName);
 
-function handle(request: ToolRequest) {
-  switch (request.tool) {
-    case "get_spec":
-      return getSpec(String(request.args?.featureId ?? "FEATURE-NFSE-SERIALIZER-001"));
-    case "list_acceptance_criteria":
-      return listAcceptanceCriteria(String(request.args?.featureId ?? "FEATURE-NFSE-SERIALIZER-001"));
-    case "suggest_commit_message":
-      return suggestCommitMessage(
-        String(request.args?.featureId ?? "FEATURE-NFSE-SERIALIZER-001"),
-        String(request.args?.changesSummary ?? "evolve nfse poc")
-      );
-    case "generate_bdd_tests":
-      return generateBddTests(
-        String(request.args?.featureId ?? "FEATURE-NFSE-SERIALIZER-001"),
-        String(request.args?.targetLanguage ?? "csharp")
-      );
-    case "review_code_against_spec":
-      return reviewCodeAgainstSpec(
-        String(request.args?.featureId ?? "FEATURE-NFSE-SERIALIZER-001"),
-        Array.isArray(request.args?.changedFiles) ? request.args!.changedFiles as string[] : []
-      );
-    default:
-      return { error: `Unknown tool: ${request.tool}` };
+  if (!extraPath) {
+    return `spec-assistant://${kind}/${encodedChange}`;
   }
+
+  const normalized = extraPath.replace(/\\/g, "/");
+  return `spec-assistant://${kind}/${encodedChange}/${normalized}`;
 }
 
-process.stdin.setEncoding("utf-8");
-let buffer = "";
-process.stdin.on("data", chunk => {
-  buffer += chunk;
-  const lines = buffer.split("\n");
-  buffer = lines.pop() ?? "";
-  for (const line of lines) {
-    if (!line.trim()) continue;
-    try {
-      const request = JSON.parse(line) as ToolRequest;
-      const result = handle(request);
-      process.stdout.write(JSON.stringify(result) + "\n");
-    } catch (error) {
-      process.stdout.write(JSON.stringify({ error: String(error) }) + "\n");
+function firstParam(value: string | string[]): string {
+  return Array.isArray(value) ? value[0] : value;
+}
+
+function joinParam(value: string | string[]): string {
+  return Array.isArray(value) ? value.join("/") : value;
+}
+
+/**
+ * Resources
+ */
+
+server.registerResource(
+  "change-proposal",
+  new ResourceTemplate("spec-assistant://proposal/{changeName}", { list: undefined }),
+  {
+    title: "OpenSpec Change Proposal",
+    description: "Conteúdo do proposal.md de uma change do OpenSpec"
+  },
+  async (uri, { changeName }) => {
+    const resolvedChangeName = firstParam(changeName);
+    const { proposalPath } = getChangeArtifacts(resolvedChangeName);
+
+    return {
+      contents: [
+        {
+          uri: uri.href,
+          text: readUtf8File(proposalPath),
+          mimeType: "text/markdown"
+        }
+      ]
+    };
+  }
+);
+
+server.registerResource(
+    "change-tasks",
+    new ResourceTemplate("spec-assistant://tasks/{changeName}", { list: undefined }),
+    {
+      title: "OpenSpec Change Tasks",
+      description: "Conteúdo do tasks.md de uma change do OpenSpec"
+    },
+    async (uri, { changeName }) => {
+      const resolvedChangeName = firstParam(changeName);
+      const { tasksPath } = getChangeArtifacts(resolvedChangeName);
+
+      return {
+        contents: [
+          {
+            uri: uri.href,
+            text: readUtf8File(tasksPath),
+            mimeType: "text/markdown"
+          }
+        ]
+      };
     }
+);
+
+server.registerResource(
+  "change-spec-file",
+  new ResourceTemplate("spec-assistant://spec-file/{changeName}/{filePath*}", { list: undefined }),
+  {
+    title: "OpenSpec Change Spec File",
+    description: "Lê um arquivo específico dentro de openspec/changes/<change>/specs"
+  },
+  async (uri, { changeName, filePath }) => {
+    const resolvedChangeName = firstParam(changeName);
+    const resolvedFilePath = joinParam(filePath);
+    const { specsDir } = getChangeArtifacts(resolvedChangeName);
+    const targetPath = path.join(specsDir, resolvedFilePath);
+
+    return {
+      contents: [
+        {
+          uri: uri.href,
+          text: readUtf8File(targetPath),
+          mimeType: "text/markdown"
+        }
+      ]
+    };
   }
+);
+
+/**
+ * Tools
+ */
+
+server.registerTool(
+    "get_change_summary",
+    {
+      title: "Get Change Summary",
+      description: "Lê proposal, tasks e arquivos de spec de uma change do OpenSpec.",
+      inputSchema: {
+        changeName: z.string().min(1)
+      }
+    },
+    async ({ changeName }) => {
+      const { proposalPath, tasksPath, specsDir } = getChangeArtifacts(changeName);
+
+      const proposal = safeReadIfExists(proposalPath);
+      const tasks = safeReadIfExists(tasksPath);
+      const specFiles = listFilesRecursively(specsDir);
+
+      return formatTextResult("Change Summary", {
+        changeName,
+        proposalResource: toSpecAssistantUri("proposal", changeName),
+        tasksResource: toSpecAssistantUri("tasks", changeName),
+        proposalPath: path.relative(projectRoot(), proposalPath),
+        tasksPath: path.relative(projectRoot(), tasksPath),
+        specFiles,
+        specResources: specFiles.map((relativePath) => {
+          const relativeToSpecs = relativePath
+              .replace(/^openspec[\\/]+changes[\\/]+/, "")
+              .split(/[\\/]/)
+              .slice(3)
+              .join("/");
+
+          return toSpecAssistantUri("spec-file", changeName, relativeToSpecs);
+        }),
+        proposal,
+        tasks
+      });
+    }
+);
+
+server.registerTool(
+    "get_change_proposal",
+    {
+      title: "Get Change Proposal",
+      description: "Lê o proposal.md de uma change.",
+      inputSchema: {
+        changeName: z.string().min(1)
+      }
+    },
+    async ({ changeName }) => {
+      const { proposalPath } = getChangeArtifacts(changeName);
+
+      return formatTextResult("Change Proposal", {
+        changeName,
+        resourceUri: toSpecAssistantUri("proposal", changeName),
+        proposalPath: path.relative(projectRoot(), proposalPath),
+        proposal: readUtf8File(proposalPath)
+      });
+    }
+);
+
+server.registerTool(
+    "get_change_tasks",
+    {
+      title: "Get Change Tasks",
+      description: "Lê o tasks.md de uma change.",
+      inputSchema: {
+        changeName: z.string().min(1)
+      }
+    },
+    async ({ changeName }) => {
+      const { tasksPath } = getChangeArtifacts(changeName);
+
+      return formatTextResult("Change Tasks", {
+        changeName,
+        resourceUri: toSpecAssistantUri("tasks", changeName),
+        tasksPath: path.relative(projectRoot(), tasksPath),
+        tasks: readUtf8File(tasksPath)
+      });
+    }
+);
+
+server.registerTool(
+    "list_change_spec_files",
+    {
+      title: "List Change Spec Files",
+      description: "Lista os arquivos de spec delta dentro de openspec/changes/<change>/specs.",
+      inputSchema: {
+        changeName: z.string().min(1)
+      }
+    },
+    async ({ changeName }) => {
+      const { specsDir } = getChangeArtifacts(changeName);
+      const files = listFilesRecursively(specsDir);
+
+      return formatTextResult("Change Spec Files", {
+        changeName,
+        specsDir: path.relative(projectRoot(), specsDir),
+        files,
+        resources: files.map((relativePath) => {
+          const relativeToSpecs = relativePath
+              .replace(/^openspec[\\/]+changes[\\/]+/, "")
+              .split(/[\\/]/)
+              .slice(3)
+              .join("/");
+
+          return toSpecAssistantUri("spec-file", changeName, relativeToSpecs);
+        })
+      });
+    }
+);
+
+server.registerTool(
+    "suggest_change_commit_message",
+    {
+      title: "Suggest Change Commit Message",
+      description: "Sugere commit semântico com base na change.",
+      inputSchema: {
+        changeName: z.string().min(1),
+        commitType: z.enum(["feat", "fix", "refactor", "test", "docs", "chore"]).default("feat"),
+        summary: z.string().min(1).default("apply approved change")
+      }
+    },
+    async ({ changeName, commitType, summary }) => {
+      return formatTextResult("Suggested Commit Message", {
+        changeName,
+        conventionalCommit: `${commitType}: ${summary} (${changeName})`
+      });
+    }
+);
+
+server.registerTool(
+    "review_change_against_spec",
+    {
+      title: "Review Change Against Spec",
+      description: "Gera checklist de revisão técnica alinhado à change.",
+      inputSchema: {
+        changeName: z.string().min(1),
+        changedFiles: z.array(z.string()).default([])
+      }
+    },
+    async ({ changeName, changedFiles }) => {
+      return formatTextResult("Review Checklist", {
+        changeName,
+        changedFiles,
+        checklist: [
+          "A implementação respeitou o proposal e o tasks.md?",
+          "Os critérios de aceite foram cobertos?",
+          "O escopo permaneceu dentro da change?",
+          "Houve reutilização antes de criar novos métodos auxiliares?",
+          "Foi evitada duplicação de lógica para CEP, telefone, documento, datas e normalizações?",
+          "Os testes unitários cobrem o comportamento alterado?",
+          "Se houve XML, os testes cobrem estrutura, nós condicionais e schema quando aplicável?"
+        ]
+      });
+    }
+);
+
+async function main(): Promise<void> {
+  const transport = new StdioServerTransport();
+  await server.connect(transport);
+}
+
+main().catch((error) => {
+  console.error("[spec-assistant] Failed to start MCP server:", error);
+  process.exit(1);
 });
