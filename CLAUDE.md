@@ -1,5 +1,16 @@
 # Padrões obrigatórios do projeto
 
+## Comandos de aplicação
+
+- Usar `/opsx-apply` para mudanças simples, localizadas e de baixo impacto.
+- Usar `/opsx-apply-orchestrated` para mudanças relevantes, com múltiplas etapas, múltiplas skills, testes obrigatórios e revisão técnica final.
+
+## Regra para `/opsx-apply-orchestrated`
+Quando esse comando for usado:
+- atuar como orquestrador técnico multiagente;
+- combinar as skills especializadas conforme o tipo da alteração;
+- não considerar a implementação concluída sem testes e revisão final.
+
 ## Implementação
 - Sempre seguir SOLID com pragmatismo.
 - Sempre seguir Clean Code sem overengineering.
