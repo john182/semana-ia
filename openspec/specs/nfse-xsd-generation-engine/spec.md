@@ -95,3 +95,35 @@ O `BaselineComparisonAnalyzer` (no projeto de testes) MUST comparar o `SchemaMod
 #### Scenario: Element-level comparison with classification
 - **WHEN** o analyzer compara SchemaModel com o código do serializer manual
 - **THEN** cada elemento é classificado com um DivergenceType e o relatório inclui critérios de equivalência e backlog de evolução
+
+### Requirement: SimpleType restriction capture
+
+O `XsdSchemaAnalyzer` MUST capturar SimpleType restrictions (enumerações, patterns, min/maxLength, totalDigits) e associá-las aos elementos do SchemaModel via `SchemaElement.Restriction`.
+
+#### Scenario: Capture restrictions from XSD
+- **WHEN** o analyzer processa um XSD com SimpleTypes restritivos
+- **THEN** os SchemaElements correspondentes possuem `Restriction` populado com enumerações, patterns ou lengths
+
+### Requirement: Multi-provider schema analysis
+
+O `XsdSchemaAnalyzer` MUST ser capaz de analisar schemas de diferentes providers (nacional, ABRASF) produzindo SchemaDocuments válidos para cada um.
+
+#### Scenario: Analyze ABRASF schema
+- **WHEN** o analyzer recebe o XSD do ABRASF
+- **THEN** produz SchemaDocument com namespace `http://www.abrasf.org.br/nfse.xsd` e complexTypes do ABRASF
+
+### Requirement: Build-time generation via runner
+
+O `SchemaGenerationRunner` MUST orquestrar análise + geração para qualquer provider, produzindo records, builder skeleton e report em `providers/{provider}/generated/` (não versionado).
+
+#### Scenario: Runner generates for provider
+- **WHEN** o runner é executado para um provider com XSDs e rules
+- **THEN** artefatos são gerados em `providers/{provider}/generated/` e a pasta está no `.gitignore`
+
+### Requirement: Generated XML validation against XSD
+
+O XML produzido a partir da estrutura do schema MUST ser validável contra os XSDs do provider, cobrindo choice groups (exatamente 1 elemento), sequences (ordem correta), obrigatoriedade e restrições SimpleType.
+
+#### Scenario: Choice, sequence, required and restriction validation
+- **WHEN** XML é validado contra o XSD do provider
+- **THEN** choice com múltiplos elementos falha, sequence com ordem errada falha, required ausente falha, valor fora do pattern falha

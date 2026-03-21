@@ -73,7 +73,8 @@ public class XsdSchemaAnalyzer
                         MaxOccurs: el.MaxOccurs == decimal.MaxValue ? -1 : (int)el.MaxOccurs,
                         IsChoice: isChoice,
                         ChoiceGroup: choiceGroup,
-                        Annotation: GetAnnotation(el.Annotation)));
+                        Annotation: GetAnnotation(el.Annotation),
+                        Restriction: ExtractRestriction(el.ElementSchemaType)));
                     break;
 
                 case XmlSchemaChoice choice:
@@ -119,5 +120,54 @@ public class XsdSchemaAnalyzer
         }
 
         return null;
+    }
+
+    private static SchemaSimpleTypeRestriction? ExtractRestriction(XmlSchemaType? schemaType)
+    {
+        if (schemaType is not XmlSchemaSimpleType simpleType)
+            return null;
+
+        if (simpleType.Content is not XmlSchemaSimpleTypeRestriction restriction)
+            return null;
+
+        string? pattern = null;
+        int? minLength = null;
+        int? maxLength = null;
+        var enumerations = new List<string>();
+
+        foreach (var facet in restriction.Facets)
+        {
+            switch (facet)
+            {
+                case XmlSchemaPatternFacet p:
+                    pattern = p.Value;
+                    break;
+                case XmlSchemaMinLengthFacet ml:
+                    if (int.TryParse(ml.Value, out var mlv)) minLength = mlv;
+                    break;
+                case XmlSchemaMaxLengthFacet mxl:
+                    if (int.TryParse(mxl.Value, out var mxlv)) maxLength = mxlv;
+                    break;
+                case XmlSchemaLengthFacet l:
+                    if (int.TryParse(l.Value, out var lv)) { minLength = lv; maxLength = lv; }
+                    break;
+                case XmlSchemaEnumerationFacet e:
+                    if (e.Value is not null) enumerations.Add(e.Value);
+                    break;
+                case XmlSchemaTotalDigitsFacet td:
+                    if (int.TryParse(td.Value, out var tdv)) maxLength = tdv;
+                    break;
+            }
+        }
+
+        if (pattern is null && minLength is null && maxLength is null && enumerations.Count == 0)
+            return null;
+
+        return new SchemaSimpleTypeRestriction(
+            BaseType: restriction.BaseTypeName?.Name ?? "string",
+            Pattern: pattern,
+            MinLength: minLength,
+            MaxLength: maxLength,
+            Enumerations: enumerations.Count > 0 ? enumerations : null);
     }
 }

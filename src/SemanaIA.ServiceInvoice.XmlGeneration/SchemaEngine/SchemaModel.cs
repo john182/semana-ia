@@ -46,7 +46,8 @@ public record SchemaElement(
     int MaxOccurs,
     bool IsChoice = false,
     string? ChoiceGroup = null,
-    string? Annotation = null);
+    string? Annotation = null,
+    SchemaSimpleTypeRestriction? Restriction = null);
 
 public record SchemaSimpleTypeRestriction(
     string BaseType,
