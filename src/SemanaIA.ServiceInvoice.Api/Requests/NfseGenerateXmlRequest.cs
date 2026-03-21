@@ -69,8 +69,7 @@ public class NfseGenerateXmlRequest
     /// </summary>
     public string? RetentionType { get; set; }
 
-    /// <summary>Placeholder — change futura dedicada ao grupo IBS/CBS.</summary>
-    public object? IbsCbs { get; set; }
+    public IbsCbsRequest? IbsCbs { get; set; }
 
     // --- Grupos complexos ---
 

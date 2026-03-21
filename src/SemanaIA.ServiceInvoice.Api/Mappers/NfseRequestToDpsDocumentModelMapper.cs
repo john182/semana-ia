@@ -42,7 +42,7 @@ public class NfseRequestToDpsDocumentModelMapper
             Benefit = MapBenefit(request.Benefit),
             Suspension = MapSuspension(request.Suspension),
             ApproximateTotals = MapApproximateTotals(request.ApproximateTotals),
-            IbsCbs = request.IbsCbs is not null ? new IbsCbs { ClassCode = "000001" } : null
+            IbsCbs = MapIbsCbs(request.IbsCbs)
         };
     }
 
@@ -278,5 +278,95 @@ public class NfseRequestToDpsDocumentModelMapper
     private static int ParseInt(string? value)
     {
         return int.TryParse(value, out var i) ? i : 0;
+    }
+
+    private static Domain.Models.IbsCbs? MapIbsCbs(IbsCbsRequest? src)
+    {
+        if (src is null || string.IsNullOrWhiteSpace(src.ClassCode)) return null;
+
+        return new Domain.Models.IbsCbs
+        {
+            ClassCode = src.ClassCode,
+            Purpose = Enum.TryParse<IbsCbsPurpose>(src.Purpose, true, out var p) ? p : IbsCbsPurpose.Regular,
+            IsDonation = src.IsDonation,
+            PersonalUse = src.PersonalUse,
+            OperationIndicator = src.OperationIndicator,
+            OperationType = Enum.TryParse<IbsCbsOperationType>(src.OperationType, true, out var ot) ? ot : null,
+            DestinationIndicator = Enum.TryParse<IbsCbsDestinationIndicator>(src.DestinationIndicator, true, out var di)
+                ? di : IbsCbsDestinationIndicator.SameAsBuyer,
+            SituationCode = src.SituationCode,
+            Basis = src.Basis,
+            ReimbursedResuppliedAmount = src.ReimbursedResuppliedAmount,
+            DeductionReductionAmount = src.IbsCbsDeductionReductionAmount,
+            RelatedDocs = src.RelatedDocs?.Items is { Count: > 0 }
+                ? new IbsCbsRelatedDocs { Items = src.RelatedDocs.Items }
+                : null,
+            GovernmentPurchase = MapGovernmentPurchase(src.GovernmentPurchase),
+            RegularTaxation = MapRegularTaxation(src.RegularTaxation),
+            ThirdPartyReimbursements = MapThirdPartyReimbursements(src.ThirdPartyReimbursements),
+            Recipient = MapPerson(src.Recipient),
+            RealEstate = MapRealEstate(src.RealEstate)
+        };
+    }
+
+    private static IbsCbsGovernmentPurchase? MapGovernmentPurchase(IbsCbsGovernmentPurchaseRequest? src)
+    {
+        if (src is null) return null;
+        return new IbsCbsGovernmentPurchase
+        {
+            EntityType = Enum.TryParse<IbsCbsGovernmentEntityType>(src.EntityType, true, out var et) ? et : null,
+            OperationType = Enum.TryParse<IbsCbsOperationType>(src.OperationType, true, out var ot) ? ot : null
+        };
+    }
+
+    private static IbsCbsRegularTaxation? MapRegularTaxation(IbsCbsRegularTaxationRequest? src)
+    {
+        if (src is null || string.IsNullOrWhiteSpace(src.ClassCode)) return null;
+        return new IbsCbsRegularTaxation { SituationCode = src.SituationCode, ClassCode = src.ClassCode };
+    }
+
+    private static IbsCbsThirdPartyReimbursements? MapThirdPartyReimbursements(IbsCbsThirdPartyReimbursementsRequest? src)
+    {
+        if (src?.Documents is not { Count: > 0 }) return null;
+
+        return new IbsCbsThirdPartyReimbursements
+        {
+            Documents = src.Documents.Select(d => new IbsCbsReimbursementDocument
+            {
+                OtherNationalDfe = d.OtherNationalDfe is not null
+                    ? new IbsCbsDfeNacional
+                    {
+                        DfeType = d.OtherNationalDfe.DfeType,
+                        DfeTypeText = d.OtherNationalDfe.DfeTypeText,
+                        DfeKey = d.OtherNationalDfe.DfeKey
+                    }
+                    : null,
+                OtherFiscalDoc = d.OtherFiscalDoc is not null
+                    ? new Domain.Models.IbsCbsFiscalDoc
+                    {
+                        IssuerCityCode = d.OtherFiscalDoc.IssuerCityCode,
+                        FiscalDocNumber = d.OtherFiscalDoc.FiscalDocNumber,
+                        FiscalDocDescription = d.OtherFiscalDoc.FiscalDocDescription
+                    }
+                    : null,
+                Supplier = d.Supplier is not null ? MapPerson(d.Supplier) : null,
+                IssueDate = DateOnly.TryParse(d.IssueDate, out var id) ? id : null,
+                AccrualOn = DateOnly.TryParse(d.AccrualOn, out var ac) ? ac : null,
+                ReimbursementType = Enum.TryParse<IbsCbsReimbursementType>(d.ReimbursementType, true, out var rt)
+                    ? rt : IbsCbsReimbursementType.Other,
+                Amount = d.Amount ?? 0
+            }).ToList()
+        };
+    }
+
+    private static Domain.Models.RealEstate? MapRealEstate(IbsCbsRealEstateRequest? src)
+    {
+        if (src is null) return null;
+        return new Domain.Models.RealEstate
+        {
+            PropertyFiscalRegistration = src.PropertyFiscalRegistration,
+            CibCode = src.CibCode,
+            SiteAddress = src.SiteAddress is not null ? MapLocation(src.SiteAddress) : null
+        };
     }
 }

@@ -63,6 +63,28 @@ public class NfseEndpointIntegrationTests : IClassFixture<WebApplicationFactory<
         xml.ShouldContain("<tribFed>");
     }
 
+    [Fact]
+    public async Task Given_RequestWithIbsCbs_Should_Return200WithIBSCBSBlock()
+    {
+        // Arrange
+        var payload = MinimalRequestPayloadWithIbsCbs();
+
+        // Act
+        var response = await _client.PostAsJsonAsync("/api/v1/nfse/xml", payload);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+
+        var body = await response.Content.ReadFromJsonAsync<JsonElement>();
+        var xml = body.GetProperty("xml").GetString()!;
+
+        xml.ShouldContain("<IBSCBS>");
+        xml.ShouldContain("<finNFSe>");
+        xml.ShouldContain("<indDest>");
+        xml.ShouldContain("<gIBSCBS>");
+        xml.ShouldContain("<cClassTrib>");
+    }
+
     // --- Helpers privados ---
 
     private static object MinimalRequestPayload() => new
@@ -160,6 +182,42 @@ public class NfseEndpointIntegrationTests : IClassFixture<WebApplicationFactory<
             order = "PEDIDO-INTEG",
             items = new[] { new { item = "Item A" } },
             otherInformation = "Info complementar"
+        }
+    };
+
+    private static object MinimalRequestPayloadWithIbsCbs() => new
+    {
+        externalId = "INTEG-IBSCBS-001",
+        federalServiceCode = "01.01",
+        description = "Serviço com IBSCBS",
+        servicesAmount = 1000.00,
+        issuedOn = "2026-01-20T10:00:00-03:00",
+        taxationType = "WithinCity",
+        nbsCode = "101010100",
+        borrower = new
+        {
+            name = "TOMADOR IBSCBS",
+            federalTaxNumber = 191,
+            address = new
+            {
+                country = "BRA", postalCode = "01000-000",
+                street = "RUA IBSCBS", number = "100", district = "CENTRO",
+                city = new { code = "3550308" }, state = "SP"
+            }
+        },
+        location = new
+        {
+            country = "BRA", postalCode = "01000-000",
+            street = "RUA PRESTACAO", number = "50", district = "CENTRO",
+            city = new { code = "3550308" }, state = "SP"
+        },
+        ibsCbs = new
+        {
+            classCode = "000001",
+            purpose = "Regular",
+            personalUse = false,
+            operationIndicator = "100501",
+            destinationIndicator = "SameAsBuyer"
         }
     };
 }

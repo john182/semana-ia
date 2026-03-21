@@ -139,6 +139,57 @@ public class NfseGenerateXmlRequestBuilder
         return this;
     }
 
+    public NfseGenerateXmlRequestBuilder WithIbsCbs()
+    {
+        _req.IbsCbs = new IbsCbsRequest
+        {
+            ClassCode = "000001",
+            Purpose = "Regular",
+            PersonalUse = false,
+            OperationIndicator = "100501",
+            DestinationIndicator = "SameAsBuyer"
+        };
+        return this;
+    }
+
+    public NfseGenerateXmlRequestBuilder WithIbsCbsFull()
+    {
+        WithIbsCbs();
+        _req.IbsCbs!.DestinationIndicator = "DifferentFromBuyer";
+        _req.IbsCbs.Recipient = new PartyRequest
+        {
+            Name = "DESTINATARIO INTEG",
+            FederalTaxNumber = 12345678000199,
+            Address = new AddressRequest
+            {
+                Country = "BRA", PostalCode = "01000-000", Street = "RUA DEST",
+                Number = "10", District = "CENTRO",
+                City = new CityRequest { Code = "3550308" }, State = "SP"
+            }
+        };
+        _req.IbsCbs.ThirdPartyReimbursements = new IbsCbsThirdPartyReimbursementsRequest
+        {
+            Documents =
+            [
+                new IbsCbsReimbursementDocumentRequest
+                {
+                    OtherNationalDfe = new IbsCbsDfeNacionalRequest
+                    {
+                        DfeType = "9",
+                        DfeTypeText = "Outro DFe",
+                        DfeKey = "DFE-CHAVE-TESTE"
+                    },
+                    Supplier = new PartyRequest { Name = "FORNECEDOR", FederalTaxNumber = 30303030000130 },
+                    IssueDate = "2026-01-05",
+                    AccrualOn = "2026-01-05",
+                    ReimbursementType = "RealEstateBrokerPassThrough",
+                    Amount = 150
+                }
+            ]
+        };
+        return this;
+    }
+
     public NfseGenerateXmlRequestBuilder WithComplete()
     {
         return WithIntermediary()
