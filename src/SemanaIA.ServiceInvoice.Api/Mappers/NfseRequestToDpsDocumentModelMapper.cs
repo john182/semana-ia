@@ -305,7 +305,19 @@ public class NfseRequestToDpsDocumentModelMapper
             RegularTaxation = MapRegularTaxation(src.RegularTaxation),
             ThirdPartyReimbursements = MapThirdPartyReimbursements(src.ThirdPartyReimbursements),
             Recipient = MapPerson(src.Recipient),
-            RealEstate = MapRealEstate(src.RealEstate)
+            RealEstate = MapRealEstate(src.RealEstate),
+            Deferment = MapDeferment(src.Deferment)
+        };
+    }
+
+    private static IbsCbsDeferment? MapDeferment(IbsCbsDefermentRequest? src)
+    {
+        if (src is null) return null;
+        return new IbsCbsDeferment
+        {
+            StateDefermentRate = src.StateDefermentRate,
+            MunicipalDefermentRate = src.MunicipalDefermentRate,
+            CbsDefermentRate = src.CbsDefermentRate
         };
     }
 
