@@ -252,7 +252,4 @@ public class TaxTier
     public decimal? Amount { get; set; }
 }
 
-public class IbsCbs
-{
-    public string? ClassCode { get; set; }
-}
+// IbsCbs moved to IbsCbsModels.cs

@@ -711,16 +711,13 @@ public class NationalDpsManualSerializer
         });
     }
 
-    // --- IBSCBS placeholder ---
+    // --- IBSCBS ---
 
-    private static Action<dynamic> BuildIbsCbs(DpsDocument doc)
+    private static readonly IbsCbsManualBuilder IbsCbsBuilder = new();
+
+    private static Action<dynamic>? BuildIbsCbs(DpsDocument doc)
     {
-        return XBuilder.Fragment(xml =>
-        {
-            // Placeholder — full IBSCBS structure to be implemented in future change
-            if (doc.IbsCbs?.ClassCode is not null)
-                xml.cClass(doc.IbsCbs.ClassCode);
-        });
+        return IbsCbsBuilder.Build(doc);
     }
 
     // --- Helpers ---

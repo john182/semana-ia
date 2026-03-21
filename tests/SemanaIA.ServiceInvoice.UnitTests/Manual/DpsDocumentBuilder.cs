@@ -244,7 +244,14 @@ public class DpsDocumentBuilder
 
     public DpsDocumentBuilder WithIbsCbs(string classCode = "000001")
     {
-        _doc.IbsCbs = new IbsCbs { ClassCode = classCode };
+        _doc.IbsCbs = new IbsCbs
+        {
+            ClassCode = classCode,
+            Purpose = IbsCbsPurpose.Regular,
+            PersonalUse = false,
+            OperationIndicator = "100501",
+            DestinationIndicator = IbsCbsDestinationIndicator.SameAsBuyer
+        };
         return this;
     }
 
