@@ -20,6 +20,7 @@ public class IbsCbsRequest
     public IbsCbsThirdPartyReimbursementsRequest? ThirdPartyReimbursements { get; set; }
     public PartyRequest? Recipient { get; set; }
     public IbsCbsRealEstateRequest? RealEstate { get; set; }
+    public IbsCbsDefermentRequest? Deferment { get; set; }
 }
 
 public class IbsCbsRelatedDocsRequest
@@ -74,4 +75,11 @@ public class IbsCbsRealEstateRequest
     public string? PropertyFiscalRegistration { get; set; }
     public string? CibCode { get; set; }
     public AddressRequest? SiteAddress { get; set; }
+}
+
+public class IbsCbsDefermentRequest
+{
+    public decimal StateDefermentRate { get; set; }
+    public decimal MunicipalDefermentRate { get; set; }
+    public decimal CbsDefermentRate { get; set; }
 }

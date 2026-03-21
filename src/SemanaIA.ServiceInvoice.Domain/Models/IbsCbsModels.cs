@@ -44,6 +44,7 @@ public class IbsCbs
     public IbsCbsThirdPartyReimbursements? ThirdPartyReimbursements { get; set; }
     public Person? Recipient { get; set; }
     public RealEstate? RealEstate { get; set; }
+    public IbsCbsDeferment? Deferment { get; set; }
 }
 
 public class IbsCbsRelatedDocs
@@ -98,4 +99,11 @@ public class RealEstate
     public string? PropertyFiscalRegistration { get; set; }
     public string? CibCode { get; set; }
     public Location? SiteAddress { get; set; }
+}
+
+public class IbsCbsDeferment
+{
+    public decimal StateDefermentRate { get; set; }
+    public decimal MunicipalDefermentRate { get; set; }
+    public decimal CbsDefermentRate { get; set; }
 }

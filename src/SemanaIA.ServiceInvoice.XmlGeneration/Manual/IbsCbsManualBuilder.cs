@@ -131,6 +131,16 @@ public class IbsCbsManualBuilder
                             regular.cClassTribReg(ibs.RegularTaxation.ClassCode.PadLeft(6, '0'));
                         }));
                     }
+
+                    if (ibs.Deferment is not null)
+                    {
+                        gIbsCbs.gDif(XBuilder.Fragment(dif =>
+                        {
+                            dif.pDifUF(Fix(ibs.Deferment.StateDefermentRate));
+                            dif.pDifMun(Fix(ibs.Deferment.MunicipalDefermentRate));
+                            dif.pDifCBS(Fix(ibs.Deferment.CbsDefermentRate));
+                        }));
+                    }
                 }));
             }));
         }));

@@ -245,6 +245,54 @@ public class IbsCbsManualBuilderTests
     }
 
     // ==========================================================
+    // Deferment (gDif)
+    // ==========================================================
+
+    [Fact]
+    public void Given_IbsCbsWithDeferment_Should_EmitGDifWithThreeRates()
+    {
+        // Arrange
+        var document = CreateDocumentWithFullIbsCbs();
+        document.IbsCbs!.Deferment = new IbsCbsDeferment
+        {
+            StateDefermentRate = 0.50m,
+            MunicipalDefermentRate = 0.00m,
+            CbsDefermentRate = 0.20m
+        };
+
+        // Act
+        var result = _sut.Serialize(document);
+
+        // Assert
+        result.Xml.ShouldBeValidAgainstDpsSchema();
+
+        var gIbsCbs = ParseIbsCbs(result.Xml).Element(Ns + "valores")!
+            .Element(Ns + "trib")!.Element(Ns + "gIBSCBS")!;
+        var gDif = gIbsCbs.Element(Ns + "gDif")!;
+        gDif.ShouldNotBeNull();
+        gDif.Element(Ns + "pDifUF")?.Value.ShouldBe("0.50");
+        gDif.Element(Ns + "pDifMun")?.Value.ShouldBe("0.00");
+        gDif.Element(Ns + "pDifCBS")?.Value.ShouldBe("0.20");
+    }
+
+    [Fact]
+    public void Given_IbsCbsWithoutDeferment_Should_OmitGDif()
+    {
+        // Arrange
+        var document = CreateDocumentWithFullIbsCbs();
+
+        // Act
+        var result = _sut.Serialize(document);
+
+        // Assert
+        result.Xml.ShouldBeValidAgainstDpsSchema();
+
+        var gIbsCbs = ParseIbsCbs(result.Xml).Element(Ns + "valores")!
+            .Element(Ns + "trib")!.Element(Ns + "gIBSCBS")!;
+        gIbsCbs.Element(Ns + "gDif").ShouldBeNull();
+    }
+
+    // ==========================================================
     // IbsCbs null
     // ==========================================================
 
