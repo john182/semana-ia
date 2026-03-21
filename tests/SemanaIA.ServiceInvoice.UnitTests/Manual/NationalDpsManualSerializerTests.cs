@@ -690,6 +690,121 @@ public class NationalDpsManualSerializerTests
     }
 
     // ==========================================================
+    // Deduction documents
+    // ==========================================================
+
+    [Fact]
+    public void Given_DeductionWithDocuments_Should_EmitDocumentosBlock()
+    {
+        // Arrange
+        var document = DpsDocumentTestFixture.CreateValidMinimal();
+        document.Deduction = new Domain.Models.Deduction
+        {
+            Documents =
+            [
+                new Domain.Models.DeductionDocument
+                {
+                    NfseKey = "11112222333344445555666677778888999900001111000001",
+                    DeductionType = Domain.Models.DeductionType.Subcontracting,
+                    IssueDate = new DateOnly(2026, 1, 10),
+                    DeductibleTotal = 1000,
+                    UsedAmount = 1000,
+                    Supplier = new Domain.Models.Person
+                    {
+                        Name = "SUBEMPREITEIRO TESTE",
+                        FederalTaxNumber = 10101010000110
+                    }
+                }
+            ]
+        };
+
+        // Act
+        var result = _sut.Serialize(document);
+
+        // Assert
+        result.Xml.ShouldBeValidAgainstDpsSchema();
+
+        var vDedRed = ParseInfDps(result.Xml).Element(Ns + "valores")!.Element(Ns + "vDedRed")!;
+        var docDedRed = vDedRed.Element(Ns + "documentos")!.Element(Ns + "docDedRed")!;
+        docDedRed.Element(Ns + "chNFSe").ShouldNotBeNull();
+        docDedRed.Element(Ns + "tpDedRed")?.Value.ShouldBe("8");
+        docDedRed.Element(Ns + "fornec").ShouldNotBeNull();
+        docDedRed.Element(Ns + "fornec")!.Element(Ns + "xNome")?.Value.ShouldBe("SUBEMPREITEIRO TESTE");
+    }
+
+    [Fact]
+    public void Given_DeductionWithAmountNoDocuments_Should_EmitVDR()
+    {
+        // Arrange
+        var document = DpsDocumentTestFixture.CreateValidMinimal();
+        document.Deduction = new Domain.Models.Deduction { Amount = 1500 };
+
+        // Act
+        var result = _sut.Serialize(document);
+
+        // Assert
+        result.Xml.ShouldBeValidAgainstDpsSchema();
+
+        var vDedRed = ParseInfDps(result.Xml).Element(Ns + "valores")!.Element(Ns + "vDedRed")!;
+        vDedRed.Element(Ns + "vDR")?.Value.ShouldBe("1500.00");
+        vDedRed.Element(Ns + "documentos").ShouldBeNull();
+    }
+
+    // ==========================================================
+    // indTotTrib
+    // ==========================================================
+
+    [Fact]
+    public void Given_TotalTaxIndicatorNotInformed_Should_EmitIndTotTrib()
+    {
+        // Arrange
+        var document = DpsDocumentTestFixture.CreateValidMinimal();
+        document.ApproximateTotals = new Domain.Models.ApproximateTotals
+        {
+            Indicator = Domain.Models.TotalTaxIndicator.NotInformed
+        };
+
+        // Act
+        var result = _sut.Serialize(document);
+
+        // Assert
+        result.Xml.ShouldBeValidAgainstDpsSchema();
+
+        var totTrib = ParseInfDps(result.Xml).Element(Ns + "valores")!.Element(Ns + "trib")!.Element(Ns + "totTrib")!;
+        totTrib.Element(Ns + "indTotTrib")?.Value.ShouldBe("0");
+        totTrib.Element(Ns + "vTotTrib").ShouldBeNull();
+        totTrib.Element(Ns + "pTotTribSN").ShouldBeNull();
+    }
+
+    // ==========================================================
+    // endExt fix
+    // ==========================================================
+
+    [Fact]
+    public void Given_ForeignAddressWithValues_Should_AlwaysEmitXCidadeAndXEstProvReg()
+    {
+        // Arrange
+        var document = DpsDocumentTestFixture.CreateValidMinimal();
+        document.Borrower.Address = new Domain.Models.Address
+        {
+            Country = "US", PostalCode = "10001", Street = "1st AVE",
+            Number = "10", District = "NY",
+            City = new Domain.Models.City { Name = "NEW YORK" }, State = "NY"
+        };
+
+        // Act
+        var result = _sut.Serialize(document);
+
+        // Assert
+        result.Xml.ShouldBeValidAgainstDpsSchema();
+
+        var endExt = ParseInfDps(result.Xml).Element(Ns + "toma")!.Element(Ns + "end")!.Element(Ns + "endExt")!;
+        endExt.Element(Ns + "cEndPost")?.Value.ShouldBe("10001");
+        endExt.Element(Ns + "xCidade")?.Value.ShouldBe("NEW YORK");
+        endExt.Element(Ns + "xEstProvReg")?.Value.ShouldBe("NY");
+    }
+
+    // ==========================================================
     // Helpers privados (final da classe)
     // ==========================================================
 

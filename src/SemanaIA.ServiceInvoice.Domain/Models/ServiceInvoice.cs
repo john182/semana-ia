@@ -225,6 +225,48 @@ public class Deduction
 {
     public decimal? Rate { get; set; }
     public decimal? Amount { get; set; }
+    public List<DeductionDocument>? Documents { get; set; }
+}
+
+public enum DeductionType
+{
+    FoodAndBeverages = 1,
+    Materials = 2,
+    ConsortiumPassThrough = 5,
+    HealthPlanPassThrough = 6,
+    Services = 7,
+    Subcontracting = 8,
+    Other = 99
+}
+
+public class DeductionDocument
+{
+    public string? NfseKey { get; set; }
+    public string? NfeKey { get; set; }
+    public MunicipalElectronicDoc? MunicipalElectronic { get; set; }
+    public NonElectronicDoc? NonElectronic { get; set; }
+    public string? FiscalDocId { get; set; }
+    public string? NonFiscalDocId { get; set; }
+    public DeductionType DeductionType { get; set; }
+    public string? OtherDeductionDescription { get; set; }
+    public DateOnly IssueDate { get; set; }
+    public decimal DeductibleTotal { get; set; }
+    public decimal UsedAmount { get; set; }
+    public Person? Supplier { get; set; }
+}
+
+public class MunicipalElectronicDoc
+{
+    public string? CityCode { get; set; }
+    public string? Number { get; set; }
+    public string? VerificationCode { get; set; }
+}
+
+public class NonElectronicDoc
+{
+    public string? Number { get; set; }
+    public string? Model { get; set; }
+    public string? Series { get; set; }
 }
 
 public class Benefit
@@ -238,12 +280,15 @@ public class Suspension
     public string? ProcessNumber { get; set; }
 }
 
+public enum TotalTaxIndicator { Monetary, Percentage, NotInformed, SimplesNacional }
+
 public class ApproximateTotals
 {
     public TaxTier? Federal { get; set; }
     public TaxTier? State { get; set; }
     public TaxTier? Municipal { get; set; }
     public decimal? Rate { get; set; }
+    public TotalTaxIndicator? Indicator { get; set; }
 }
 
 public class TaxTier

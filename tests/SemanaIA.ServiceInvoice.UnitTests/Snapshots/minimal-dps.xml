@@ -1,0 +1,60 @@
+<DPS versao="1.01" xmlns="http://www.sped.fazenda.gov.br/nfse">
+  <infDPS Id="DPS355030820000000000000000001000000000000001">
+    <tpAmb>2</tpAmb>
+    <dhEmi>2026-01-20T10:00:00-03:00</dhEmi>
+    <verAplic>V_1.00.02</verAplic>
+    <serie>00001</serie>
+    <nDPS>1</nDPS>
+    <dCompet>2026-01-20</dCompet>
+    <tpEmit>1</tpEmit>
+    <cLocEmi>3550308</cLocEmi>
+    <prest>
+      <CNPJ>00000000000000</CNPJ>
+      <regTrib>
+        <opSimpNac>1</opSimpNac>
+        <regEspTrib>0</regEspTrib>
+      </regTrib>
+    </prest>
+    <toma>
+      <CPF>00000000191</CPF>
+      <xNome>CONSUMIDOR MINIMO LTDA</xNome>
+      <end>
+        <endNac>
+          <cMun>3550308</cMun>
+          <CEP>01000000</CEP>
+        </endNac>
+        <xLgr>RUA DAS FLORES</xLgr>
+        <nro>100</nro>
+        <xBairro>CENTRO</xBairro>
+      </end>
+    </toma>
+    <serv>
+      <locPrest>
+        <cLocPrestacao>3550308</cLocPrestacao>
+      </locPrest>
+      <cServ>
+        <cTribNac>000101</cTribNac>
+        <xDescServ>Serviço de Consultoria</xDescServ>
+        <cNBS>101010100</cNBS>
+      </cServ>
+    </serv>
+    <valores>
+      <vServPrest>
+        <vServ>1000.00</vServ>
+      </vServPrest>
+      <trib>
+        <tribMun>
+          <tribISSQN>1</tribISSQN>
+          <tpRetISSQN>1</tpRetISSQN>
+        </tribMun>
+        <totTrib>
+          <vTotTrib>
+            <vTotTribFed>0.00</vTotTribFed>
+            <vTotTribEst>0.00</vTotTribEst>
+            <vTotTribMun>0.00</vTotTribMun>
+          </vTotTrib>
+        </totTrib>
+      </trib>
+    </valores>
+  </infDPS>
+</DPS>

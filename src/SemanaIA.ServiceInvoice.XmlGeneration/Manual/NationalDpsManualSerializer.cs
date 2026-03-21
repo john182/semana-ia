@@ -223,12 +223,9 @@ public class NationalDpsManualSerializer
                 xml.endExt(XBuilder.Fragment(ext =>
                 {
                     ext.cPais(address.Country);
-                    if (!string.IsNullOrWhiteSpace(address.PostalCode))
-                        ext.cEndPost(address.PostalCode);
-                    if (!string.IsNullOrWhiteSpace(address.City?.Name))
-                        ext.xCidade(address.City!.Name);
-                    if (!string.IsNullOrWhiteSpace(address.State))
-                        ext.xEstProvReg(address.State);
+                    ext.cEndPost(address.PostalCode ?? string.Empty);
+                    ext.xCidade(address.City?.Name ?? string.Empty);
+                    ext.xEstProvReg(address.State ?? string.Empty);
                 }));
             }
 
@@ -498,10 +495,15 @@ public class NationalDpsManualSerializer
                 }));
             }
 
-            if (doc.Deduction is not null && doc.Deduction.Rate > 0)
-                xml.vDedRed(XBuilder.Fragment(d => { d.pDR(Fix(doc.Deduction.Rate)); }));
-            else if (doc.Deduction is not null && doc.Deduction.Amount > 0)
-                xml.vDedRed(XBuilder.Fragment(d => { d.vDR(Fix(doc.Deduction.Amount)); }));
+            if (doc.Deduction is not null)
+            {
+                if (doc.Deduction.Documents is { Count: > 0 })
+                    xml.vDedRed(XBuilder.Fragment(d => { d.documentos(BuildDeductionDocuments(doc.Deduction.Documents)); }));
+                else if (doc.Deduction.Rate > 0)
+                    xml.vDedRed(XBuilder.Fragment(d => { d.pDR(Fix(doc.Deduction.Rate)); }));
+                else if (doc.Deduction.Amount > 0)
+                    xml.vDedRed(XBuilder.Fragment(d => { d.vDR(Fix(doc.Deduction.Amount)); }));
+            }
 
             xml.trib(XBuilder.Fragment(trib =>
             {
@@ -621,13 +623,13 @@ public class NationalDpsManualSerializer
                     else if (v.CofinsAmount is null && v.CofinsAmountWithheld > 0)
                         pc.vCofins(Fix(v.CofinsAmountWithheld));
 
-                    int? withheldType = (v.PisAmountWithheld > 0, v.CofinsAmountWithheld > 0,
-                        v.PisAmount > 0, v.CofinsAmount > 0) switch
-                    {
-                        (true, true, false, false) => 1,
-                        (false, false, true, true) => 2,
-                        _ => null
-                    };
+                    // XSD v1.01 TSTipoRetPISCofins: only "1" (Retido) or "2" (Não Retido)
+                    // Production uses 0-9 for newer XSD versions — deferred until XSD upgrade
+                    int? withheldType = null;
+                    if (v.PisAmountWithheld > 0 || v.CofinsAmountWithheld > 0)
+                        withheldType = 1;
+                    else if (v.PisAmount > 0 || v.CofinsAmount > 0)
+                        withheldType = 2;
 
                     if (withheldType is not null)
                         pc.tpRetPisCofins(withheldType);
@@ -652,7 +654,13 @@ public class NationalDpsManualSerializer
             var approx = doc.ApproximateTotals;
             var isSimples = doc.Provider.TaxRegime == TaxRegime.SimplesNacional;
 
-            if (isSimples)
+            if (approx?.Indicator == TotalTaxIndicator.NotInformed)
+            {
+                xml.indTotTrib("0");
+                return;
+            }
+
+            if (isSimples || approx?.Indicator == TotalTaxIndicator.SimplesNacional)
             {
                 xml.pTotTribSN(Fix(approx?.Rate ?? 0));
                 return;
@@ -708,6 +716,76 @@ public class NationalDpsManualSerializer
                 t.vTotTribEst(Fix(0));
                 t.vTotTribMun(Fix(0));
             }));
+        });
+    }
+
+    // --- Deduction documents ---
+
+    private static Action<dynamic> BuildDeductionDocuments(List<DeductionDocument> documents)
+    {
+        return XBuilder.Fragment(docs =>
+        {
+            foreach (var d in documents.Take(1000))
+            {
+                docs.docDedRed(XBuilder.Fragment(doc =>
+                {
+                    if (!string.IsNullOrWhiteSpace(d.NfseKey))
+                        doc.chNFSe(d.NfseKey);
+                    else if (!string.IsNullOrWhiteSpace(d.NfeKey))
+                        doc.chNFe(d.NfeKey);
+                    else if (d.MunicipalElectronic is not null)
+                    {
+                        doc.NFSeMun(XBuilder.Fragment(m =>
+                        {
+                            m.cMunNFSeMun(d.MunicipalElectronic.CityCode ?? string.Empty);
+                            m.nNFSeMun(d.MunicipalElectronic.Number ?? string.Empty);
+                            m.cVerifNFSeMun(d.MunicipalElectronic.VerificationCode ?? string.Empty);
+                        }));
+                    }
+                    else if (d.NonElectronic is not null)
+                    {
+                        doc.NFNFS(XBuilder.Fragment(nf =>
+                        {
+                            nf.nNFS(d.NonElectronic.Number ?? string.Empty);
+                            nf.modNFS(d.NonElectronic.Model ?? string.Empty);
+                            nf.serieNFS(d.NonElectronic.Series ?? string.Empty);
+                        }));
+                    }
+                    else if (!string.IsNullOrWhiteSpace(d.FiscalDocId))
+                        doc.nDocFisc(d.FiscalDocId);
+                    else if (!string.IsNullOrWhiteSpace(d.NonFiscalDocId))
+                        doc.nDoc(d.NonFiscalDocId);
+
+                    doc.tpDedRed((int)d.DeductionType);
+
+                    if (d.DeductionType == DeductionType.Other && !string.IsNullOrWhiteSpace(d.OtherDeductionDescription))
+                        doc.xDescOutDed(d.OtherDeductionDescription);
+
+                    doc.dtEmiDoc(d.IssueDate.ToString(DateFormat, CultureInfo.InvariantCulture));
+                    doc.vDedutivelRedutivel(Fix(d.DeductibleTotal));
+                    doc.vDeducaoReducao(Fix(d.UsedAmount));
+
+                    if (d.Supplier is not null)
+                    {
+                        doc.fornec(XBuilder.Fragment(fornec =>
+                        {
+                            if (d.Supplier.FederalTaxNumber > 0)
+                            {
+                                if (d.Supplier.IsLegalPerson())
+                                    fornec.CNPJ(d.Supplier.FederalTaxNumber.ToString().PadLeft(14, '0'));
+                                else
+                                    fornec.CPF(d.Supplier.FederalTaxNumber.ToString().PadLeft(11, '0'));
+                            }
+                            else
+                            {
+                                fornec.cNaoNIF((int)(d.Supplier.NoTaxIdReason ?? NoTaxIdReason.NotInformedOriginal));
+                            }
+
+                            fornec.xNome(d.Supplier.Name);
+                        }));
+                    }
+                }));
+            }
         });
     }
 
