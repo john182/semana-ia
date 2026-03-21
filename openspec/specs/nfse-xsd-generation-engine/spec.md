@@ -127,3 +127,11 @@ O XML produzido a partir da estrutura do schema MUST ser validável contra os XS
 #### Scenario: Choice, sequence, required and restriction validation
 - **WHEN** XML é validado contra o XSD do provider
 - **THEN** choice com múltiplos elementos falha, sequence com ordem errada falha, required ausente falha, valor fora do pattern falha
+
+### Requirement: GISSOnline provider onboarding
+
+O `SchemaGenerationRunner` MUST processar o provider GISSOnline sem alterações no código da engine, confirmando onboarding data-driven. Validação XML contra XSD do GISSOnline deve cobrir minimal valid, required missing e choice groups.
+
+#### Scenario: GISSOnline onboarding
+- **WHEN** o runner é executado para "gissonline" com XSDs e base-rules.json mínimo
+- **THEN** artefatos são gerados e XML mínimo válido passa validação contra os XSDs do GISSOnline
