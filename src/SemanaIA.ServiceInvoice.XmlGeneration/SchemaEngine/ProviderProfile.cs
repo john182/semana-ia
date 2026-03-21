@@ -39,6 +39,12 @@ public class FormattingRule
 
     [JsonPropertyName("trim")]
     public bool? Trim { get; set; }
+
+    [JsonPropertyName("maxLength")]
+    public int? MaxLength { get; set; }
+
+    [JsonPropertyName("maxValue")]
+    public int? MaxValue { get; set; }
 }
 
 public class ConditionalRule
