@@ -33,3 +33,6 @@ coverage.xml
 .idea/
 *.user
 .dapr/
+
+node_modules/
+dist/

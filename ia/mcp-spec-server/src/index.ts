@@ -32,10 +32,30 @@ function generateBddTests(featureId: string, targetLanguage: string) {
   return {
     featureId,
     targetLanguage,
+    testingConventions: {
+      framework: "xUnit",
+      assertions: "Shouldly",
+      forbidAssertions: ["Assert.Equal", "Assert.NotNull", "Assert.Null", "Assert.StartsWith", "Assert.Contains"],
+      namingPattern: "Given_<context>_Should_<expected_behavior>",
+      structure: ["Arrange", "Act", "Assert"]
+    },
+    requiredScenarios: [
+      "documento mínimo válido",
+      "documento completo com todos os blocos opcionais",
+      "tomador com CPF",
+      "tomador com CNPJ",
+      "endereço nacional",
+      "endereço estrangeiro",
+      "totais aproximados por valor",
+      "totais aproximados por percentual",
+      "sem totais aproximados"
+    ],
     examples: [
       {
-        testName: "Given_MinimumValidRequest_When_GeneratingXml_Should_ReturnDpsXml",
-        structure: ["Arrange", "Act", "Assert"]
+        testName: "Given_MinimalValidDocument_Should_GenerateValidDpsStructure"
+      },
+      {
+        testName: "Given_CompleteDocument_Should_ContainAllOptionalBlocks"
       }
     ]
   };
