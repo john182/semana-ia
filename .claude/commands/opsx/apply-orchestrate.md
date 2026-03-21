@@ -1,5 +1,5 @@
 ---
-description: Executa uma change aprovada com orquestração técnica por agentes, priorizando reutilização, centralização, testes e revisão final
+description: Executa uma change aprovada com orquestração técnica por agentes, priorizando reutilização, centralização, testes, uso complementar de MCP de spec e revisão final
 argument-hint: <change-name>
 ---
 
@@ -34,6 +34,17 @@ Não trate a execução como um fluxo genérico de um único agente.
 
 A execução deve ser conduzida como uma orquestração entre agentes especializados, cada um responsável por uma etapa específica do trabalho.
 
+# Uso do MCP de spec
+
+Quando o MCP de spec estiver disponível no projeto, ele deve ser usado como apoio complementar principalmente na etapa de entendimento da change.
+
+Regras:
+- o MCP não substitui os arquivos oficiais da change
+- proposal, tasks e spec local continuam sendo a fonte principal
+- o MCP deve ser usado para enriquecer contexto, não para sobrescrever a change
+- se houver divergência entre o MCP e os arquivos versionados da change, priorizar os arquivos versionados
+- a execução não deve falhar apenas porque o MCP não está disponível
+
 # Fluxo obrigatório
 
 ## Etapa 1 — Entendimento da mudança
@@ -42,6 +53,7 @@ Use o `spec-agent` para:
 
 - localizar a change informada
 - ler proposal, tasks, spec e contexto relacionado
+- usar o MCP de spec como apoio complementar, quando disponível
 - resumir o objetivo da mudança
 - listar critérios de aceite
 - identificar riscos, dependências e lacunas
@@ -54,6 +66,7 @@ O resultado dessa etapa deve deixar claro:
 3. quais arquivos ou áreas tendem a ser impactados
 4. quais testes serão necessários
 5. se existe impacto em XML/schema/serialização
+6. se o MCP foi usado como apoio ou não
 
 Antes de seguir para implementação, consolide esse entendimento.
 
@@ -163,12 +176,12 @@ Use o `unit-test-agent` para criar ou ajustar os testes unitários necessários.
 - Sempre usar Arrange / Act / Assert.
 - Cada teste deve cobrir um único comportamento.
 - Priorizar:
-    - regras de negócio
-    - cenários mínimos
-    - edge cases
-    - fluxos de erro
-    - nulos
-    - condicionais relevantes
+  - regras de negócio
+  - cenários mínimos
+  - edge cases
+  - fluxos de erro
+  - nulos
+  - condicionais relevantes
 
 Os testes devem cobrir o comportamento alterado, e não apenas detalhes internos sem valor.
 
@@ -286,6 +299,7 @@ Ao final da execução, apresente um resumo estruturado contendo:
 - objetivo
 - critérios de aceite
 - escopo aplicado
+- uso ou não do MCP como apoio
 
 ## 2. Implementação realizada
 - arquivos alterados
