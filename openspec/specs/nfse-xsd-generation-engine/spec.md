@@ -87,3 +87,11 @@ O gerador MUST produzir um relatório de comparação entre os complexTypes gera
 #### Scenario: Comparison report identifies coverage
 - **WHEN** o relatório é gerado
 - **THEN** lista cada complexType com status: presente no manual, presente no gerado, diferenças de campos
+
+### Requirement: Detailed baseline comparison
+
+O `BaselineComparisonAnalyzer` (no projeto de testes) MUST comparar o `SchemaModel` com o serializer manual elemento-a-elemento e classificar cada divergência como: Equivalent, MissingInManual, MissingInGenerated, ExternalRuleGap, AcceptableByDesign, SchemaManualDivergence.
+
+#### Scenario: Element-level comparison with classification
+- **WHEN** o analyzer compara SchemaModel com o código do serializer manual
+- **THEN** cada elemento é classificado com um DivergenceType e o relatório inclui critérios de equivalência e backlog de evolução
