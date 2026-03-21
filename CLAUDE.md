@@ -24,6 +24,13 @@ Quando esse comando for usado:
 - Métodos privados devem ficar no final da classe.
 - Antes de propor a solução, avaliar se ela está mais complexa do que o problema exige.
 
+## Reutilização e centralização
+- Antes de criar métodos auxiliares para formatação, normalização, parsing, conversão, limpeza ou composição de valores, sempre procurar implementação equivalente já existente no projeto.
+- Não duplicar lógica recorrente como CEP, telefone, documento, máscaras, datas, textos, identificadores e códigos.
+- Quando houver comportamento compartilhável, preferir reutilização ou consolidação em um ponto único apropriado.
+- Evitar espalhar lógica repetida em builders, services, validators, mappers, converters e handlers.
+- Se existir implementação semelhante, reutilizar ou refatorar para centralizar, em vez de criar outra versão paralela.
+
 ## Testes unitários
 - Usar xUnit.
 - Usar Shouldly.
