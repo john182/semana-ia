@@ -51,6 +51,8 @@ public class XsdSchemaAnalyzer
 
         if (ct.ContentTypeParticle is XmlSchemaSequence sequence)
             ExtractElements(sequence, elements);
+        else if (ct.ContentTypeParticle is XmlSchemaChoice topChoice)
+            ExtractElements(topChoice, elements, "choice_top");
 
         return new SchemaComplexType(ct.Name ?? "anonymous", elements, annotation);
     }
