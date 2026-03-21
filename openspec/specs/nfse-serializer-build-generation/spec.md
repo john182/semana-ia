@@ -38,6 +38,7 @@ A build pipeline capable of reading XSD files and generating intermediate artifa
 3. The generation workflow must separate schema structure from business rules.
 4. The generation workflow must support future extension without breaking handwritten logic.
 5. The project must expose a build command or target for regeneration.
+6. The project must organize schemas by provider in `providers/{provider}/xsd/`, separating data from code and allowing expansion without C# project changes.
 
 ## Non-Functional Requirements
 - Deterministic output

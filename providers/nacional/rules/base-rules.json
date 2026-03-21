@@ -1,0 +1,208 @@
+{
+  "provider": "nacional",
+  "version": "1.01",
+  "description": "Regras derivadas do serializer manual NationalDpsManualSerializer — baseline da POC",
+  "constants": {
+    "dpsVersion": "1.01",
+    "dpsNamespace": "http://www.sped.fazenda.gov.br/nfse",
+    "appVersion": "V_1.00.02",
+    "countryBRA": "BRA",
+    "dateFormat": "yyyy-MM-dd",
+    "dateTimeFormat": "yyyy-MM-ddTHH:mm:sszzz",
+    "decimalFormat": "0.00",
+    "addressNumberFallback": "S/N"
+  },
+  "defaults": {
+    "tpAmb": 2,
+    "tpEmit": 1,
+    "opSimpNac": 1,
+    "regEspTrib": 0,
+    "tpRetISSQN": 1,
+    "finNFSe": "0",
+    "indFinal": "0",
+    "indDest": "0",
+    "indTotTrib": "0"
+  },
+  "enums": {
+    "tribISSQN": {
+      "WithinCity": "1",
+      "OutsideCity": "1",
+      "Immune": "2",
+      "Export": "3",
+      "Free": "4",
+      "_default": "1"
+    },
+    "tpRetISSQN": {
+      "NotWithheld": "1",
+      "WithheldByBuyer": "2",
+      "WithheldByIntermediary": "3"
+    },
+    "tpImunidade": {
+      "NotInformed": "0",
+      "Heritage": "1",
+      "Temple": "2",
+      "PoliticalParty": "3",
+      "BooksPressPaper": "4",
+      "Phonograms": "5"
+    },
+    "tpSusp": {
+      "SuspendedCourtDecision": "1",
+      "SuspendedAdministrativeProcedure": "2"
+    },
+    "tpDedRed": {
+      "FoodAndBeverages": "1",
+      "Materials": "2",
+      "ConsortiumPassThrough": "5",
+      "HealthPlanPassThrough": "6",
+      "Services": "7",
+      "Subcontracting": "8",
+      "Other": "99"
+    },
+    "finNFSe": {
+      "Regular": "0"
+    },
+    "indFinal": {
+      "false": "0",
+      "true": "1"
+    },
+    "indDest": {
+      "SameAsBuyer": "0",
+      "DifferentFromBuyer": "1"
+    },
+    "tpRetPisCofins": {
+      "Retained": "1",
+      "NotRetained": "2",
+      "_note": "XSD v1.01 aceita apenas 1 e 2. Produção usa 0-9 em XSD mais recente."
+    },
+    "opSimpNac": {
+      "MicroempreendedorIndividual": "2",
+      "SimplesNacional": "3",
+      "_default": "1"
+    },
+    "cNaoNIF": {
+      "NotInformedOriginal": "0",
+      "Exempted": "1",
+      "NotRequired": "2"
+    }
+  },
+  "formatting": {
+    "cTribNac": { "padLeft": 6, "padChar": "0", "digitsOnly": true, "maxLength": 6 },
+    "cTribMun": { "padLeft": 3, "padChar": "0", "digitsOnly": true, "maxLength": 3 },
+    "CEP": { "removeChars": "-", "trim": true },
+    "CST": { "padLeft": 2, "padChar": "0" },
+    "cIndOp": { "padLeft": 6, "padChar": "0", "maxLength": 6 },
+    "cClassTrib": { "padLeft": 6, "padChar": "0" },
+    "CSTReg": { "padLeft": 3, "padChar": "0" },
+    "cClassTribReg": { "padLeft": 6, "padChar": "0" },
+    "CNPJ": { "padLeft": 14, "padChar": "0" },
+    "CPF": { "padLeft": 11, "padChar": "0" },
+    "mecAFComexP": { "padLeft": 2, "padChar": "0", "maxValue": 8 },
+    "mecAFComexT": { "padLeft": 2, "padChar": "0", "maxValue": 26 },
+    "nDI": { "maxLength": 12 },
+    "nRE": { "maxLength": 12 },
+    "tpReeRepRes": { "padLeft": 2, "padChar": "0" },
+    "nProcesso": { "digitsOnly": true }
+  },
+  "conditionals": {
+    "toma": { "emitWhen": "tpRetISSQN in [2, 3] OR borrower.federalTaxNumber != 0 OR borrower.address.country != BRA" },
+    "interm": { "emitWhen": "intermediary != null" },
+    "IBSCBS": { "emitWhen": "ibsCbs.classCode != null" },
+    "tpImunidade": { "emitWhen": "tribISSQN == 2" },
+    "cPaisResult": { "emitWhen": "tribISSQN == 3" },
+    "exigSusp": { "emitWhen": "taxationType in [SuspendedCourtDecision, SuspendedAdministrativeProcedure] AND suspension.processNumber != null" },
+    "BM": { "emitWhen": "benefit.id != null AND (benefit.id.length == 14 OR benefit.amount > 0)" },
+    "pAliq": { "emitWhen": "issRate > 0 AND taxationType NOT IN [Export, Immune]" },
+    "tribFed": { "emitWhen": "anyOf(pisAmountWithheld, cofinsAmountWithheld, pisAmount, cofinsAmount, pisRate, cofinsRate, pisCofinsBaseTax, cstPisCofins, inssAmountWithheld, csllAmountWithheld, irAmountWithheld) > 0" },
+    "vDescCondIncond": { "emitWhen": "discountConditionedAmount > 0 OR discountUnconditionedAmount > 0" },
+    "comExt": { "emitWhen": "foreignTrade != null" },
+    "lsadppu": { "emitWhen": "lease != null" },
+    "obra": { "emitWhen": "construction != null" },
+    "atvEvento": { "emitWhen": "activityEvent.name != null" },
+    "infoCompl": { "emitWhen": "additionalInformationGroup hasAnyField OR additionalInformation != null" },
+    "gTribRegular": { "emitWhen": "ibsCbs.regularTaxation.classCode != null" },
+    "gDif": { "emitWhen": "ibsCbs.deferment != null" },
+    "dest": { "emitWhen": "ibsCbs.destinationIndicator == DifferentFromBuyer AND ibsCbs.recipient != null" },
+    "imovel": { "emitWhen": "ibsCbs.realEstate != null AND (realEstate.hasRegistration OR realEstate.hasCib OR realEstate.hasAddress)" },
+    "gReeRepRes": { "emitWhen": "ibsCbs.thirdPartyReimbursements.documents.count > 0" }
+  },
+  "documentChoice": {
+    "provider": {
+      "description": "Seleção de documento fiscal do prestador (TCInfoPrestador)",
+      "rules": [
+        { "when": "personType == LegalEntity", "emit": "CNPJ", "format": "padLeft(14, '0')" },
+        { "when": "personType == NaturalPerson", "emit": "CPF", "format": "padLeft(11, '0')" },
+        { "when": "federalTaxNumber <= 0", "emit": "cNaoNIF", "value": "noTaxIdReason" },
+        { "when": "else", "emit": "NIF", "value": "federalTaxNumber" }
+      ]
+    },
+    "person": {
+      "description": "Seleção de documento fiscal de pessoa (TCInfoPessoa — toma, interm, fornec)",
+      "rules": [
+        { "when": "country == BRA AND isLegalPerson AND federalTaxNumber > 0", "emit": "CNPJ" },
+        { "when": "country == BRA AND !isLegalPerson AND federalTaxNumber > 0", "emit": "CPF" },
+        { "when": "country == BRA AND noTaxIdReason != null AND federalTaxNumber <= 0", "emit": "cNaoNIF" },
+        { "when": "country != BRA AND noTaxIdReason != null", "emit": "cNaoNIF" },
+        { "when": "country != BRA AND else", "emit": "NIF" }
+      ]
+    },
+    "ibscbsPerson": {
+      "description": "Seleção de documento fiscal no IBSCBS (dest, fornec reembolso)",
+      "rules": [
+        { "when": "isLegalPerson AND federalTaxNumber > 0", "emit": "CNPJ" },
+        { "when": "!isLegalPerson AND federalTaxNumber > 0", "emit": "CPF" },
+        { "when": "federalTaxNumber <= 0", "emit": "NaoNIF", "value": "noTaxIdReason" }
+      ]
+    },
+    "address": {
+      "description": "Seleção de endereço (TCEndereco)",
+      "rules": [
+        { "when": "country == BRA OR country == null", "emit": "endNac", "contains": ["cMun", "CEP"] },
+        { "when": "country != BRA", "emit": "endExt", "contains": ["cPais", "cEndPost", "xCidade", "xEstProvReg"] }
+      ]
+    },
+    "locPrest": {
+      "description": "Seleção de local de prestação",
+      "rules": [
+        { "when": "location != null AND location.country == BRA", "emit": "cLocPrestacao", "value": "location.city.code" },
+        { "when": "location != null AND location.country != BRA", "emit": "cPaisPrestacao", "value": "location.country" },
+        { "when": "location == null AND taxationType == OutsideCity AND borrower.country == BRA", "emit": "cLocPrestacao", "value": "borrower.address.city.code" },
+        { "when": "location == null AND taxationType == OutsideCity AND borrower.country != BRA", "emit": "cPaisPrestacao", "value": "borrower.address.country" },
+        { "when": "location == null AND else", "emit": "cLocPrestacao", "value": "provider.municipalityCode" }
+      ]
+    },
+    "totTrib": {
+      "description": "Seleção de total de tributos",
+      "rules": [
+        { "when": "indicator == NotInformed", "emit": "indTotTrib", "value": "0" },
+        { "when": "provider.taxRegime == SimplesNacional", "emit": "pTotTribSN", "value": "approx.rate" },
+        { "when": "approx == null OR !hasAnyData", "emit": "vTotTrib", "value": "zeroed(fed, est, mun)" },
+        { "when": "hasAmounts", "emit": "vTotTrib", "value": "amounts(fed, est, mun)" },
+        { "when": "hasRates", "emit": "pTotTrib", "value": "rates(fed, est, mun)" },
+        { "when": "fallback", "emit": "vTotTrib", "value": "zeroed(fed, est, mun)" }
+      ]
+    },
+    "deduction": {
+      "description": "Seleção de tipo de dedução",
+      "rules": [
+        { "when": "deduction.documents.count > 0", "emit": "documentos" },
+        { "when": "deduction.rate > 0", "emit": "pDR" },
+        { "when": "deduction.amount > 0", "emit": "vDR" }
+      ]
+    },
+    "obra": {
+      "description": "Seleção de identificação de obra",
+      "rules": [
+        { "when": "workId.value != null", "emit": "cObra" },
+        { "when": "cibCode != null", "emit": "cCIB" },
+        { "when": "siteAddress hasData", "emit": "end" }
+      ]
+    },
+    "atvEvento": {
+      "description": "Seleção de identificação de evento",
+      "rules": [
+        { "when": "code != null", "emit": "idAtvEvt" },
+        { "when": "address hasData", "emit": "end" }
+      ]
+    }
+  }
+}
