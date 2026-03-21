@@ -1,0 +1,123 @@
+using System.Xml;
+using System.Xml.Schema;
+
+namespace SemanaIA.ServiceInvoice.XmlGeneration.SchemaEngine;
+
+public class XsdSchemaAnalyzer
+{
+    private const string DsigNamespace = "http://www.w3.org/2000/09/xmldsig#";
+
+    public SchemaDocument Analyze(string xsdPath)
+    {
+        var schemaSet = LoadSchemaSet(xsdPath);
+        var complexTypes = new List<SchemaComplexType>();
+        var targetNamespace = string.Empty;
+        var rootElementName = string.Empty;
+
+        // Find the target namespace from the primary XSD (not from xmldsig)
+        foreach (XmlSchema schema in schemaSet.Schemas())
+        {
+            if (!string.IsNullOrWhiteSpace(schema.TargetNamespace) && schema.TargetNamespace != DsigNamespace)
+            {
+                targetNamespace = schema.TargetNamespace;
+                break;
+            }
+        }
+
+        foreach (XmlSchema schema in schemaSet.Schemas())
+        {
+            if (schema.TargetNamespace == DsigNamespace) continue;
+
+            foreach (XmlSchemaElement element in schema.Elements.Values)
+            {
+                if (string.IsNullOrEmpty(rootElementName))
+                    rootElementName = element.Name ?? string.Empty;
+            }
+        }
+
+        foreach (XmlSchemaType type in schemaSet.GlobalTypes.Values)
+        {
+            if (type is XmlSchemaComplexType ct && type.QualifiedName.Namespace != DsigNamespace)
+                complexTypes.Add(AnalyzeComplexType(ct));
+        }
+
+        return new SchemaDocument(targetNamespace, rootElementName, complexTypes);
+    }
+
+    private static SchemaComplexType AnalyzeComplexType(XmlSchemaComplexType ct)
+    {
+        var elements = new List<SchemaElement>();
+        var annotation = GetAnnotation(ct.Annotation);
+
+        if (ct.ContentTypeParticle is XmlSchemaSequence sequence)
+            ExtractElements(sequence, elements);
+
+        return new SchemaComplexType(ct.Name ?? "anonymous", elements, annotation);
+    }
+
+    private static void ExtractElements(XmlSchemaGroupBase group, List<SchemaElement> elements, string? choiceGroup = null)
+    {
+        var choiceIndex = 0;
+
+        foreach (var item in group.Items)
+        {
+            switch (item)
+            {
+                case XmlSchemaElement el:
+                    var isChoice = choiceGroup is not null;
+                    elements.Add(new SchemaElement(
+                        Name: el.Name ?? string.Empty,
+                        TypeName: el.SchemaTypeName?.Name ?? el.ElementSchemaType?.Name ?? "complex",
+                        IsRequired: !isChoice && el.MinOccurs > 0,
+                        MinOccurs: (int)el.MinOccurs,
+                        MaxOccurs: el.MaxOccurs == decimal.MaxValue ? -1 : (int)el.MaxOccurs,
+                        IsChoice: isChoice,
+                        ChoiceGroup: choiceGroup,
+                        Annotation: GetAnnotation(el.Annotation)));
+                    break;
+
+                case XmlSchemaChoice choice:
+                    choiceIndex++;
+                    var groupName = $"choice_{choiceIndex}";
+                    ExtractElements(choice, elements, groupName);
+                    break;
+
+                case XmlSchemaSequence innerSeq:
+                    ExtractElements(innerSeq, elements, choiceGroup);
+                    break;
+            }
+        }
+    }
+
+    private static XmlSchemaSet LoadSchemaSet(string xsdPath)
+    {
+        var schemaSet = new XmlSchemaSet();
+        var directory = Path.GetDirectoryName(xsdPath) ?? string.Empty;
+
+        var readerSettings = new XmlReaderSettings { DtdProcessing = DtdProcessing.Parse };
+
+        foreach (var file in Directory.GetFiles(directory, "*.xsd"))
+        {
+            using var reader = XmlReader.Create(file, readerSettings);
+            var schema = XmlSchema.Read(reader, null);
+            if (schema is not null)
+                schemaSet.Add(schema);
+        }
+
+        schemaSet.Compile();
+        return schemaSet;
+    }
+
+    private static string? GetAnnotation(XmlSchemaAnnotation? annotation)
+    {
+        if (annotation is null) return null;
+
+        foreach (var item in annotation.Items)
+        {
+            if (item is XmlSchemaDocumentation doc && doc.Markup?.Length > 0)
+                return doc.Markup[0].Value?.Trim();
+        }
+
+        return null;
+    }
+}
