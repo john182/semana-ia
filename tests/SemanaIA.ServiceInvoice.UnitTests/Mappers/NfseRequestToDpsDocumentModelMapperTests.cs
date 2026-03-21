@@ -160,4 +160,79 @@ public class NfseRequestToDpsDocumentModelMapperTests
         result.ApproximateTotals.Municipal!.Amount.ShouldBe(0);
         result.ApproximateTotals.Rate.ShouldBe(0.15m);
     }
+
+    // ==========================================================
+    // IBSCBS mapper
+    // ==========================================================
+
+    [Fact]
+    public void Given_IbsCbsMinimal_Should_MapClassCodeAndPurpose()
+    {
+        // Arrange
+        var request = new NfseGenerateXmlRequestBuilder().WithIbsCbs().Build();
+
+        // Act
+        var result = NfseRequestToDpsDocumentModelMapper.Map(request);
+
+        // Assert
+        result.IbsCbs.ShouldNotBeNull();
+        result.IbsCbs!.ClassCode.ShouldBe("000001");
+        result.IbsCbs.Purpose.ShouldBe(IbsCbsPurpose.Regular);
+        result.IbsCbs.OperationIndicator.ShouldBe("100501");
+        result.IbsCbs.DestinationIndicator.ShouldBe(IbsCbsDestinationIndicator.SameAsBuyer);
+        result.IbsCbs.PersonalUse.ShouldBe(false);
+    }
+
+    [Fact]
+    public void Given_IbsCbsWithRecipient_Should_MapRecipientAsPerson()
+    {
+        // Arrange
+        var request = new NfseGenerateXmlRequestBuilder().WithIbsCbsFull().Build();
+
+        // Act
+        var result = NfseRequestToDpsDocumentModelMapper.Map(request);
+
+        // Assert
+        result.IbsCbs.ShouldNotBeNull();
+        result.IbsCbs!.DestinationIndicator.ShouldBe(IbsCbsDestinationIndicator.DifferentFromBuyer);
+        result.IbsCbs.Recipient.ShouldNotBeNull();
+        result.IbsCbs.Recipient!.Name.ShouldBe("DESTINATARIO INTEG");
+        result.IbsCbs.Recipient.FederalTaxNumber.ShouldBe(12345678000199);
+    }
+
+    [Fact]
+    public void Given_IbsCbsWithReimbursements_Should_MapDocuments()
+    {
+        // Arrange
+        var request = new NfseGenerateXmlRequestBuilder().WithIbsCbsFull().Build();
+
+        // Act
+        var result = NfseRequestToDpsDocumentModelMapper.Map(request);
+
+        // Assert
+        result.IbsCbs!.ThirdPartyReimbursements.ShouldNotBeNull();
+        result.IbsCbs.ThirdPartyReimbursements!.Documents.ShouldNotBeNull();
+        result.IbsCbs.ThirdPartyReimbursements.Documents!.Count.ShouldBe(1);
+
+        var doc = result.IbsCbs.ThirdPartyReimbursements.Documents[0];
+        doc.OtherNationalDfe.ShouldNotBeNull();
+        doc.OtherNationalDfe!.DfeType.ShouldBe("9");
+        doc.Supplier.ShouldNotBeNull();
+        doc.Supplier!.Name.ShouldBe("FORNECEDOR");
+        doc.Amount.ShouldBe(150);
+        doc.ReimbursementType.ShouldBe(IbsCbsReimbursementType.RealEstateBrokerPassThrough);
+    }
+
+    [Fact]
+    public void Given_IbsCbsNull_Should_MapNull()
+    {
+        // Arrange
+        var request = new NfseGenerateXmlRequestBuilder().Build();
+
+        // Act
+        var result = NfseRequestToDpsDocumentModelMapper.Map(request);
+
+        // Assert
+        result.IbsCbs.ShouldBeNull();
+    }
 }
