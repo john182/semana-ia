@@ -91,16 +91,22 @@ public class AllProvidersXsdValidationSummaryTests
     // ==========================================================
 
     [Fact]
-    public void Given_AbrasfSchema_Should_AnalyzeAndProduceComplexTypes()
+    public void Given_AbrasfMinimalData_Should_ProduceRuntimeXml()
     {
-        // Arrange & Act — ABRASF runtime serialization requires anonymous type support (future change)
+        // Arrange — now with inline type support
         var schema = AnalyzeProvider("abrasf", "wne_model_xsd_nota_fiscal_abrasf.xsd");
+        var resolver = LoadResolver("abrasf");
+        var data = AbrasfMinimalData();
+
+        // Act
+        // Note: versao goes on LoteRps (via @versao in data), not on root
+        var result = Serializer.SerializeAndValidate(schema, data, resolver,
+            "_anon_EnviarLoteRpsEnvio", "EnviarLoteRpsEnvio",
+            FindXsdDir("abrasf"));
 
         // Assert
-        schema.ShouldNotBeNull();
-        schema.ComplexTypes.Count.ShouldBeGreaterThan(10);
-        schema.ComplexTypes.Select(ct => ct.Name).ShouldContain("tcLoteRps");
-        schema.ComplexTypes.Select(ct => ct.Name).ShouldContain("tcCpfCnpj");
+        result.Xml.ShouldNotBeNull($"Errors: {string.Join("\n", result.Errors.Select(e => $"{e.Kind}: {e.Field} - {e.Message}"))}");
+        result.ValidationErrors.ShouldBeEmpty($"ABRASF XSD errors:\n{string.Join("\n", result.ValidationErrors)}\nXML:\n{result.Xml}");
     }
 
     [Fact]
@@ -122,15 +128,16 @@ public class AllProvidersXsdValidationSummaryTests
     // ==========================================================
 
     [Fact]
-    public void Given_GissonlineSchema_Should_AnalyzeAndProduceComplexTypes()
+    public void Given_GissonlineSchema_Should_AnalyzeWithInlineTypes()
     {
-        // Arrange & Act — GISSOnline runtime serialization requires anonymous type support (future change)
+        // Arrange & Act — GISSOnline requires multi-namespace support (tipos vs envio)
         var schema = AnalyzeProvider("gissonline", "enviar-lote-rps-envio-v2_04.xsd");
 
         // Assert
         schema.ShouldNotBeNull();
         schema.ComplexTypes.Count.ShouldBeGreaterThan(10);
         schema.ComplexTypes.Select(ct => ct.Name).ShouldContain("tcLoteRps");
+        schema.RootInlineType.ShouldNotBeNull("Root inline type should be captured");
     }
 
     // ==========================================================
@@ -140,7 +147,7 @@ public class AllProvidersXsdValidationSummaryTests
     [Fact]
     public void Given_IssnetSchema_Should_AnalyzeAndContainTCDPS()
     {
-        // Arrange & Act — ISSNet root is EnviarLoteDpsEnvio (inline), runtime needs anonymous type support
+        // Arrange & Act
         var schema = AnalyzeProvider("issnet", "schema_v101.xsd");
 
         // Assert
@@ -162,6 +169,18 @@ public class AllProvidersXsdValidationSummaryTests
         choiceElements.Count.ShouldBeGreaterThanOrEqualTo(2);
         choiceElements.Select(e => e.Name).ShouldContain("CNPJ");
         choiceElements.Select(e => e.Name).ShouldContain("CPF");
+    }
+
+    [Fact]
+    public void Given_IssnetSchema_Should_HaveRootInlineType()
+    {
+        // Arrange & Act — ISSNet requires LoteDps prefix resolution (multi-level inline)
+        var schema = AnalyzeProvider("issnet", "schema_v101.xsd");
+
+        // Assert
+        schema.ShouldNotBeNull();
+        schema.RootInlineType.ShouldNotBeNull("Root inline type should be captured for ISSNet");
+        schema.RootInlineType!.Elements.Count.ShouldBeGreaterThan(0);
     }
 
     // ==========================================================
@@ -195,32 +214,36 @@ public class AllProvidersXsdValidationSummaryTests
 
         // Nacional
         var nacResult = TestProvider("nacional", "DPS_v1.01.xsd", "TCDPS", "DPS", NacionalMinimalData(), "1.01");
-        report.AppendLine($"| Nacional | TCDPS/DPS | {Status(nacResult)} | CNPJ/CPF/NIF/cNaoNIF | tpAmb→valores | tpAmb,dhEmi,serie,prest,serv,valores |");
+        report.AppendLine($"| Nacional | TCDPS/DPS | {FormatValidationStatus(nacResult)} | CNPJ/CPF/NIF/cNaoNIF | tpAmb→valores | tpAmb,dhEmi,serie,prest,serv,valores |");
 
-        // ABRASF (analysis only — anonymous types not yet supported in runtime)
-        var abrasfSchema = AnalyzeProvider("abrasf", "wne_model_xsd_nota_fiscal_abrasf.xsd");
-        report.AppendLine($"| ABRASF | tcLoteRps | ANALYZED ({abrasfSchema.ComplexTypes.Count} types) | Cpf/Cnpj choice identified | NumeroLote→ListaRps | Requires anonymous type support |");
+        // ABRASF
+        var abrasfResult = TestProvider("abrasf", "wne_model_xsd_nota_fiscal_abrasf.xsd", "_anon_EnviarLoteRpsEnvio", "EnviarLoteRpsEnvio", AbrasfMinimalData(), null);
+        report.AppendLine($"| ABRASF | EnviarLoteRpsEnvio (inline) | {FormatValidationStatus(abrasfResult)} | Cpf/Cnpj choice | NumeroLote→ListaRps | {DescribeValidationGap(abrasfResult)} |");
 
-        // GISSOnline (analysis only — anonymous types not yet supported in runtime)
-        var gissSchema = AnalyzeProvider("gissonline", "enviar-lote-rps-envio-v2_04.xsd");
-        report.AppendLine($"| GISSOnline | tcLoteRps | ANALYZED ({gissSchema.ComplexTypes.Count} types) | Cpf/Cnpj choice identified | NumeroLote→ListaRps | Requires anonymous type support |");
+        // GISSOnline
+        var gissResult = TestProvider("gissonline", "enviar-lote-rps-envio-v2_04.xsd", "_anon_EnviarLoteRpsEnvio", "EnviarLoteRpsEnvio", GissonlineMinimalData(), null);
+        report.AppendLine($"| GISSOnline | EnviarLoteRpsEnvio (inline) | {FormatValidationStatus(gissResult)} | Cpf/Cnpj choice | NumeroLote→ListaRps+IBSCBS | {DescribeValidationGap(gissResult)} |");
 
-        // ISSNet (analysis — root is EnviarLoteDpsEnvio inline)
-        var issnetSchema = AnalyzeProvider("issnet", "schema_v101.xsd");
-        report.AppendLine($"| ISSNet | TCDPS (via EnviarLoteDpsEnvio) | ANALYZED ({issnetSchema.ComplexTypes.Count} types) | CNPJ/CPF/NIF/cNaoNIF | tpAmb→valores | Requires anonymous type support |");
+        // ISSNet
+        var issnetData = new Dictionary<string, object?>();
+        foreach (var (k, v) in NacionalMinimalData()) issnetData[$"DPS.{k}"] = v;
+        issnetData["DPS.infDPS.prest.IM"] = "12345";
+        issnetData["DPS.infDPS.serv.cServ.cTribMun"] = "040101";
+        var issnetResult = TestProvider("issnet", "schema_v101.xsd", "_anon_EnviarLoteDpsEnvio", "EnviarLoteDpsEnvio", issnetData, null);
+        report.AppendLine($"| ISSNet | EnviarLoteDpsEnvio (inline) | {FormatValidationStatus(issnetResult)} | CNPJ/CPF choice | tpAmb→valores via DPS | {DescribeValidationGap(issnetResult)} |");
 
-        // Paulistana (analysis only — different root structure)
+        // Paulistana
         var paulistanaSchema = AnalyzeProvider("paulistana", "PedidoEnvioLoteRPS_v02.xsd");
-        var paulistanaStatus = paulistanaSchema.ComplexTypes.Count > 0 ? "ANALYZED" : "FAIL";
-        report.AppendLine($"| Paulistana | PedidoEnvioLoteRPS | {paulistanaStatus} | CPF/CNPJ | Cabecalho→ListaRPS | CPFCNPJRemetente,dtInicio,dtFim,QtdRPS |");
+        report.AppendLine($"| Paulistana | PedidoEnvioLoteRPS (inline) | ANALYZED ({paulistanaSchema.ComplexTypes.Count} types) | CPF/CNPJ | Cabecalho→ListaRPS | Data bindings not yet configured |");
 
         report.AppendLine();
         report.AppendLine("## Summary");
         report.AppendLine();
         report.AppendLine($"**Total providers:** 5");
-        report.AppendLine($"**Runtime XML validated (XSD pass):** Nacional = {nacResult.IsValid}");
-        report.AppendLine($"**Schema analyzed (model ready):** ABRASF ({abrasfSchema.ComplexTypes.Count} types), GISSOnline ({gissSchema.ComplexTypes.Count} types), ISSNet ({issnetSchema.ComplexTypes.Count} types), Paulistana ({paulistanaSchema.ComplexTypes.Count} types)");
-        report.AppendLine($"**Pending for runtime:** ABRASF, GISSOnline, ISSNet, Paulistana require anonymous inline type support in serializer");
+        var runtimePass = new[] { nacResult, abrasfResult, gissResult, issnetResult }.Count(result => result.IsValid);
+        report.AppendLine($"**Runtime XML validated (XSD pass):** {runtimePass}/4 (Nacional, ABRASF, GISSOnline, ISSNet)");
+        report.AppendLine($"**Schema analyzed:** Paulistana ({paulistanaSchema.ComplexTypes.Count} types)");
+        report.AppendLine($"**Inline type support:** Enabled — anonymous complexTypes resolved recursively");
 
         var reportPath = Path.Combine(FindProvidersDir(), "runtime-xsd-validation-summary.md");
         File.WriteAllText(reportPath, report.ToString());
@@ -262,54 +285,58 @@ public class AllProvidersXsdValidationSummaryTests
 
     private static Dictionary<string, object?> AbrasfMinimalData() => new()
     {
-        ["NumeroLote"] = "1",
-        ["Prestador.CpfCnpj.Cnpj"] = "00000000000000",
-        ["QuantidadeRps"] = "1",
-        ["ListaRps.Rps.InfDeclaracaoPrestacaoServico.Competencia"] = "2026-01-20",
-        ["ListaRps.Rps.InfDeclaracaoPrestacaoServico.Servico.Valores.ValorServicos"] = "1000.00",
-        ["ListaRps.Rps.InfDeclaracaoPrestacaoServico.Servico.IssRetido"] = "2",
-        ["ListaRps.Rps.InfDeclaracaoPrestacaoServico.Servico.ItemListaServico"] = "01.01",
-        ["ListaRps.Rps.InfDeclaracaoPrestacaoServico.Servico.Discriminacao"] = "Servico ABRASF runtime",
-        ["ListaRps.Rps.InfDeclaracaoPrestacaoServico.Servico.CodigoMunicipio"] = "3550308",
-        ["ListaRps.Rps.InfDeclaracaoPrestacaoServico.Servico.ExigibilidadeISS"] = "1",
-        ["ListaRps.Rps.InfDeclaracaoPrestacaoServico.Prestador.CpfCnpj.Cnpj"] = "00000000000000",
-        ["ListaRps.Rps.InfDeclaracaoPrestacaoServico.OptanteSimplesNacional"] = "2",
-        ["ListaRps.Rps.InfDeclaracaoPrestacaoServico.IncentivoFiscal"] = "2"
+        ["LoteRps.@Id"] = "lote1",
+        ["LoteRps.@versao"] = "2.04",
+        ["LoteRps.NumeroLote"] = "1",
+        ["LoteRps.Prestador.CpfCnpj.Cnpj"] = "00000000000000",
+        ["LoteRps.QuantidadeRps"] = "1",
+        ["LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.Competencia"] = "2026-01-20",
+        ["LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.Servico.Valores.ValorServicos"] = "1000.00",
+        ["LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.Servico.IssRetido"] = "2",
+        ["LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.Servico.ItemListaServico"] = "01.01",
+        ["LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.Servico.Discriminacao"] = "Servico ABRASF runtime",
+        ["LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.Servico.CodigoMunicipio"] = "3550308",
+        ["LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.Servico.ExigibilidadeISS"] = "1",
+        ["LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.Prestador.CpfCnpj.Cnpj"] = "00000000000000",
+        ["LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.OptanteSimplesNacional"] = "2",
+        ["LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.IncentivoFiscal"] = "2"
     };
 
     private static Dictionary<string, object?> GissonlineMinimalData() => new()
     {
-        ["NumeroLote"] = "1",
-        ["Prestador.CpfCnpj.Cnpj"] = "00000000000000",
-        ["Prestador.InscricaoMunicipal"] = "12345",
-        ["QuantidadeRps"] = "1",
-        ["ListaRps.Rps.InfDeclaracaoPrestacaoServico.Competencia"] = "2026-01-20",
-        ["ListaRps.Rps.InfDeclaracaoPrestacaoServico.Servico.Valores.ValorServicos"] = "1000.00",
-        ["ListaRps.Rps.InfDeclaracaoPrestacaoServico.Servico.Valores.trib.totTrib.pTotTribSN"] = "0.00",
-        ["ListaRps.Rps.InfDeclaracaoPrestacaoServico.Servico.Valores.IBSCBS.finNFSe"] = "0",
-        ["ListaRps.Rps.InfDeclaracaoPrestacaoServico.Servico.Valores.IBSCBS.indFinal"] = "0",
-        ["ListaRps.Rps.InfDeclaracaoPrestacaoServico.Servico.Valores.IBSCBS.cIndOp"] = "100501",
-        ["ListaRps.Rps.InfDeclaracaoPrestacaoServico.Servico.Valores.IBSCBS.indDest"] = "0",
-        ["ListaRps.Rps.InfDeclaracaoPrestacaoServico.Servico.Valores.IBSCBS.valores.trib.gIBSCBS.CST"] = "000",
-        ["ListaRps.Rps.InfDeclaracaoPrestacaoServico.Servico.Valores.IBSCBS.valores.trib.gIBSCBS.cClassTrib"] = "000001",
-        ["ListaRps.Rps.InfDeclaracaoPrestacaoServico.Servico.Valores.IBSCBS.valores.cLocalidadeIncid"] = "3550308",
-        ["ListaRps.Rps.InfDeclaracaoPrestacaoServico.Servico.Valores.IBSCBS.valores.pRedutor"] = "0.00",
-        ["ListaRps.Rps.InfDeclaracaoPrestacaoServico.Servico.IssRetido"] = "2",
-        ["ListaRps.Rps.InfDeclaracaoPrestacaoServico.Servico.ItemListaServico"] = "01.01",
-        ["ListaRps.Rps.InfDeclaracaoPrestacaoServico.Servico.CodigoNbs"] = "101010100",
-        ["ListaRps.Rps.InfDeclaracaoPrestacaoServico.Servico.Discriminacao"] = "Servico GISSOnline runtime",
-        ["ListaRps.Rps.InfDeclaracaoPrestacaoServico.Servico.CodigoMunicipio"] = "3550308",
-        ["ListaRps.Rps.InfDeclaracaoPrestacaoServico.Servico.ExigibilidadeISS"] = "1",
-        ["ListaRps.Rps.InfDeclaracaoPrestacaoServico.Prestador.CpfCnpj.Cnpj"] = "00000000000000",
-        ["ListaRps.Rps.InfDeclaracaoPrestacaoServico.OptanteSimplesNacional"] = "2",
-        ["ListaRps.Rps.InfDeclaracaoPrestacaoServico.IncentivoFiscal"] = "2"
+        ["LoteRps.@Id"] = "lote1",
+        ["LoteRps.@versao"] = "2.04",
+        ["LoteRps.NumeroLote"] = "1",
+        ["LoteRps.Prestador.CpfCnpj.Cnpj"] = "00000000000000",
+        ["LoteRps.Prestador.InscricaoMunicipal"] = "12345",
+        ["LoteRps.QuantidadeRps"] = "1",
+        ["LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.Competencia"] = "2026-01-20",
+        ["LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.Servico.Valores.ValorServicos"] = "1000.00",
+        ["LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.Servico.Valores.trib.totTrib.pTotTribSN"] = "0.00",
+        ["LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.Servico.Valores.IBSCBS.finNFSe"] = "0",
+        ["LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.Servico.Valores.IBSCBS.indFinal"] = "0",
+        ["LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.Servico.Valores.IBSCBS.cIndOp"] = "100501",
+        ["LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.Servico.Valores.IBSCBS.indDest"] = "0",
+        ["LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.Servico.Valores.IBSCBS.valores.trib.gIBSCBS.CST"] = "000",
+        ["LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.Servico.Valores.IBSCBS.valores.trib.gIBSCBS.cClassTrib"] = "000001",
+        ["LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.Servico.Valores.IBSCBS.valores.cLocalidadeIncid"] = "3550308",
+        ["LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.Servico.Valores.IBSCBS.valores.pRedutor"] = "0.00",
+        ["LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.Servico.IssRetido"] = "2",
+        ["LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.Servico.ItemListaServico"] = "01.01",
+        ["LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.Servico.CodigoNbs"] = "101010100",
+        ["LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.Servico.Discriminacao"] = "Servico GISSOnline runtime",
+        ["LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.Servico.CodigoMunicipio"] = "3550308",
+        ["LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.Servico.ExigibilidadeISS"] = "1",
+        ["LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.Prestador.CpfCnpj.Cnpj"] = "00000000000000",
+        ["LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.OptanteSimplesNacional"] = "2",
+        ["LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.IncentivoFiscal"] = "2"
     };
 
     // ==========================================================
     // Helpers privados (final da classe)
     // ==========================================================
 
-    private static SerializationResult TestProvider(string provider, string xsdFile, string rootType, string rootElement, Dictionary<string, object?> data, string version)
+    private static SerializationResult TestProvider(string provider, string xsdFile, string rootType, string rootElement, Dictionary<string, object?> data, string? version)
     {
         var schema = AnalyzeProvider(provider, xsdFile);
         var resolver = LoadResolver(provider);
@@ -322,7 +349,28 @@ public class AllProvidersXsdValidationSummaryTests
     private static ProviderRuleResolver LoadResolver(string provider) =>
         ProviderRuleResolver.LoadFromFile(FindRulesPath(provider));
 
-    private static string Status(SerializationResult r) => r.IsValid ? "PASS" : "FAIL";
+    private static string FormatValidationStatus(SerializationResult result) =>
+        result.IsValid ? "PASS" : "FAIL";
+
+    private static string DescribeValidationGap(SerializationResult result)
+    {
+        if (result.IsValid) return "None";
+
+        if (result.Errors.Count > 0)
+        {
+            var firstSerializationError = result.Errors[0].Message;
+            return $"Errors: {firstSerializationError}";
+        }
+
+        if (result.ValidationErrors.Count > 0)
+        {
+            var firstXsdError = result.ValidationErrors[0];
+            var truncatedError = firstXsdError[..Math.Min(60, firstXsdError.Length)];
+            return $"XSD: {truncatedError}";
+        }
+
+        return "Unknown";
+    }
 
     private static string FindXsdPath(string provider, string fileName)
     {

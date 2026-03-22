@@ -19,9 +19,17 @@ public class SchemaBasedXmlSerializer
 
         if (!typeMap.TryGetValue(rootComplexTypeName, out var rootType))
         {
-            errors.Add(new SerializationError(SerializationErrorKind.SchemaError,
-                rootComplexTypeName, $"ComplexType '{rootComplexTypeName}' not found in schema"));
-            return SerializationResult.Failure(errors);
+            // Fallback to RootInlineType for schemas with inline root elements
+            if (schema.RootInlineType is not null)
+            {
+                rootType = schema.RootInlineType;
+            }
+            else
+            {
+                errors.Add(new SerializationError(SerializationErrorKind.SchemaError,
+                    rootComplexTypeName, $"ComplexType '{rootComplexTypeName}' not found in schema"));
+                return SerializationResult.Failure(errors);
+            }
         }
 
         try
@@ -117,14 +125,15 @@ public class SchemaBasedXmlSerializer
         List<SerializationError> errors)
     {
         var choiceElements = complexType.Elements
-            .Where(e => e.ChoiceGroup == choiceGroup)
+            .Where(el => el.ChoiceGroup == choiceGroup)
             .ToList();
 
-        var selectedElement = choiceElements.FirstOrDefault(e =>
+        var selectedElement = choiceElements.FirstOrDefault(candidate =>
         {
-            var ePath = string.IsNullOrEmpty(pathPrefix) ? e.Name : $"{pathPrefix}.{e.Name}";
-            return (data.ContainsKey(ePath) && data[ePath] is not null) ||
-                   data.Keys.Any(k => k.StartsWith(ePath + ".", StringComparison.Ordinal));
+            var candidatePath = string.IsNullOrEmpty(pathPrefix) ? candidate.Name : $"{pathPrefix}.{candidate.Name}";
+            var hasExactMatch = data.ContainsKey(candidatePath) && data[candidatePath] is not null;
+            var hasChildMatch = data.Keys.Any(key => key.StartsWith(candidatePath + ".", StringComparison.Ordinal));
+            return hasExactMatch || hasChildMatch;
         });
 
         if (selectedElement is not null)
@@ -148,11 +157,16 @@ public class SchemaBasedXmlSerializer
         XNamespace ns,
         List<SerializationError> errors)
     {
-        if (typeMap.TryGetValue(element.TypeName, out var childType))
+        // Resolve complex type: InlineType takes priority, then typeMap lookup
+        var childType = element.InlineType;
+        if (childType is null)
+            typeMap.TryGetValue(element.TypeName, out childType);
+
+        if (childType is not null)
         {
-            var hasChildData = data.Keys.Any(k =>
-                k.StartsWith(path + ".", StringComparison.Ordinal) ||
-                k == path);
+            var hasChildData = data.Keys.Any(dataKey =>
+                dataKey.StartsWith(path + ".", StringComparison.Ordinal) ||
+                dataKey == path);
 
             if (hasChildData)
             {
@@ -161,6 +175,16 @@ public class SchemaBasedXmlSerializer
                 var idPath = $"{path}.@Id";
                 if (data.TryGetValue(idPath, out var idValue) && idValue is not null)
                     childElement.SetAttributeValue("Id", idValue.ToString());
+
+                // Check for versao attribute
+                var versaoPath = $"{path}.@versao";
+                if (data.TryGetValue(versaoPath, out var versaoValue) && versaoValue is not null)
+                    childElement.SetAttributeValue("versao", versaoValue.ToString());
+
+                // Check for Id attribute (without @)
+                var attrIdPath = $"{path}.@Id";
+                if (data.TryGetValue(attrIdPath, out var attrIdVal) && attrIdVal is not null)
+                    childElement.SetAttributeValue("Id", attrIdVal.ToString());
 
                 BuildComplexTypeContent(childElement, childType, path, data, resolver, typeMap, ns, errors);
                 parent.Add(childElement);
@@ -206,8 +230,8 @@ public class SchemaBasedXmlSerializer
 
         if (rule.RemoveChars is not null)
         {
-            foreach (var c in rule.RemoveChars)
-                result = result.Replace(c.ToString(), string.Empty);
+            foreach (var charToRemove in rule.RemoveChars)
+                result = result.Replace(charToRemove.ToString(), string.Empty);
         }
 
         if (rule.Trim == true)

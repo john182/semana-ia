@@ -58,3 +58,30 @@ Ao implementar:
 3. minimizar impacto desnecessário
 4. reutilizar o que já existe antes de criar novas abstrações
 5. explicar de forma objetiva qualquer decisão técnica relevante
+
+## Naming obrigatório
+
+- Nunca usar nomes genéricos ou de uma letra para parâmetros, variáveis locais, métodos privados e resultados intermediários, exceto em lambdas extremamente curtas e óbvias.
+- Parâmetros devem ter nome semântico completo, representando claramente o papel no contexto.
+- Métodos privados devem ter nomes que expressem claramente intenção e resultado.
+- Variáveis intermediárias devem receber nomes que expliquem o conteúdo ou propósito, evitando expressões complexas inline quando isso prejudicar legibilidade.
+
+### Exemplos proibidos
+- `r`
+- `x`
+- `obj`
+- `data`
+- `value`
+- `item`
+- `res`
+- `result` quando houver um nome mais específico
+- métodos como `Gap`, `Build`, `Handle`, `Process` sem contexto suficiente
+
+### Exemplos esperados
+- `serializationResult`
+- `firstValidationError`
+- `providerRuleProfile`
+- `schemaAnalysisResult`
+- `BuildValidationGapSummary`
+- `ResolveFirstValidationMessage`
+- `CreateProviderRuntimeSummary`

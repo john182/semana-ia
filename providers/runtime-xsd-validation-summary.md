@@ -3,14 +3,14 @@
 | Provider | Schema Root | XSD Valid | Choice | Sequence | Required |
 |----------|------------|----------|--------|----------|----------|
 | Nacional | TCDPS/DPS | PASS | CNPJ/CPF/NIF/cNaoNIF | tpAmb→valores | tpAmb,dhEmi,serie,prest,serv,valores |
-| ABRASF | tcLoteRps | ANALYZED (64 types) | Cpf/Cnpj choice identified | NumeroLote→ListaRps | Requires anonymous type support |
-| GISSOnline | tcLoteRps | ANALYZED (71 types) | Cpf/Cnpj choice identified | NumeroLote→ListaRps | Requires anonymous type support |
-| ISSNet | TCDPS (via EnviarLoteDpsEnvio) | ANALYZED (114 types) | CNPJ/CPF/NIF/cNaoNIF | tpAmb→valores | Requires anonymous type support |
-| Paulistana | PedidoEnvioLoteRPS | ANALYZED | CPF/CNPJ | Cabecalho→ListaRPS | CPFCNPJRemetente,dtInicio,dtFim,QtdRPS |
+| ABRASF | EnviarLoteRpsEnvio (inline) | PASS | Cpf/Cnpj choice | NumeroLote→ListaRps | None |
+| GISSOnline | EnviarLoteRpsEnvio (inline) | FAIL | Cpf/Cnpj choice | NumeroLote→ListaRps+IBSCBS | XSD: [Error] The element 'LoteRps' in namespace 'http://www.giss. |
+| ISSNet | EnviarLoteDpsEnvio (inline) | FAIL | CNPJ/CPF choice | tpAmb→valores via DPS | Errors: Required complex element 'LoteDps' has no data |
+| Paulistana | PedidoEnvioLoteRPS (inline) | ANALYZED (32 types) | CPF/CNPJ | Cabecalho→ListaRPS | Data bindings not yet configured |
 
 ## Summary
 
 **Total providers:** 5
-**Runtime XML validated (XSD pass):** Nacional = True
-**Schema analyzed (model ready):** ABRASF (64 types), GISSOnline (71 types), ISSNet (114 types), Paulistana (31 types)
-**Pending for runtime:** ABRASF, GISSOnline, ISSNet, Paulistana require anonymous inline type support in serializer
+**Runtime XML validated (XSD pass):** 2/4 (Nacional, ABRASF, GISSOnline, ISSNet)
+**Schema analyzed:** Paulistana (32 types)
+**Inline type support:** Enabled — anonymous complexTypes resolved recursively

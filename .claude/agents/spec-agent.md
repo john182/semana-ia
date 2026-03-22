@@ -47,6 +47,22 @@ Regras para uso do MCP:
 - Não inventar escopo novo.
 - Não assumir requisitos que não estejam sustentados por spec, proposal, tasks ou contexto técnico claro.
 
+# Regras adicionais para changes de engine/schema/provider
+
+Quando a change envolver engine de schema, serializer runtime, provider onboarding, XSD analysis ou geração baseada em provider:
+
+- tratar como critério de aceite obrigatório a validação para todos os providers existentes na pasta `providers/`
+- exigir um resumo sumarizado por provider ao final da execução
+- o resumo por provider deve conter, no mínimo:
+  - Schema Analysis
+  - Runtime XML + XSD
+  - Choice
+  - Sequence
+  - Status
+  - principal gap remanescente, se houver
+- exigir que divergências ou limitações sejam registradas por provider, e não apenas de forma global
+- quando a change não alcançar runtime completo para todos os providers, registrar explicitamente o motivo técnico por provider
+
 # Fluxo esperado
 
 1. Localizar a change ativa.

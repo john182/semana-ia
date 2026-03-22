@@ -24,6 +24,9 @@ public class XsdSchemaAnalyzer
             }
         }
 
+        SchemaComplexType? rootInlineType = null;
+        var rootInlineTypes = new List<SchemaComplexType>();
+
         foreach (XmlSchema schema in schemaSet.Schemas())
         {
             if (schema.TargetNamespace == DsigNamespace) continue;
@@ -32,6 +35,17 @@ public class XsdSchemaAnalyzer
             {
                 if (string.IsNullOrEmpty(rootElementName))
                     rootElementName = element.Name ?? string.Empty;
+
+                // Capture inline types from all root elements
+                if (element.ElementSchemaType is XmlSchemaComplexType inlineCt &&
+                    string.IsNullOrEmpty(inlineCt.Name))
+                {
+                    var inlineAnalyzed = AnalyzeComplexType(inlineCt, $"_anon_{element.Name}");
+                    rootInlineTypes.Add(inlineAnalyzed);
+
+                    if (rootInlineType is null)
+                        rootInlineType = inlineAnalyzed;
+                }
             }
         }
 
@@ -41,10 +55,13 @@ public class XsdSchemaAnalyzer
                 complexTypes.Add(AnalyzeComplexType(ct));
         }
 
-        return new SchemaDocument(targetNamespace, rootElementName, complexTypes);
+        // Add root inline types to the complexTypes list so they can be found by name
+        complexTypes.AddRange(rootInlineTypes);
+
+        return new SchemaDocument(targetNamespace, rootElementName, complexTypes, rootInlineType);
     }
 
-    private static SchemaComplexType AnalyzeComplexType(XmlSchemaComplexType ct)
+    private static SchemaComplexType AnalyzeComplexType(XmlSchemaComplexType ct, string? nameOverride = null)
     {
         var elements = new List<SchemaElement>();
         var annotation = GetAnnotation(ct.Annotation);
@@ -54,7 +71,7 @@ public class XsdSchemaAnalyzer
         else if (ct.ContentTypeParticle is XmlSchemaChoice topChoice)
             ExtractElements(topChoice, elements, "choice_top");
 
-        return new SchemaComplexType(ct.Name ?? "anonymous", elements, annotation);
+        return new SchemaComplexType(nameOverride ?? ct.Name ?? "anonymous", elements, annotation);
     }
 
     private static void ExtractElements(XmlSchemaGroupBase group, List<SchemaElement> elements, string? choiceGroup = null)
@@ -67,6 +84,15 @@ public class XsdSchemaAnalyzer
             {
                 case XmlSchemaElement el:
                     var isChoice = choiceGroup is not null;
+
+                    // Check for anonymous inline type
+                    SchemaComplexType? inlineType = null;
+                    if (el.ElementSchemaType is XmlSchemaComplexType inlineCt &&
+                        string.IsNullOrEmpty(inlineCt.Name))
+                    {
+                        inlineType = AnalyzeComplexType(inlineCt, $"_anon_{el.Name}");
+                    }
+
                     elements.Add(new SchemaElement(
                         Name: el.Name ?? string.Empty,
                         TypeName: el.SchemaTypeName?.Name ?? el.ElementSchemaType?.Name ?? "complex",
@@ -76,7 +102,8 @@ public class XsdSchemaAnalyzer
                         IsChoice: isChoice,
                         ChoiceGroup: choiceGroup,
                         Annotation: GetAnnotation(el.Annotation),
-                        Restriction: ExtractRestriction(el.ElementSchemaType)));
+                        Restriction: ExtractRestriction(el.ElementSchemaType),
+                        InlineType: inlineType));
                     break;
 
                 case XmlSchemaChoice choice:

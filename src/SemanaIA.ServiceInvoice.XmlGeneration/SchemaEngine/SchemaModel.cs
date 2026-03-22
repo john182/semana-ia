@@ -5,7 +5,8 @@ namespace SemanaIA.ServiceInvoice.XmlGeneration.SchemaEngine;
 public record SchemaDocument(
     string TargetNamespace,
     string RootElementName,
-    List<SchemaComplexType> ComplexTypes)
+    List<SchemaComplexType> ComplexTypes,
+    SchemaComplexType? RootInlineType = null)
 {
     public string ToMarkdownReport()
     {
@@ -47,7 +48,8 @@ public record SchemaElement(
     bool IsChoice = false,
     string? ChoiceGroup = null,
     string? Annotation = null,
-    SchemaSimpleTypeRestriction? Restriction = null);
+    SchemaSimpleTypeRestriction? Restriction = null,
+    SchemaComplexType? InlineType = null);
 
 public record SchemaSimpleTypeRestriction(
     string BaseType,
