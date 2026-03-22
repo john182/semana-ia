@@ -1,0 +1,12 @@
+{
+  "provider": "issnet",
+  "version": "1.01",
+  "description": "Regras complementares do ISSNet — usa schema DPS nacional",
+  "constants": {
+    "namespace": "http://www.sped.fazenda.gov.br/nfse"
+  },
+  "defaults": {},
+  "enums": {},
+  "formatting": {},
+  "conditionals": {}
+}

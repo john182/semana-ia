@@ -21,6 +21,9 @@ public class ProviderProfile
 
     [JsonPropertyName("conditionals")]
     public Dictionary<string, ConditionalRule>? Conditionals { get; set; }
+
+    [JsonPropertyName("bindings")]
+    public Dictionary<string, string>? Bindings { get; set; }
 }
 
 public class FormattingRule
