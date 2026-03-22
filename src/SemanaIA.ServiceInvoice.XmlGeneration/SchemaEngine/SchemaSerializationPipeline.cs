@@ -17,15 +17,15 @@ public class SchemaSerializationPipeline
         string? version = null)
     {
         var providerDir = Path.Combine(providersBaseDir, providerName);
-        var xsdDir = Path.Combine(providerDir, "xsd");
-        var rulesPath = Path.Combine(providerDir, "rules", "base-rules.json");
+        var xsdDir = Path.Combine(providerDir, ProviderProfile.XsdDirectoryName);
+        var rulesPath = Path.Combine(providerDir, ProviderProfile.RulesDirectoryName, ProviderProfile.RulesFileName);
 
         if (!Directory.Exists(xsdDir))
             return SerializationResult.Failure([new SerializationError(
                 SerializationErrorKind.SchemaError, providerName,
                 $"XSD directory not found: {xsdDir}")]);
 
-        var xsdFiles = Directory.GetFiles(xsdDir, "*.xsd");
+        var xsdFiles = Directory.GetFiles(xsdDir, ProviderProfile.XsdSearchPattern);
         if (xsdFiles.Length == 0)
             return SerializationResult.Failure([new SerializationError(
                 SerializationErrorKind.SchemaError, providerName,
@@ -71,13 +71,6 @@ public class SchemaSerializationPipeline
 
     // --- Private methods ---
 
-    private static ProviderProfile LoadProfile(string rulesPath)
-    {
-        if (!File.Exists(rulesPath))
-            return new ProviderProfile();
-
-        var json = File.ReadAllText(rulesPath);
-        return System.Text.Json.JsonSerializer.Deserialize<ProviderProfile>(json)
-               ?? new ProviderProfile();
-    }
+    private static ProviderProfile LoadProfile(string rulesPath) =>
+        ProviderProfile.LoadFromFile(rulesPath) ?? new ProviderProfile();
 }

@@ -21,7 +21,7 @@ public class SchemaSerializationPipelineTests
         var document = CreateMinimalDocument();
 
         // Act
-        var result = _sut.Execute(document, "nacional", FindProvidersDir(), version: "1.01");
+        var result = _sut.Execute(document, "nacional", TestProviderPaths.FindProvidersDir(), version: "1.01");
 
         // Assert
         result.Xml.ShouldNotBeNull($"Errors: {FormatErrors(result)}");
@@ -40,7 +40,7 @@ public class SchemaSerializationPipelineTests
         var document = new DpsDocument(); // empty — many required fields missing
 
         // Act
-        var result = _sut.Execute(document, "nacional", FindProvidersDir(), version: "1.01");
+        var result = _sut.Execute(document, "nacional", TestProviderPaths.FindProvidersDir(), version: "1.01");
 
         // Assert
         result.IsValid.ShouldBeFalse();
@@ -57,7 +57,7 @@ public class SchemaSerializationPipelineTests
         var document = CreateProductionLikeDocument();
 
         // Act
-        var result = _sut.Execute(document, "nacional", FindProvidersDir(), version: "1.01");
+        var result = _sut.Execute(document, "nacional", TestProviderPaths.FindProvidersDir(), version: "1.01");
 
         // Assert
         result.Xml.ShouldNotBeNull($"Errors: {FormatErrors(result)}");
@@ -73,7 +73,7 @@ public class SchemaSerializationPipelineTests
         var document = CreateProductionLikeDocument();
 
         // Act
-        var result = _sut.Execute(document, "nacional", FindProvidersDir(), version: "1.01");
+        var result = _sut.Execute(document, "nacional", TestProviderPaths.FindProvidersDir(), version: "1.01");
 
         // Assert
         result.Xml.ShouldNotBeNull();
@@ -168,18 +168,6 @@ public class SchemaSerializationPipelineTests
             ClassCode = "000001"
         }
     };
-
-    private static string FindProvidersDir()
-    {
-        var dir = AppContext.BaseDirectory;
-        while (dir is not null)
-        {
-            var candidate = Path.Combine(dir, "providers");
-            if (Directory.Exists(candidate)) return candidate;
-            dir = Directory.GetParent(dir)?.FullName;
-        }
-        throw new DirectoryNotFoundException("providers/ not found");
-    }
 
     private static string FormatErrors(SerializationResult result) =>
         string.Join("\n", result.Errors.Select(e => $"{e.Kind}: {e.Field} - {e.Message} {e.Details ?? ""}"));

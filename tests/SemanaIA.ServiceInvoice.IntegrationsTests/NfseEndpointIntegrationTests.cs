@@ -29,7 +29,7 @@ public class NfseEndpointIntegrationTests : IClassFixture<WebApplicationFactory<
 
         var body = await response.Content.ReadFromJsonAsync<JsonElement>();
         body.GetProperty("rootElement").GetString().ShouldBe("DPS");
-        body.GetProperty("xmlFramework").GetString().ShouldBe("XBuilder");
+        body.GetProperty("generatedBy").GetString().ShouldBe("XBuilder");
 
         var xml = body.GetProperty("xml").GetString()!;
         xml.ShouldContain("<DPS");

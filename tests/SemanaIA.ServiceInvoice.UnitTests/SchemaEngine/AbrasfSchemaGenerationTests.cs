@@ -1,7 +1,7 @@
 using System.Xml;
 using System.Xml.Linq;
 using System.Xml.Schema;
-using SemanaIA.ServiceInvoice.Infrastructure.Xml;
+using SemanaIA.ServiceInvoice.XmlGeneration.Xml;
 using SemanaIA.ServiceInvoice.XmlGeneration.SchemaEngine;
 using Shouldly;
 
@@ -19,7 +19,7 @@ public class AbrasfSchemaGenerationTests
     public void Given_AbrasfXsd_Should_ProduceSchemaDocumentWithAbrasfComplexTypes()
     {
         // Arrange
-        var xsdPath = FindXsdPath("abrasf", "wne_model_xsd_nota_fiscal_abrasf.xsd");
+        var xsdPath = TestProviderPaths.FindXsdPath("abrasf", "wne_model_xsd_nota_fiscal_abrasf.xsd");
 
         // Act
         var schema = Analyzer.Analyze(xsdPath);
@@ -34,7 +34,7 @@ public class AbrasfSchemaGenerationTests
     public void Given_AbrasfXsd_Should_CaptureSimpleTypeRestrictions()
     {
         // Arrange
-        var xsdPath = FindXsdPath("abrasf", "wne_model_xsd_nota_fiscal_abrasf.xsd");
+        var xsdPath = TestProviderPaths.FindXsdPath("abrasf", "wne_model_xsd_nota_fiscal_abrasf.xsd");
 
         // Act
         var schema = Analyzer.Analyze(xsdPath);
@@ -49,7 +49,7 @@ public class AbrasfSchemaGenerationTests
     public void Given_NacionalXsd_Should_CaptureEnumerationsFromSimpleType()
     {
         // Arrange
-        var xsdPath = FindXsdPath("nacional", "DPS_v1.01.xsd");
+        var xsdPath = TestProviderPaths.FindXsdPath("nacional", "DPS_v1.01.xsd");
 
         // Act
         var schema = Analyzer.Analyze(xsdPath);
@@ -68,7 +68,7 @@ public class AbrasfSchemaGenerationTests
     public void Given_AbrasfProvider_Should_GenerateArtifactsViaRunner()
     {
         // Arrange
-        var providersDir = FindProvidersDir();
+        var providersDir = TestProviderPaths.FindProvidersDir();
         var runner = new SchemaGenerationRunner();
 
         // Act
@@ -86,7 +86,7 @@ public class AbrasfSchemaGenerationTests
     public void Given_NacionalProvider_Should_StillGenerateCorrectly()
     {
         // Arrange
-        var providersDir = FindProvidersDir();
+        var providersDir = TestProviderPaths.FindProvidersDir();
         var runner = new SchemaGenerationRunner();
 
         // Act
@@ -237,7 +237,7 @@ public class AbrasfSchemaGenerationTests
     private static List<string> ValidateAgainstNacionalDpsXsd(string xml)
     {
         var errors = new List<string>();
-        var xsdDir = FindXsdDir("nacional");
+        var xsdDir = TestProviderPaths.FindXsdDir("nacional");
 
         var schemaSet = new XmlSchemaSet();
         var dsigPath = Path.Combine(xsdDir, "xmldsig-core-schema.xsd");
@@ -263,39 +263,4 @@ public class AbrasfSchemaGenerationTests
         return errors;
     }
 
-    private static string FindXsdPath(string provider, string fileName)
-    {
-        var dir = AppContext.BaseDirectory;
-        while (dir is not null)
-        {
-            var candidate = Path.Combine(dir, "providers", provider, "xsd", fileName);
-            if (File.Exists(candidate)) return candidate;
-            dir = Directory.GetParent(dir)?.FullName;
-        }
-        throw new FileNotFoundException($"XSD not found: {provider}/{fileName}");
-    }
-
-    private static string FindXsdDir(string provider)
-    {
-        var dir = AppContext.BaseDirectory;
-        while (dir is not null)
-        {
-            var candidate = Path.Combine(dir, "providers", provider, "xsd");
-            if (Directory.Exists(candidate)) return candidate;
-            dir = Directory.GetParent(dir)?.FullName;
-        }
-        throw new DirectoryNotFoundException($"XSD dir not found for provider: {provider}");
-    }
-
-    private static string FindProvidersDir()
-    {
-        var dir = AppContext.BaseDirectory;
-        while (dir is not null)
-        {
-            var candidate = Path.Combine(dir, "providers");
-            if (Directory.Exists(candidate)) return candidate;
-            dir = Directory.GetParent(dir)?.FullName;
-        }
-        throw new DirectoryNotFoundException("providers/ not found");
-    }
 }

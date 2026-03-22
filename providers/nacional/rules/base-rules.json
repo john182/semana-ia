@@ -2,6 +2,7 @@
   "provider": "nacional",
   "version": "1.01",
   "description": "Regras derivadas do serializer manual NationalDpsManualSerializer — baseline da POC",
+  "municipalityCodes": [],
   "constants": {
     "dpsVersion": "1.01",
     "dpsNamespace": "http://www.sped.fazenda.gov.br/nfse",

@@ -3,8 +3,11 @@
 ## Objetivo
 Melhorar a análise de código front-end em TypeScript e Angular na POC.
 
+## Estado atual
+LSP ativo.
+
 ## Onde ajuda mais
-- navegação entre componentes, services e models
+- navegação entre components, services, models e interfaces
 - entendimento de referências
 - revisão de mudanças
 - análise de impacto entre arquivos
@@ -23,6 +26,3 @@ Melhorar a análise de código front-end em TypeScript e Angular na POC.
 
 ## Prioridade
 Alta
-
-## Observação
-É o segundo LSP prioritário da POC, junto com C#.

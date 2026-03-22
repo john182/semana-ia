@@ -2,6 +2,7 @@
   "provider": "issnet",
   "version": "1.01",
   "description": "Regras complementares do ISSNet — usa schema DPS nacional com envelope LoteDps",
+  "municipalityCodes": ["3509502"],
   "constants": {
     "namespace": "http://www.sped.fazenda.gov.br/nfse"
   },

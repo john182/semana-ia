@@ -136,7 +136,7 @@ public class AbrasfXsdValidationTests
     private static List<string> ValidateAgainstAbrasfXsd(string xml)
     {
         var errors = new List<string>();
-        var xsdDir = FindXsdDir("abrasf");
+        var xsdDir = TestProviderPaths.FindXsdDir("abrasf");
 
         var schemaSet = new XmlSchemaSet();
         var corePath = Path.Combine(xsdDir, "wne_model_xsd_nota_fiscal_abrasf_core.xsd");
@@ -161,15 +161,4 @@ public class AbrasfXsdValidationTests
         return errors;
     }
 
-    private static string FindXsdDir(string provider)
-    {
-        var dir = AppContext.BaseDirectory;
-        while (dir is not null)
-        {
-            var candidate = Path.Combine(dir, "providers", provider, "xsd");
-            if (Directory.Exists(candidate)) return candidate;
-            dir = Directory.GetParent(dir)?.FullName;
-        }
-        throw new DirectoryNotFoundException($"XSD dir not found: {provider}");
-    }
 }

@@ -17,7 +17,7 @@ public class GissonlineSchemaGenerationTests
     public void Given_GissonlineXsd_Should_ProduceSchemaDocumentWithGissonlineComplexTypes()
     {
         // Arrange
-        var xsdPath = FindXsdPath("gissonline", "enviar-lote-rps-envio-v2_04.xsd");
+        var xsdPath = TestProviderPaths.FindXsdPath("gissonline", "enviar-lote-rps-envio-v2_04.xsd");
 
         // Act
         var schema = Analyzer.Analyze(xsdPath);
@@ -36,7 +36,7 @@ public class GissonlineSchemaGenerationTests
     public void Given_GissonlineProvider_Should_GenerateArtifactsViaRunner()
     {
         // Arrange
-        var providersDir = FindProvidersDir();
+        var providersDir = TestProviderPaths.FindProvidersDir();
         var runner = new SchemaGenerationRunner();
 
         // Act
@@ -57,7 +57,7 @@ public class GissonlineSchemaGenerationTests
     public void Given_GissonlineXsd_Should_LoadAndCompileWithoutErrors()
     {
         // Arrange & Act
-        var xsdDir = FindXsdDir("gissonline");
+        var xsdDir = TestProviderPaths.FindXsdDir("gissonline");
         var schemaSet = new XmlSchemaSet();
         var dsigPath = Path.Combine(xsdDir, "xmldsig-core-schema20020212.xsd");
         using (var dsigReader = XmlReader.Create(dsigPath, new XmlReaderSettings { DtdProcessing = DtdProcessing.Parse }))
@@ -75,7 +75,7 @@ public class GissonlineSchemaGenerationTests
     public void Given_GissonlineSchema_Should_ContainLoteRpsComplexType()
     {
         // Arrange
-        var xsdPath = FindXsdPath("gissonline", "enviar-lote-rps-envio-v2_04.xsd");
+        var xsdPath = TestProviderPaths.FindXsdPath("gissonline", "enviar-lote-rps-envio-v2_04.xsd");
 
         // Act
         var schema = Analyzer.Analyze(xsdPath);
@@ -233,7 +233,7 @@ public class GissonlineSchemaGenerationTests
     public void Given_NacionalProvider_Should_StillGenerateCorrectly()
     {
         // Arrange
-        var providersDir = FindProvidersDir();
+        var providersDir = TestProviderPaths.FindProvidersDir();
         var runner = new SchemaGenerationRunner();
 
         // Act
@@ -248,7 +248,7 @@ public class GissonlineSchemaGenerationTests
     public void Given_AbrasfProvider_Should_StillGenerateCorrectly()
     {
         // Arrange
-        var providersDir = FindProvidersDir();
+        var providersDir = TestProviderPaths.FindProvidersDir();
         var runner = new SchemaGenerationRunner();
 
         // Act
@@ -266,7 +266,7 @@ public class GissonlineSchemaGenerationTests
     private static List<string> ValidateAgainstGissonlineXsd(string xml)
     {
         var errors = new List<string>();
-        var xsdDir = FindXsdDir("gissonline");
+        var xsdDir = TestProviderPaths.FindXsdDir("gissonline");
 
         var schemaSet = new XmlSchemaSet();
         var dsigPath = Path.Combine(xsdDir, "xmldsig-core-schema20020212.xsd");
@@ -290,39 +290,4 @@ public class GissonlineSchemaGenerationTests
         return errors;
     }
 
-    private static string FindXsdPath(string provider, string fileName)
-    {
-        var dir = AppContext.BaseDirectory;
-        while (dir is not null)
-        {
-            var candidate = Path.Combine(dir, "providers", provider, "xsd", fileName);
-            if (File.Exists(candidate)) return candidate;
-            dir = Directory.GetParent(dir)?.FullName;
-        }
-        throw new FileNotFoundException($"XSD not found: {provider}/{fileName}");
-    }
-
-    private static string FindXsdDir(string provider)
-    {
-        var dir = AppContext.BaseDirectory;
-        while (dir is not null)
-        {
-            var candidate = Path.Combine(dir, "providers", provider, "xsd");
-            if (Directory.Exists(candidate)) return candidate;
-            dir = Directory.GetParent(dir)?.FullName;
-        }
-        throw new DirectoryNotFoundException($"XSD dir not found: {provider}");
-    }
-
-    private static string FindProvidersDir()
-    {
-        var dir = AppContext.BaseDirectory;
-        while (dir is not null)
-        {
-            var candidate = Path.Combine(dir, "providers");
-            if (Directory.Exists(candidate)) return candidate;
-            dir = Directory.GetParent(dir)?.FullName;
-        }
-        throw new DirectoryNotFoundException("providers/ not found");
-    }
 }

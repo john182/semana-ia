@@ -1,13 +1,11 @@
 # LSP da POC
 
 ## Objetivo
-Documentar os LSPs que podem melhorar a qualidade do fluxo da POC.
+Documentar os LSPs ativos e planejados que melhoram a qualidade do fluxo da POC.
 
-## Estratégia
-Nesta POC, a pasta `lsp/` começa como documentação e planejamento.
-A ativação prática pode ser feita depois, de forma incremental.
+## Estado atual
+Atualmente a POC já possui LSP ativo para:
 
-## Prioridades
 1. C#
 2. TypeScript
 
@@ -20,14 +18,22 @@ A ativação prática pode ser feita depois, de forma incremental.
 - refatorações mais seguras
 - melhor suporte à criação de testes
 
-## Regra da POC
-Não tentar ativar tudo de uma vez.
-Começar pelas linguagens que mais impactam o fluxo real do estudo.
+## Papel no fluxo
+Os LSPs ativos devem ser usados como apoio principalmente em:
+- implementação
+- revisão técnica
+- análise de impacto
+- localização de componentes equivalentes
+- detecção de pontos de reutilização
+- validação de aderência arquitetural
 
-## Ordem sugerida
+## Regra da POC
+Não ativar LSP desnecessário.
+Manter apenas os LSPs que trazem ganho real para o fluxo atual.
+
+## Prioridades atuais
 1. C#
 2. TypeScript
 
 ## Observação
-A pasta `lsp/` organiza intenção, estratégia e contexto.
-A configuração concreta pode ser adicionada depois.
+A pasta `lsp/` documenta o estado atual, os casos de uso e a estratégia de evolução dos LSPs da POC.

@@ -2,6 +2,7 @@
   "provider": "abrasf",
   "version": "2.04",
   "description": "Regras complementares do ABRASF — a maioria das regras é inferida do XSD",
+  "municipalityCodes": [],
   "constants": {
     "namespace": "http://www.abrasf.org.br/nfse.xsd",
     "countryBRA": "BRA"

@@ -1,6 +1,6 @@
 using System.Globalization;
 using SemanaIA.ServiceInvoice.Domain.Models;
-using SemanaIA.ServiceInvoice.Infrastructure.Xml;
+using SemanaIA.ServiceInvoice.XmlGeneration.Xml;
 using SemanaIA.ServiceInvoice.XmlGeneration.Services;
 
 namespace SemanaIA.ServiceInvoice.XmlGeneration.Manual;

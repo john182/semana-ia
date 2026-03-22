@@ -5,6 +5,7 @@ Centralizar a documentação dos MCPs usados ou planejados na POC de estudo sobr
 
 ## Servidor MCP atual
 - Nome: `spec-assistant`
+- Estado: ativo
 
 ## Registro
 O servidor MCP é registrado na raiz do projeto em `.mcp.json`.
@@ -29,7 +30,7 @@ O MCP atual existe para apoiar o fluxo spec-driven, especialmente em:
 - leitura e interpretação de specs
 - apoio ao entendimento de proposal e tasks
 - apoio ao fluxo de aplicação de change
-- possível enriquecimento do `spec-agent`
+- enriquecimento do `spec-agent`
 
 ## Estratégia da POC
 Nesta POC:
@@ -39,7 +40,6 @@ Nesta POC:
 
 ## Próximos MCPs possíveis
 - GitHub
-- Azure DevOps
 - documentação externa
 - observabilidade
 

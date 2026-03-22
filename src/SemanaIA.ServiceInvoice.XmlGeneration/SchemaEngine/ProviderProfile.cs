@@ -1,9 +1,31 @@
+using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace SemanaIA.ServiceInvoice.XmlGeneration.SchemaEngine;
 
 public class ProviderProfile
 {
+    public const string XsdDirectoryName = "xsd";
+    public const string XsdSearchPattern = "*.xsd";
+    public const string RulesDirectoryName = "rules";
+    public const string RulesFileName = "base-rules.json";
+
+    public static ProviderProfile? LoadFromFile(string path)
+    {
+        if (!File.Exists(path))
+            return null;
+
+        try
+        {
+            var json = File.ReadAllText(path);
+            return JsonSerializer.Deserialize<ProviderProfile>(json);
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
     [JsonPropertyName("provider")]
     public string Provider { get; set; } = string.Empty;
 
@@ -36,6 +58,9 @@ public class ProviderProfile
 
     [JsonPropertyName("bindings")]
     public Dictionary<string, string>? Bindings { get; set; }
+
+    [JsonPropertyName("municipalityCodes")]
+    public List<string>? MunicipalityCodes { get; init; }
 }
 
 public class FormattingRule

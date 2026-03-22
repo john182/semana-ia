@@ -11,7 +11,7 @@ public class XsdSchemaAnalyzerTests
     public void Given_NacionalDpsXsd_Should_ProduceSchemaDocumentWithMainComplexTypes()
     {
         // Arrange
-        var xsdPath = FindXsdPath("DPS_v1.01.xsd");
+        var xsdPath = TestProviderPaths.FindXsdPath("nacional", "DPS_v1.01.xsd");
 
         // Act
         var result = _sut.Analyze(xsdPath);
@@ -34,7 +34,7 @@ public class XsdSchemaAnalyzerTests
     public void Given_NacionalDpsXsd_Should_ContainTCInfDPSWithRequiredAndOptionalElements()
     {
         // Arrange
-        var xsdPath = FindXsdPath("DPS_v1.01.xsd");
+        var xsdPath = TestProviderPaths.FindXsdPath("nacional", "DPS_v1.01.xsd");
 
         // Act
         var result = _sut.Analyze(xsdPath);
@@ -57,7 +57,7 @@ public class XsdSchemaAnalyzerTests
     public void Given_NacionalDpsXsd_Should_IdentifyChoiceGroupsInPrestador()
     {
         // Arrange
-        var xsdPath = FindXsdPath("DPS_v1.01.xsd");
+        var xsdPath = TestProviderPaths.FindXsdPath("nacional", "DPS_v1.01.xsd");
 
         // Act
         var result = _sut.Analyze(xsdPath);
@@ -80,7 +80,7 @@ public class XsdSchemaAnalyzerTests
     public void Given_NacionalDpsXsd_Should_GenerateMarkdownReport()
     {
         // Arrange
-        var xsdPath = FindXsdPath("DPS_v1.01.xsd");
+        var xsdPath = TestProviderPaths.FindXsdPath("nacional", "DPS_v1.01.xsd");
 
         // Act
         var result = _sut.Analyze(xsdPath);
@@ -93,19 +93,4 @@ public class XsdSchemaAnalyzerTests
         report.ShouldContain("yes");
     }
 
-    // ==========================================================
-    // Helpers privados (final da classe)
-    // ==========================================================
-
-    private static string FindXsdPath(string fileName)
-    {
-        var dir = AppContext.BaseDirectory;
-        while (dir is not null)
-        {
-            var candidate = Path.Combine(dir, "providers", "nacional", "xsd", fileName);
-            if (File.Exists(candidate)) return candidate;
-            dir = Directory.GetParent(dir)?.FullName;
-        }
-        throw new FileNotFoundException($"XSD not found: {fileName}");
-    }
 }

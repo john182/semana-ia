@@ -1,20 +1,19 @@
 using SemanaIA.ServiceInvoice.Domain.Models;
-using SemanaIA.ServiceInvoice.XmlGeneration.Manual;
-using SemanaIA.ServiceInvoice.XmlGeneration.Services;
+using SemanaIA.ServiceInvoice.Domain.Services;
 
 namespace SemanaIA.ServiceInvoice.Application;
 
 public class GenerateNfseXmlUseCase
 {
-    private readonly NationalDpsManualSerializer _serializer;
+    private readonly INfseXmlGenerator _xmlGenerator;
 
-    public GenerateNfseXmlUseCase(NationalDpsManualSerializer serializer)
+    public GenerateNfseXmlUseCase(INfseXmlGenerator xmlGenerator)
     {
-        _serializer = serializer;
+        _xmlGenerator = xmlGenerator;
     }
 
-    public GeneratedXmlResult Execute(DpsDocument document)
+    public NfseXmlGenerationResult Execute(DpsDocument document)
     {
-        return _serializer.Serialize(document);
+        return _xmlGenerator.Generate(document);
     }
 }
