@@ -427,26 +427,26 @@ public class AllProvidersXsdValidationSummaryTests
         var report = new StringBuilder();
         report.AppendLine("# Runtime Serializer XSD Validation Summary");
         report.AppendLine();
-        report.AppendLine("| Provider | Schema Root | Namespace | XSD Valid | Onboarding Status | Gap Classification | Choice | Sequence |");
-        report.AppendLine("|----------|------------|-----------|----------|-------------------|-------------------|--------|----------|");
+        report.AppendLine("| Provider | Schema Root | Namespace | XSD Valid | OperationalStatus | Onboarding Status | Gap Classification | Choice | Sequence |");
+        report.AppendLine("|----------|------------|-----------|----------|-------------------|-------------------|-------------------|--------|----------|");
 
         // Nacional
         var nacSchema = AnalyzeProvider("nacional", "DPS_v1.01.xsd");
         var nacResult = TestProvider("nacional", "DPS_v1.01.xsd", "TCDPS", "DPS", NacionalMinimalData(), "1.01");
         var nacOnboarding = FindOnboardingReport(allOnboardingReports, "nacional");
-        report.AppendLine($"| Nacional | TCDPS/DPS | {FormatNamespaceType(nacSchema)} | {FormatValidationStatus(nacResult)} | {FormatOnboardingStatus(nacOnboarding)} | {FormatGapClassification(nacOnboarding)} | CNPJ/CPF/NIF/cNaoNIF | tpAmb->valores |");
+        report.AppendLine($"| Nacional | TCDPS/DPS | {FormatNamespaceType(nacSchema)} | {FormatValidationStatus(nacResult)} | {FormatOperationalStatusEnum(nacOnboarding)} | {FormatOnboardingStatus(nacOnboarding)} | {FormatGapClassification(nacOnboarding)} | CNPJ/CPF/NIF/cNaoNIF | tpAmb->valores |");
 
         // ABRASF
         var abrasfSchema = AnalyzeProvider("abrasf", "wne_model_xsd_nota_fiscal_abrasf.xsd");
         var abrasfResult = TestProvider("abrasf", "wne_model_xsd_nota_fiscal_abrasf.xsd", "_anon_EnviarLoteRpsEnvio", "EnviarLoteRpsEnvio", AbrasfMinimalData(), null);
         var abrasfOnboarding = FindOnboardingReport(allOnboardingReports, "abrasf");
-        report.AppendLine($"| ABRASF | EnviarLoteRpsEnvio (inline) | {FormatNamespaceType(abrasfSchema)} | {FormatValidationStatus(abrasfResult)} | {FormatOnboardingStatus(abrasfOnboarding)} | {FormatGapClassification(abrasfOnboarding)} | Cpf/Cnpj choice | NumeroLote->ListaRps |");
+        report.AppendLine($"| ABRASF | EnviarLoteRpsEnvio (inline) | {FormatNamespaceType(abrasfSchema)} | {FormatValidationStatus(abrasfResult)} | {FormatOperationalStatusEnum(abrasfOnboarding)} | {FormatOnboardingStatus(abrasfOnboarding)} | {FormatGapClassification(abrasfOnboarding)} | Cpf/Cnpj choice | NumeroLote->ListaRps |");
 
         // GISSOnline
         var gissSchema = AnalyzeProvider("gissonline", "enviar-lote-rps-envio-v2_04.xsd");
         var gissResult = TestProvider("gissonline", "enviar-lote-rps-envio-v2_04.xsd", "_anon_EnviarLoteRpsEnvio", "EnviarLoteRpsEnvio", GissonlineMinimalData(), null);
         var gissOnboarding = FindOnboardingReport(allOnboardingReports, "gissonline");
-        report.AppendLine($"| GISSOnline | EnviarLoteRpsEnvio (inline) | {FormatNamespaceType(gissSchema)} | {FormatValidationStatus(gissResult)} | {FormatOnboardingStatus(gissOnboarding)} | {FormatGapClassification(gissOnboarding)} | Cpf/Cnpj choice | NumeroLote->ListaRps+IBSCBS |");
+        report.AppendLine($"| GISSOnline | EnviarLoteRpsEnvio (inline) | {FormatNamespaceType(gissSchema)} | {FormatValidationStatus(gissResult)} | {FormatOperationalStatusEnum(gissOnboarding)} | {FormatOnboardingStatus(gissOnboarding)} | {FormatGapClassification(gissOnboarding)} | Cpf/Cnpj choice | NumeroLote->ListaRps+IBSCBS |");
 
         // ISSNet
         var issnetSchema = AnalyzeProvider("issnet", "schema_v101.xsd");
@@ -459,7 +459,7 @@ public class AllProvidersXsdValidationSummaryTests
             issnetProfile.RootComplexTypeName!, issnetProfile.RootElementName!,
             TestProviderPaths.FindXsdDir("issnet"));
         var issnetOnboarding = FindOnboardingReport(allOnboardingReports, "issnet");
-        report.AppendLine($"| ISSNet | EnviarLoteDpsEnvio (inline) | {FormatNamespaceType(issnetSchema)} | {FormatValidationStatus(issnetResult)} | {FormatOnboardingStatus(issnetOnboarding)} | {FormatGapClassification(issnetOnboarding)} | CNPJ/CPF choice | LoteDps->ListaDps->DPS via binder |");
+        report.AppendLine($"| ISSNet | EnviarLoteDpsEnvio (inline) | {FormatNamespaceType(issnetSchema)} | {FormatValidationStatus(issnetResult)} | {FormatOperationalStatusEnum(issnetOnboarding)} | {FormatOnboardingStatus(issnetOnboarding)} | {FormatGapClassification(issnetOnboarding)} | CNPJ/CPF choice | LoteDps->ListaDps->DPS via binder |");
 
         // Paulistana — attempt runtime XML generation
         var paulistanaSchema = AnalyzeProvider("paulistana", "PedidoEnvioLoteRPS_v02.xsd");
@@ -471,7 +471,7 @@ public class AllProvidersXsdValidationSummaryTests
         var paulistanaGapDetail = paulistanaRuntimeResult is not null && !paulistanaRuntimeResult.IsValid
             ? FormatGapClassification(paulistanaOnboarding)
             : FormatGapClassification(paulistanaOnboarding);
-        report.AppendLine($"| Paulistana | PedidoEnvioLoteRPS (inline) | {FormatNamespaceType(paulistanaSchema)} | {paulistanaXsdStatus} | {FormatOnboardingStatus(paulistanaOnboarding)} | {paulistanaGapDetail} | CPF/CNPJ | Cabecalho->ListaRPS |");
+        report.AppendLine($"| Paulistana | PedidoEnvioLoteRPS (inline) | {FormatNamespaceType(paulistanaSchema)} | {paulistanaXsdStatus} | {FormatOperationalStatusEnum(paulistanaOnboarding)} | {FormatOnboardingStatus(paulistanaOnboarding)} | {paulistanaGapDetail} | CPF/CNPJ | Cabecalho->ListaRPS |");
 
         // Simpliss — attempt runtime XML generation
         var simplissIncluded = ProviderXsdDirExists("simpliss");
@@ -486,7 +486,7 @@ public class AllProvidersXsdValidationSummaryTests
             var simplissXsdStatus = simplissRuntimeResult is not null
                 ? FormatValidationStatus(simplissRuntimeResult)
                 : $"ANALYZED ({simplissSchema.ComplexTypes.Count} types)";
-            report.AppendLine($"| Simpliss | nfse (ABRASF-based) | {FormatNamespaceType(simplissSchema)} | {simplissXsdStatus} | {FormatOnboardingStatus(simplissOnboarding)} | {FormatGapClassification(simplissOnboarding)} | Cpf/Cnpj | NumeroLote->ListaRps |");
+            report.AppendLine($"| Simpliss | nfse (ABRASF-based) | {FormatNamespaceType(simplissSchema)} | {simplissXsdStatus} | {FormatOperationalStatusEnum(simplissOnboarding)} | {FormatOnboardingStatus(simplissOnboarding)} | {FormatGapClassification(simplissOnboarding)} | Cpf/Cnpj | NumeroLote->ListaRps |");
         }
 
         var totalProviders = simplissIncluded ? 6 : 5;
@@ -524,15 +524,15 @@ public class AllProvidersXsdValidationSummaryTests
         report.AppendLine();
         report.AppendLine("## Onboarding Status");
         report.AppendLine();
-        report.AppendLine("| Provider | Status | Checks Passed | Total Checks | Failed Checks |");
-        report.AppendLine("|----------|--------|---------------|--------------|---------------|");
+        report.AppendLine("| Provider | OperationalStatus | Status | Checks Passed | Total Checks | Failed Checks |");
+        report.AppendLine("|----------|-------------------|--------|---------------|--------------|---------------|");
         foreach (var onboarding in allOnboardingReports)
         {
             var passedCount = onboarding.Checks.Count(c => c.Passed);
             var totalCount = onboarding.Checks.Count;
             var failedChecks = onboarding.Checks.Where(c => !c.Passed).Select(c => c.Name).ToList();
             var failedDisplay = failedChecks.Count > 0 ? string.Join(", ", failedChecks) : "None";
-            report.AppendLine($"| {onboarding.ProviderName} | {FormatOnboardingStatus(onboarding)} | {passedCount} | {totalCount} | {failedDisplay} |");
+            report.AppendLine($"| {onboarding.ProviderName} | {FormatOperationalStatusEnum(onboarding)} | {FormatOnboardingStatus(onboarding)} | {passedCount} | {totalCount} | {failedDisplay} |");
         }
 
         report.AppendLine();
@@ -596,14 +596,15 @@ public class AllProvidersXsdValidationSummaryTests
         report.AppendLine();
         report.AppendLine("## Provider Status Overview");
         report.AppendLine();
-        report.AppendLine("| Provider | Status | SchemaLoadable | AnalysisOk | BindingsPresent | RuntimeProducible | XsdValid |");
-        report.AppendLine("|----------|--------|----------------|------------|-----------------|-------------------|----------|");
+        report.AppendLine("| Provider | OperationalStatus | Status | SchemaLoadable | AnalysisOk | BindingsPresent | RuntimeProducible | XsdValid |");
+        report.AppendLine("|----------|-------------------|--------|----------------|------------|-----------------|-------------------|----------|");
 
         foreach (var providerReport in allReports)
         {
+            var operationalStatus = providerReport.OperationalStatus.ToString();
             var status = FormatOnboardingStatus(providerReport);
             var checkResults = FormatCheckResults(providerReport);
-            report.AppendLine($"| {providerReport.ProviderName} | {status} | {checkResults["SchemaLoadable"]} | {checkResults["AnalysisOk"]} | {checkResults["BindingsPresent"]} | {checkResults["RuntimeProducible"]} | {checkResults["XsdValid"]} |");
+            report.AppendLine($"| {providerReport.ProviderName} | {operationalStatus} | {status} | {checkResults["SchemaLoadable"]} | {checkResults["AnalysisOk"]} | {checkResults["BindingsPresent"]} | {checkResults["RuntimeProducible"]} | {checkResults["XsdValid"]} |");
         }
 
         var fullyOnboarded = allReports.Count(r => r.IsFullyOnboarded);
@@ -628,11 +629,12 @@ public class AllProvidersXsdValidationSummaryTests
             report.AppendLine();
             report.AppendLine("## Gaps by Classification");
             report.AppendLine();
-            report.AppendLine("| Provider | Check | Gap Kind | Details |");
-            report.AppendLine("|----------|-------|----------|---------|");
+            report.AppendLine("| Provider | Check | Gap Kind | Details | Actionable Recommendation |");
+            report.AppendLine("|----------|-------|----------|---------|---------------------------|");
             foreach (var gap in allGaps)
             {
-                report.AppendLine($"| {gap.Provider} | {gap.Check.Name} | {gap.Check.GapKind?.ToString() ?? "Unknown"} | {gap.Check.Details ?? "No details"} |");
+                var recommendation = gap.Check.ActionableRecommendation ?? "No recommendation";
+                report.AppendLine($"| {gap.Provider} | {gap.Check.Name} | {gap.Check.GapKind?.ToString() ?? "Unknown"} | {gap.Check.Details ?? "No details"} | {recommendation} |");
             }
         }
 
@@ -656,6 +658,42 @@ public class AllProvidersXsdValidationSummaryTests
             var engineProviders = string.Join(", ", engineGaps.Select(g => g.Provider).Distinct());
             report.AppendLine($"| Development | Engine or serializer changes needed | {engineProviders} |");
         }
+
+        // Onboarding Workflow Documentation
+        report.AppendLine();
+        report.AppendLine("## Onboarding Workflow");
+        report.AppendLine();
+        report.AppendLine("### Step-by-step via API");
+        report.AppendLine();
+        report.AppendLine("1. **Upload schemas and define municipalities:**");
+        report.AppendLine("   ```");
+        report.AppendLine("   POST /api/v1/providers/onboard");
+        report.AppendLine("   Content-Type: multipart/form-data");
+        report.AppendLine("   - providerName: \"my-provider\"");
+        report.AppendLine("   - xsdFiles: [schema.xsd, tipos.xsd]");
+        report.AppendLine("   - municipalityCodes: \"3550308,3106200\"");
+        report.AppendLine("   ```");
+        report.AppendLine("   The engine auto-analyzes the schema, generates config, and returns an OnboardingReport.");
+        report.AppendLine();
+        report.AppendLine("2. **Check onboarding status:**");
+        report.AppendLine("   ```");
+        report.AppendLine("   GET /api/v1/providers/{name}/status");
+        report.AppendLine("   ```");
+        report.AppendLine("   Returns the full OnboardingReport with OperationalStatus and actionable recommendations.");
+        report.AppendLine();
+        report.AppendLine("3. **If `SupportConfigOnly`:** Review and adjust `providers/{name}/rules/base-rules.json`.");
+        report.AppendLine("   - The generated config is at `providers/{name}/generated/suggested-rules.json`.");
+        report.AppendLine("   - Copy useful bindings from suggested-rules.json to base-rules.json.");
+        report.AppendLine("   - Complete any `TODO: manual mapping required` bindings.");
+        report.AppendLine("   - Re-check status with `GET /api/v1/providers/{name}/status`.");
+        report.AppendLine();
+        report.AppendLine("4. **If `NeedsEngineering`:** Escalate to development.");
+        report.AppendLine("   - Engine gaps require code changes to the serializer or analyzer.");
+        report.AppendLine("   - Schema incompatibilities need investigation of the XSD structure.");
+        report.AppendLine();
+        report.AppendLine("5. **If `SupportReady`:** Provider is fully operational.");
+        report.AppendLine("   - The provider can be used for NFS-e XML generation.");
+        report.AppendLine("   - Monitor via `GET /api/v1/providers` for a list of all providers with their status.");
 
         var reportPath = Path.Combine(providersDir, "onboarding-report.md");
         File.WriteAllText(reportPath, report.ToString());
@@ -836,6 +874,12 @@ public class AllProvidersXsdValidationSummaryTests
 
     private static OnboardingReport? FindOnboardingReport(List<OnboardingReport> reports, string providerName) =>
         reports.FirstOrDefault(r => string.Equals(r.ProviderName, providerName, StringComparison.OrdinalIgnoreCase));
+
+    private static string FormatOperationalStatusEnum(OnboardingReport? report)
+    {
+        if (report is null) return "Unknown";
+        return report.OperationalStatus.ToString();
+    }
 
     private static string FormatOnboardingStatus(OnboardingReport? report)
     {

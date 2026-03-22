@@ -1,15 +1,38 @@
 {
   "provider": "simpliss",
   "version": "2.03",
-  "description": "Regras complementares do Simpliss — usa schema ABRASF v2.03",
+  "description": "Regras complementares do Simpliss - usa schema ABRASF v2.03",
   "rootComplexTypeName": "_anon_EnviarLoteRpsEnvio",
   "rootElementName": "EnviarLoteRpsEnvio",
   "municipalityCodes": ["3106200"],
   "constants": {
     "namespace": "http://www.abrasf.org.br/nfse.xsd"
   },
+  "bindingPathPrefix": "LoteRps.ListaRps.Rps",
+  "wrapperBindings": {
+    "LoteRps.@Id": "const:lote1",
+    "LoteRps.@versao": "const:2.03",
+    "LoteRps.NumeroLote": "const:1",
+    "LoteRps.CpfCnpj.Cnpj": "Provider.Cnpj | padLeft:14:0",
+    "LoteRps.InscricaoMunicipal": "Provider.MunicipalTaxNumber",
+    "LoteRps.QuantidadeRps": "const:1"
+  },
   "defaults": {},
   "enums": {},
   "formatting": {},
-  "conditionals": {}
+  "conditionals": {},
+  "bindings": {
+    "InfDeclaracaoPrestacaoServico.Competencia": "CompetenceDate | format:yyyy-MM-dd",
+    "InfDeclaracaoPrestacaoServico.Servico.Valores.ValorServicos": "Values.ServicesAmount | decimal:2",
+    "InfDeclaracaoPrestacaoServico.Servico.IssRetido": "const:2",
+    "InfDeclaracaoPrestacaoServico.Servico.ItemListaServico": "Service.FederalServiceCode",
+    "InfDeclaracaoPrestacaoServico.Servico.CodigoNbs": "Service.NbsCode",
+    "InfDeclaracaoPrestacaoServico.Servico.Discriminacao": "Service.Description",
+    "InfDeclaracaoPrestacaoServico.Servico.CodigoMunicipio": "Service.MunicipalityCode",
+    "InfDeclaracaoPrestacaoServico.Servico.ExigibilidadeISS": "const:1",
+    "InfDeclaracaoPrestacaoServico.Prestador.CpfCnpj.Cnpj": "Provider.Cnpj | padLeft:14:0",
+    "InfDeclaracaoPrestacaoServico.Prestador.InscricaoMunicipal": "Provider.MunicipalTaxNumber",
+    "InfDeclaracaoPrestacaoServico.OptanteSimplesNacional": "Provider.TaxRegime | nullable:2",
+    "InfDeclaracaoPrestacaoServico.IncentivoFiscal": "const:2"
+  }
 }
