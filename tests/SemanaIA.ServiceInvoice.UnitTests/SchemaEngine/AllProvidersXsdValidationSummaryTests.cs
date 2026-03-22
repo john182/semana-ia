@@ -1,5 +1,7 @@
 using System.Text;
+using System.Text.Json;
 using System.Xml.Linq;
+using SemanaIA.ServiceInvoice.Domain.Models;
 using SemanaIA.ServiceInvoice.XmlGeneration.SchemaEngine;
 using Shouldly;
 
@@ -14,6 +16,7 @@ public class AllProvidersXsdValidationSummaryTests
 {
     private static readonly SchemaBasedXmlSerializer Serializer = new();
     private static readonly XsdSchemaAnalyzer Analyzer = new();
+    private static readonly ServiceInvoiceSchemaDataBinder Binder = new();
 
     // ==========================================================
     // Nacional — pipeline end-to-end with XSD validation
@@ -295,6 +298,104 @@ public class AllProvidersXsdValidationSummaryTests
         schema.RootInlineType!.Elements.Count.ShouldBeGreaterThan(0);
     }
 
+    [Fact]
+    public void Given_IssnetMinimalDataViaBinder_Should_ProduceXsdValidXml()
+    {
+        // Arrange
+        var schema = AnalyzeProvider("issnet", "schema_v101.xsd");
+        var profile = LoadIssnetProfile();
+        var resolver = new ProviderRuleResolver(profile);
+        var document = CreateIssnetMinimalDocument();
+        var data = Binder.Bind(document, profile);
+
+        // Act
+        var result = Serializer.SerializeAndValidate(
+            schema, data, resolver,
+            profile.RootComplexTypeName!, profile.RootElementName!,
+            FindXsdDir("issnet"));
+
+        // Assert
+        result.Xml.ShouldNotBeNull($"Errors: {string.Join("\n", result.Errors.Select(e => $"{e.Kind}: {e.Field} - {e.Message}"))}");
+        result.ValidationErrors.ShouldBeEmpty($"ISSNet XSD errors:\n{string.Join("\n", result.ValidationErrors)}\nXML:\n{result.Xml}");
+        result.IsValid.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Given_IssnetXml_Should_EmitLoteDpsWrapperWithCorrectStructure()
+    {
+        // Arrange
+        var schema = AnalyzeProvider("issnet", "schema_v101.xsd");
+        var profile = LoadIssnetProfile();
+        var resolver = new ProviderRuleResolver(profile);
+        var document = CreateIssnetMinimalDocument();
+        var data = Binder.Bind(document, profile);
+
+        // Act
+        var result = Serializer.Serialize(
+            schema, data, resolver,
+            profile.RootComplexTypeName!, profile.RootElementName!);
+
+        // Assert
+        result.Xml.ShouldNotBeNull();
+        var ns = XNamespace.Get("http://www.sped.fazenda.gov.br/nfse");
+        var doc = XDocument.Parse(result.Xml!);
+
+        var root = doc.Root!;
+        root.Name.LocalName.ShouldBe("EnviarLoteDpsEnvio");
+
+        var loteDps = root.Element(ns + "LoteDps");
+        loteDps.ShouldNotBeNull("LoteDps wrapper element should be present");
+        loteDps!.Attribute("versao")?.Value.ShouldBe("1.01");
+
+        var numeroLote = loteDps.Element(ns + "NumeroLote");
+        numeroLote.ShouldNotBeNull("NumeroLote should be present inside LoteDps");
+
+        var prestador = loteDps.Element(ns + "Prestador");
+        prestador.ShouldNotBeNull("Prestador should be present inside LoteDps");
+        prestador!.Element(ns + "CNPJ").ShouldNotBeNull("Prestador CNPJ should be present");
+        prestador.Element(ns + "IM").ShouldNotBeNull("Prestador IM should be present");
+
+        var quantidadeDps = loteDps.Element(ns + "QuantidadeDps");
+        quantidadeDps.ShouldNotBeNull("QuantidadeDps should be present inside LoteDps");
+
+        var listaDps = loteDps.Element(ns + "ListaDps");
+        listaDps.ShouldNotBeNull("ListaDps should be present inside LoteDps");
+
+        var dps = listaDps!.Element(ns + "DPS");
+        dps.ShouldNotBeNull("DPS element should be present inside ListaDps");
+
+        var infDps = dps!.Element(ns + "infDPS");
+        infDps.ShouldNotBeNull("infDPS should be present inside DPS");
+    }
+
+    [Fact]
+    public void Given_IssnetBinderData_Should_PrefixAllBindingsWithLoteDpsListaDpsDps()
+    {
+        // Arrange
+        var profile = LoadIssnetProfile();
+        var document = CreateIssnetMinimalDocument();
+
+        // Act
+        var data = Binder.Bind(document, profile);
+
+        // Assert — wrapper bindings should be at top level (LoteDps.*)
+        data.ShouldContainKey("LoteDps.@versao");
+        data.ShouldContainKey("LoteDps.NumeroLote");
+        data.ShouldContainKey("LoteDps.Prestador.CNPJ");
+        data.ShouldContainKey("LoteDps.Prestador.IM");
+        data.ShouldContainKey("LoteDps.QuantidadeDps");
+
+        // Assert — regular bindings should be prefixed with LoteDps.ListaDps.DPS
+        data.ShouldContainKey("LoteDps.ListaDps.DPS.infDPS.tpAmb");
+        data.ShouldContainKey("LoteDps.ListaDps.DPS.infDPS.prest.CNPJ");
+        data.ShouldContainKey("LoteDps.ListaDps.DPS.infDPS.serv.cServ.cTribNac");
+        data.ShouldContainKey("LoteDps.ListaDps.DPS.infDPS.valores.vServPrest.vServ");
+
+        // Assert — no unprefixed binding keys should exist
+        data.Keys.Where(k => k.StartsWith("infDPS.")).ShouldBeEmpty(
+            "All infDPS bindings should be prefixed with LoteDps.ListaDps.DPS");
+    }
+
     // ==========================================================
     // Paulistana — SP municipal schema
     // ==========================================================
@@ -339,14 +440,17 @@ public class AllProvidersXsdValidationSummaryTests
         var gissResult = TestProvider("gissonline", "enviar-lote-rps-envio-v2_04.xsd", "_anon_EnviarLoteRpsEnvio", "EnviarLoteRpsEnvio", GissonlineMinimalData(), null);
         report.AppendLine($"| GISSOnline | EnviarLoteRpsEnvio (inline) | {FormatNamespaceType(gissSchema)} | {FormatValidationStatus(gissResult)} | Cpf/Cnpj choice | NumeroLote→ListaRps+IBSCBS | {DescribeValidationGap(gissResult)} |");
 
-        // ISSNet
+        // ISSNet — binder-based approach with wrapper bindings and path prefix
         var issnetSchema = AnalyzeProvider("issnet", "schema_v101.xsd");
-        var issnetData = new Dictionary<string, object?>();
-        foreach (var (k, v) in NacionalMinimalData()) issnetData[$"DPS.{k}"] = v;
-        issnetData["DPS.infDPS.prest.IM"] = "12345";
-        issnetData["DPS.infDPS.serv.cServ.cTribMun"] = "040101";
-        var issnetResult = TestProvider("issnet", "schema_v101.xsd", "_anon_EnviarLoteDpsEnvio", "EnviarLoteDpsEnvio", issnetData, null);
-        report.AppendLine($"| ISSNet | EnviarLoteDpsEnvio (inline) | {FormatNamespaceType(issnetSchema)} | {FormatValidationStatus(issnetResult)} | CNPJ/CPF choice | tpAmb→valores via DPS | {DescribeValidationGap(issnetResult)} |");
+        var issnetProfile = LoadIssnetProfile();
+        var issnetResolver = new ProviderRuleResolver(issnetProfile);
+        var issnetDocument = CreateIssnetMinimalDocument();
+        var issnetData = Binder.Bind(issnetDocument, issnetProfile);
+        var issnetResult = Serializer.SerializeAndValidate(
+            issnetSchema, issnetData, issnetResolver,
+            issnetProfile.RootComplexTypeName!, issnetProfile.RootElementName!,
+            FindXsdDir("issnet"));
+        report.AppendLine($"| ISSNet | EnviarLoteDpsEnvio (inline) | {FormatNamespaceType(issnetSchema)} | {FormatValidationStatus(issnetResult)} | CNPJ/CPF choice | LoteDps→ListaDps→DPS via binder | {DescribeValidationGap(issnetResult)} |");
 
         // Paulistana
         var paulistanaSchema = AnalyzeProvider("paulistana", "PedidoEnvioLoteRPS_v02.xsd");
@@ -381,7 +485,8 @@ public class AllProvidersXsdValidationSummaryTests
         report.AppendLine();
         report.AppendLine("| Provider | Gap | Reason |");
         report.AppendLine("|----------|-----|--------|");
-        report.AppendLine($"| ISSNet | {DescribeValidationGap(issnetResult)} | LoteDps wrapper requires specific data bindings not yet mapped |");
+        if (!issnetResult.IsValid)
+            report.AppendLine($"| ISSNet | {DescribeValidationGap(issnetResult)} | Binder-based wrapper bindings need adjustment |");
         report.AppendLine($"| Paulistana | Schema analyzed only | Data bindings not yet configured for SP municipal schema |");
         if (simplissIncluded)
             report.AppendLine($"| Simpliss | Schema analyzed only | ABRASF-based schema; data bindings not yet configured |");
@@ -392,6 +497,7 @@ public class AllProvidersXsdValidationSummaryTests
         // Assert
         File.Exists(reportPath).ShouldBeTrue();
         nacResult.IsValid.ShouldBeTrue("Nacional should be XSD valid");
+        issnetResult.IsValid.ShouldBeTrue("ISSNet should be XSD valid via binder");
     }
 
     // ==========================================================
@@ -476,6 +582,42 @@ public class AllProvidersXsdValidationSummaryTests
     // ==========================================================
     // Helpers privados (final da classe)
     // ==========================================================
+
+    private static DpsDocument CreateIssnetMinimalDocument() => new()
+    {
+        Environment = 2,
+        Version = "V_1.00.02",
+        Series = "00001",
+        Number = 1,
+        IssuedOn = new DateTimeOffset(2026, 1, 20, 10, 0, 0, TimeSpan.FromHours(-3)),
+        CompetenceDate = new DateOnly(2026, 1, 20),
+        CityServiceCode = "040101",
+        Provider = new Provider
+        {
+            Cnpj = "00000000000000",
+            MunicipalTaxNumber = "12345",
+            MunicipalityCode = "3550308"
+        },
+        Service = new Service
+        {
+            FederalServiceCode = "01.01",
+            Description = "Servico ISSNet runtime",
+            NbsCode = "101010100",
+            MunicipalityCode = "3550308"
+        },
+        Values = new Values
+        {
+            ServicesAmount = 1000.00m,
+            TaxationType = TaxationType.WithinCity
+        }
+    };
+
+    private static ProviderProfile LoadIssnetProfile()
+    {
+        var path = FindRulesPath("issnet");
+        var json = File.ReadAllText(path);
+        return JsonSerializer.Deserialize<ProviderProfile>(json)!;
+    }
 
     private static SerializationResult TestProvider(string provider, string xsdFile, string rootType, string rootElement, Dictionary<string, object?> data, string? version)
     {

@@ -90,6 +90,141 @@ public class ServiceInvoiceSchemaDataBinderTests
     }
 
     // ==========================================================
+    // WrapperBindings
+    // ==========================================================
+
+    [Fact]
+    public void Given_WrapperBindingsWithStaticValue_Should_AddToData()
+    {
+        // Arrange
+        var doc = CreateMinimalDocument();
+        var profile = new ProviderProfile
+        {
+            WrapperBindings = new Dictionary<string, string>
+            {
+                { "LoteDps.NumeroLote", "const:1" }
+            }
+        };
+
+        // Act
+        var data = _sut.Bind(doc, profile);
+
+        // Assert
+        data.ShouldContainKey("LoteDps.NumeroLote");
+        data["LoteDps.NumeroLote"].ShouldBe("1");
+    }
+
+    [Fact]
+    public void Given_WrapperBindingsWithDynamicExpression_Should_ResolveAndAddToData()
+    {
+        // Arrange
+        var doc = CreateMinimalDocument();
+        doc.Provider.Cnpj = "12345678000100";
+        var profile = new ProviderProfile
+        {
+            WrapperBindings = new Dictionary<string, string>
+            {
+                { "LoteDps.Prestador.CNPJ", "Provider.Cnpj | padLeft:14:0" }
+            }
+        };
+
+        // Act
+        var data = _sut.Bind(doc, profile);
+
+        // Assert
+        data.ShouldContainKey("LoteDps.Prestador.CNPJ");
+        data["LoteDps.Prestador.CNPJ"].ShouldBe("12345678000100");
+    }
+
+    // ==========================================================
+    // BindingPathPrefix
+    // ==========================================================
+
+    [Fact]
+    public void Given_BindingPathPrefix_Should_PrefixAllBindingPaths()
+    {
+        // Arrange
+        var doc = CreateMinimalDocument();
+        var profile = new ProviderProfile
+        {
+            BindingPathPrefix = "LoteDps.ListaDps.DPS",
+            Bindings = new Dictionary<string, string>
+            {
+                { "infDPS.tpAmb", "Environment" }
+            }
+        };
+
+        // Act
+        var data = _sut.Bind(doc, profile);
+
+        // Assert
+        data.ShouldContainKey("LoteDps.ListaDps.DPS.infDPS.tpAmb");
+        data.ShouldNotContainKey("infDPS.tpAmb");
+    }
+
+    [Fact]
+    public void Given_NoWrapperBindingsOrPrefix_Should_PreserveCurrentBehavior()
+    {
+        // Arrange
+        var doc = CreateMinimalDocument();
+        var profile = new ProviderProfile
+        {
+            Bindings = new Dictionary<string, string>
+            {
+                { "infDPS.tpAmb", "Environment" }
+            }
+        };
+
+        // Act
+        var data = _sut.Bind(doc, profile);
+
+        // Assert
+        data.ShouldContainKey("infDPS.tpAmb");
+        data["infDPS.tpAmb"]!.ToString().ShouldBe("2");
+    }
+
+    // ==========================================================
+    // WrapperBindings + BindingPathPrefix combined
+    // ==========================================================
+
+    [Fact]
+    public void Given_WrapperAndRegularBindings_Should_ProcessBothCorrectly()
+    {
+        // Arrange
+        var doc = CreateMinimalDocument();
+        doc.Provider.Cnpj = "11222333000181";
+        var profile = new ProviderProfile
+        {
+            WrapperBindings = new Dictionary<string, string>
+            {
+                { "LoteDps.NumeroLote", "const:1" },
+                { "LoteDps.Prestador.CNPJ", "Provider.Cnpj | padLeft:14:0" }
+            },
+            BindingPathPrefix = "LoteDps.ListaDps.DPS",
+            Bindings = new Dictionary<string, string>
+            {
+                { "infDPS.tpAmb", "Environment" },
+                { "infDPS.serie", "Series" }
+            }
+        };
+
+        // Act
+        var data = _sut.Bind(doc, profile);
+
+        // Assert — wrapper paths exist without prefix
+        data.ShouldContainKey("LoteDps.NumeroLote");
+        data["LoteDps.NumeroLote"].ShouldBe("1");
+        data.ShouldContainKey("LoteDps.Prestador.CNPJ");
+        data["LoteDps.Prestador.CNPJ"].ShouldBe("11222333000181");
+
+        // Assert — regular bindings have prefix applied
+        data.ShouldContainKey("LoteDps.ListaDps.DPS.infDPS.tpAmb");
+        data.ShouldContainKey("LoteDps.ListaDps.DPS.infDPS.serie");
+        data.ShouldNotContainKey("infDPS.tpAmb");
+        data.ShouldNotContainKey("infDPS.serie");
+    }
+
+    // ==========================================================
     // Helpers privados (final da classe)
     // ==========================================================
 
