@@ -1,0 +1,377 @@
+{
+  "provider": "gissonline",
+  "version": "1.01",
+  "formatting": {
+    "NumeroLote": {
+      "maxLength": 15
+    },
+    "Cpf": {
+      "padLeft": 11,
+      "padChar": "0",
+      "maxLength": 11
+    },
+    "Cnpj": {
+      "padLeft": 14,
+      "padChar": "0",
+      "maxLength": 14
+    },
+    "InscricaoMunicipal": {
+      "maxLength": 15
+    },
+    "QuantidadeRps": {
+      "maxLength": 4
+    },
+    "Numero": {
+      "maxLength": 60
+    },
+    "Serie": {
+      "maxLength": 5
+    },
+    "ValorServicos": {
+      "maxLength": 15
+    },
+    "ValorDeducoes": {
+      "maxLength": 15
+    },
+    "ValorPis": {
+      "maxLength": 15
+    },
+    "ValorCofins": {
+      "maxLength": 15
+    },
+    "ValorInss": {
+      "maxLength": 15
+    },
+    "ValorIr": {
+      "maxLength": 15
+    },
+    "ValorCsll": {
+      "maxLength": 15
+    },
+    "OutrasRetencoes": {
+      "maxLength": 15
+    },
+    "ValTotTributos": {
+      "maxLength": 15
+    },
+    "ValorIss": {
+      "maxLength": 15
+    },
+    "Aliquota": {
+      "maxLength": 5
+    },
+    "DescontoIncondicionado": {
+      "maxLength": 15
+    },
+    "DescontoCondicionado": {
+      "maxLength": 15
+    },
+    "cIndOp": {
+      "padLeft": 6,
+      "padChar": "0",
+      "digitsOnly": true
+    },
+    "refNFSe": {
+      "maxLength": 50
+    },
+    "xTipoChaveDFe": {
+      "maxLength": 255
+    },
+    "chaveDFe": {
+      "maxLength": 50
+    },
+    "cMunDocFiscal": {
+      "padLeft": 7,
+      "padChar": "0",
+      "digitsOnly": true,
+      "maxLength": 7
+    },
+    "nDocFiscal": {
+      "maxLength": 255
+    },
+    "xDocFiscal": {
+      "maxLength": 255
+    },
+    "nDoc": {
+      "maxLength": 255
+    },
+    "xDoc": {
+      "maxLength": 255
+    },
+    "CNPJ": {
+      "padLeft": 14,
+      "padChar": "0",
+      "digitsOnly": true,
+      "maxLength": 14
+    },
+    "CPF": {
+      "padLeft": 11,
+      "padChar": "0",
+      "digitsOnly": true,
+      "maxLength": 11
+    },
+    "NIF": {
+      "maxLength": 40
+    },
+    "xNome": {
+      "maxLength": 150
+    },
+    "xTpReeRepRes": {
+      "maxLength": 150
+    },
+    "CST": {
+      "padLeft": 3,
+      "padChar": "0",
+      "digitsOnly": true
+    },
+    "cClassTrib": {
+      "padLeft": 6,
+      "padChar": "0",
+      "digitsOnly": true
+    },
+    "cLocalidadeIncid": {
+      "padLeft": 7,
+      "padChar": "0",
+      "digitsOnly": true
+    },
+    "CodigoCnae": {
+      "maxLength": 7
+    },
+    "CodigoTributacaoMunicipio": {
+      "maxLength": 20
+    },
+    "CodigoNbs": {
+      "maxLength": 9
+    },
+    "Discriminacao": {
+      "maxLength": 2000
+    },
+    "CodigoMunicipio": {
+      "maxLength": 7
+    },
+    "CodigoPais": {
+      "padLeft": 4,
+      "padChar": "0",
+      "maxLength": 4
+    },
+    "IdentifNaoExigibilidade": {
+      "maxLength": 4
+    },
+    "MunicipioIncidencia": {
+      "maxLength": 7
+    },
+    "NumeroProcesso": {
+      "maxLength": 30
+    },
+    "tpMoeda": {
+      "padLeft": 3,
+      "padChar": "0",
+      "digitsOnly": true,
+      "maxLength": 3
+    },
+    "nDI": {
+      "maxLength": 12
+    },
+    "nRE": {
+      "maxLength": 12
+    },
+    "NifTomador": {
+      "maxLength": 40
+    },
+    "RazaoSocial": {
+      "maxLength": 150
+    },
+    "Endereco": {
+      "maxLength": 255
+    },
+    "Complemento": {
+      "maxLength": 60
+    },
+    "Bairro": {
+      "maxLength": 60
+    },
+    "Uf": {
+      "padLeft": 2,
+      "padChar": "0",
+      "maxLength": 2
+    },
+    "Cep": {
+      "padLeft": 8,
+      "padChar": "0",
+      "digitsOnly": true,
+      "maxLength": 8
+    },
+    "EnderecoCompletoExterior": {
+      "maxLength": 255
+    },
+    "cEndPost": {
+      "maxLength": 11
+    },
+    "xCidade": {
+      "maxLength": 60
+    },
+    "xEstProvReg": {
+      "maxLength": 60
+    },
+    "Telefone": {
+      "maxLength": 20
+    },
+    "Email": {
+      "maxLength": 80
+    },
+    "CodigoObra": {
+      "maxLength": 30
+    },
+    "Art": {
+      "maxLength": 30
+    },
+    "IdentificacaoEvento": {
+      "maxLength": 30
+    },
+    "DescricaoEvento": {
+      "maxLength": 255
+    },
+    "InformacoesComplementares": {
+      "maxLength": 2000
+    },
+    "DescricaoDeducao": {
+      "maxLength": 150
+    },
+    "CodigoMunicipioGerador": {
+      "maxLength": 7
+    },
+    "NumeroNfse": {
+      "maxLength": 15
+    },
+    "CodigoVerificacao": {
+      "maxLength": 9
+    },
+    "NumeroNfe": {
+      "maxLength": 9
+    },
+    "UfNfe": {
+      "padLeft": 2,
+      "padChar": "0",
+      "maxLength": 2
+    },
+    "ChaveAcessoNfe": {
+      "maxLength": 44
+    },
+    "IdentificacaoDocumento": {
+      "maxLength": 255
+    },
+    "NifFornecedor": {
+      "maxLength": 40
+    },
+    "ValorDedutivel": {
+      "maxLength": 15
+    },
+    "ValorUtilizadoDeducao": {
+      "maxLength": 15
+    }
+  },
+  "rootComplexTypeName": "_anon_EnviarLoteRpsEnvio",
+  "rootElementName": "EnviarLoteRpsEnvio",
+  "wrapperBindings": {
+    "LoteRps.NumeroLote": "const:1",
+    "LoteRps.QuantidadeRps": "const:1"
+  },
+  "bindingPathPrefix": "LoteRps.Prestador",
+  "bindings": {
+    "LoteRps.NumeroLote": "const:1",
+    "CpfCnpj.Cpf": "Borrower.FederalTaxNumber",
+    "CpfCnpj.Cnpj": "Provider.Cnpj",
+    "InscricaoMunicipal": "Provider.MunicipalTaxNumber",
+    "LoteRps.QuantidadeRps": "const:1",
+    "LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.Rps.IdentificacaoRps.Numero": "TODO: manual mapping required",
+    "LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.Rps.IdentificacaoRps.Serie": "Series",
+    "LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.Rps.IdentificacaoRps.Tipo": "TODO: manual mapping required",
+    "LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.Rps.DataEmissao": "IssuedOn | format:yyyy-MM-ddTHH:mm:sszzz",
+    "LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.Rps.Status": "TODO: manual mapping required",
+    "LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.Rps.RpsSubstituido.Numero": "TODO: manual mapping required",
+    "LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.Rps.RpsSubstituido.Serie": "Series",
+    "LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.Rps.RpsSubstituido.Tipo": "TODO: manual mapping required",
+    "LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.Competencia": "CompetenceDate",
+    "LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.Servico.Valores.ValorServicos": "Values.ServicesAmount",
+    "LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.Servico.Valores.Aliquota": "Values.IssRate",
+    "LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.Servico.Valores.trib.tribFed.piscofins.CST": "TODO: manual mapping required",
+    "LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.Servico.Valores.trib.totTrib.pTotTrib.pTotTribFed": "TODO: manual mapping required",
+    "LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.Servico.Valores.trib.totTrib.pTotTrib.pTotTribEst": "TODO: manual mapping required",
+    "LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.Servico.Valores.trib.totTrib.pTotTrib.pTotTribMun": "TODO: manual mapping required",
+    "LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.Servico.Valores.IBSCBS.finNFSe": "TODO: manual mapping required",
+    "LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.Servico.Valores.IBSCBS.indFinal": "TODO: manual mapping required",
+    "LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.Servico.Valores.IBSCBS.cIndOp": "TODO: manual mapping required",
+    "LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.Servico.Valores.IBSCBS.indDest": "TODO: manual mapping required",
+    "LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.Servico.Valores.IBSCBS.valores.gReeRepRes.documentos.dFeNacional.tipoChaveDFe": "TODO: manual mapping required",
+    "LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.Servico.Valores.IBSCBS.valores.gReeRepRes.documentos.dFeNacional.chaveDFe": "TODO: manual mapping required",
+    "LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.Servico.Valores.IBSCBS.valores.gReeRepRes.documentos.docFiscalOutro.cMunDocFiscal": "TODO: manual mapping required",
+    "LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.Servico.Valores.IBSCBS.valores.gReeRepRes.documentos.docFiscalOutro.nDocFiscal": "TODO: manual mapping required",
+    "LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.Servico.Valores.IBSCBS.valores.gReeRepRes.documentos.docFiscalOutro.xDocFiscal": "TODO: manual mapping required",
+    "LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.Servico.Valores.IBSCBS.valores.gReeRepRes.documentos.docOutro.nDoc": "TODO: manual mapping required",
+    "LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.Servico.Valores.IBSCBS.valores.gReeRepRes.documentos.docOutro.xDoc": "TODO: manual mapping required",
+    "LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.Servico.Valores.IBSCBS.valores.gReeRepRes.documentos.fornec.CNPJ": "Provider.Cnpj",
+    "LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.Servico.Valores.IBSCBS.valores.gReeRepRes.documentos.fornec.CPF": "Borrower.FederalTaxNumber",
+    "LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.Servico.Valores.IBSCBS.valores.gReeRepRes.documentos.fornec.xNome": "Borrower.Name",
+    "LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.Servico.Valores.IBSCBS.valores.gReeRepRes.documentos.dtEmiDoc": "TODO: manual mapping required",
+    "LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.Servico.Valores.IBSCBS.valores.gReeRepRes.documentos.dtCompDoc": "TODO: manual mapping required",
+    "LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.Servico.Valores.IBSCBS.valores.gReeRepRes.documentos.tpReeRepRes": "TODO: manual mapping required",
+    "LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.Servico.Valores.IBSCBS.valores.gReeRepRes.documentos.vlrReeRepRes": "TODO: manual mapping required",
+    "LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.Servico.Valores.IBSCBS.valores.trib.gIBSCBS.CST": "TODO: manual mapping required",
+    "LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.Servico.Valores.IBSCBS.valores.trib.gIBSCBS.cClassTrib": "TODO: manual mapping required",
+    "LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.Servico.Valores.IBSCBS.valores.cLocalidadeIncid": "TODO: manual mapping required",
+    "LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.Servico.Valores.IBSCBS.valores.pRedutor": "TODO: manual mapping required",
+    "LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.Servico.IssRetido": "Values.RetentionType",
+    "LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.Servico.ItemListaServico": "Service.FederalServiceCode",
+    "LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.Servico.CodigoNbs": "Service.NbsCode",
+    "LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.Servico.Discriminacao": "Service.Description",
+    "LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.Servico.CodigoMunicipio": "Provider.MunicipalityCode",
+    "LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.Servico.ExigibilidadeISS": "const:1",
+    "LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.Servico.comExt.mdPrestacao": "TODO: manual mapping required",
+    "LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.Servico.comExt.vincPrest": "TODO: manual mapping required",
+    "LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.Servico.comExt.tpMoeda": "TODO: manual mapping required",
+    "LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.Servico.comExt.vServMoeda": "TODO: manual mapping required",
+    "LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.Servico.comExt.mecAFComexP": "TODO: manual mapping required",
+    "LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.Servico.comExt.mecAFComexT": "TODO: manual mapping required",
+    "LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.Servico.comExt.movTempBens": "TODO: manual mapping required",
+    "LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.Servico.comExt.mdic": "TODO: manual mapping required",
+    "LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.Prestador.CpfCnpj.Cpf": "Borrower.FederalTaxNumber",
+    "LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.Prestador.CpfCnpj.Cnpj": "Provider.Cnpj",
+    "LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.Prestador.InscricaoMunicipal": "Provider.MunicipalTaxNumber",
+    "LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.TomadorServico.IdentificacaoTomador.CpfCnpj.Cpf": "Borrower.FederalTaxNumber",
+    "LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.TomadorServico.IdentificacaoTomador.CpfCnpj.Cnpj": "Provider.Cnpj",
+    "LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.TomadorServico.IdentificacaoTomador.InscricaoMunicipal": "Provider.MunicipalTaxNumber",
+    "LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.TomadorServico.RazaoSocial": "Borrower.Name",
+    "LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.TomadorServico.Endereco.Endereco": "TODO: manual mapping required",
+    "LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.TomadorServico.Endereco.Numero": "TODO: manual mapping required",
+    "LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.TomadorServico.Endereco.Bairro": "TODO: manual mapping required",
+    "LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.TomadorServico.Endereco.CodigoMunicipio": "Provider.MunicipalityCode",
+    "LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.TomadorServico.Endereco.Uf": "TODO: manual mapping required",
+    "LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.TomadorServico.Endereco.Cep": "TODO: manual mapping required",
+    "LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.TomadorServico.EnderecoExterior.CodigoPais": "TODO: manual mapping required",
+    "LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.TomadorServico.EnderecoExterior.EnderecoCompletoExterior": "TODO: manual mapping required",
+    "LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.TomadorServico.EnderecoExterior.cEndPost": "TODO: manual mapping required",
+    "LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.TomadorServico.EnderecoExterior.xCidade": "TODO: manual mapping required",
+    "LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.TomadorServico.EnderecoExterior.xEstProvReg": "TODO: manual mapping required",
+    "LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.TomadorServico.Contato.Telefone": "Borrower.PhoneNumber",
+    "LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.TomadorServico.Contato.Email": "Borrower.Email",
+    "LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.Intermediario.IdentificacaoIntermediario.CpfCnpj.Cpf": "Borrower.FederalTaxNumber",
+    "LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.Intermediario.IdentificacaoIntermediario.CpfCnpj.Cnpj": "Provider.Cnpj",
+    "LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.Intermediario.IdentificacaoIntermediario.InscricaoMunicipal": "Provider.MunicipalTaxNumber",
+    "LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.Intermediario.RazaoSocial": "Borrower.Name",
+    "LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.Intermediario.CodigoMunicipio": "Provider.MunicipalityCode",
+    "LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.OptanteSimplesNacional": "Provider.TaxRegime",
+    "LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.IncentivoFiscal": "const:2",
+    "LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.Deducao.TipoDeducao": "TODO: manual mapping required",
+    "LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.Deducao.IdentificacaoDocumentoDeducao.IdentificacaoNfse.CodigoMunicipioGerador": "TODO: manual mapping required",
+    "LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.Deducao.IdentificacaoDocumentoDeducao.IdentificacaoNfse.NumeroNfse": "TODO: manual mapping required",
+    "LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.Deducao.IdentificacaoDocumentoDeducao.IdentificacaoNfe.NumeroNfe": "TODO: manual mapping required",
+    "LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.Deducao.IdentificacaoDocumentoDeducao.IdentificacaoNfe.UfNfe": "TODO: manual mapping required",
+    "LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.Deducao.IdentificacaoDocumentoDeducao.OutroDocumento.IdentificacaoDocumento": "TODO: manual mapping required",
+    "LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.Deducao.DadosFornecedor.IdentificacaoFornecedor.CpfCnpj.Cpf": "Borrower.FederalTaxNumber",
+    "LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.Deducao.DadosFornecedor.IdentificacaoFornecedor.CpfCnpj.Cnpj": "Provider.Cnpj",
+    "LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.Deducao.DadosFornecedor.FornecedorExterior.CodigoPais": "TODO: manual mapping required",
+    "LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.Deducao.DataEmissao": "IssuedOn | format:yyyy-MM-ddTHH:mm:sszzz",
+    "LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.Deducao.ValorDedutivel": "TODO: manual mapping required",
+    "LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico.Deducao.ValorUtilizadoDeducao": "TODO: manual mapping required"
+  }
+}

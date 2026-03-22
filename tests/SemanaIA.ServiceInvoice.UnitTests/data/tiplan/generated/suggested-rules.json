@@ -1,0 +1,154 @@
+{
+  "provider": "tiplan",
+  "version": "1.01",
+  "formatting": {
+    "Numero": {
+      "maxLength": 10
+    },
+    "Serie": {
+      "maxLength": 5
+    },
+    "ValorServicos": {
+      "maxLength": 15
+    },
+    "ValorDeducoes": {
+      "maxLength": 15
+    },
+    "ValorPis": {
+      "maxLength": 15
+    },
+    "ValorCofins": {
+      "maxLength": 15
+    },
+    "ValorInss": {
+      "maxLength": 15
+    },
+    "ValorIr": {
+      "maxLength": 15
+    },
+    "ValorCsll": {
+      "maxLength": 15
+    },
+    "ValorIss": {
+      "maxLength": 15
+    },
+    "ValorIssRetido": {
+      "maxLength": 15
+    },
+    "OutrasRetencoes": {
+      "maxLength": 15
+    },
+    "BaseCalculo": {
+      "maxLength": 15
+    },
+    "Aliquota": {
+      "maxLength": 5
+    },
+    "ValorLiquidoNfse": {
+      "maxLength": 15
+    },
+    "DescontoIncondicionado": {
+      "maxLength": 15
+    },
+    "DescontoCondicionado": {
+      "maxLength": 15
+    },
+    "ItemListaServico": {
+      "maxLength": 5
+    },
+    "CodigoCnae": {
+      "maxLength": 7
+    },
+    "CodigoTributacaoMunicipio": {
+      "maxLength": 20
+    },
+    "Discriminacao": {
+      "maxLength": 2000
+    },
+    "CodigoMunicipio": {
+      "maxLength": 7
+    },
+    "Cnpj": {
+      "padLeft": 14,
+      "padChar": "0",
+      "maxLength": 14
+    },
+    "InscricaoMunicipal": {
+      "maxLength": 15
+    },
+    "Cpf": {
+      "padLeft": 11,
+      "padChar": "0",
+      "maxLength": 11
+    },
+    "RazaoSocial": {
+      "maxLength": 115
+    },
+    "Endereco": {
+      "maxLength": 125
+    },
+    "Complemento": {
+      "maxLength": 60
+    },
+    "Bairro": {
+      "maxLength": 60
+    },
+    "Uf": {
+      "padLeft": 2,
+      "padChar": "0",
+      "maxLength": 2
+    },
+    "Cep": {
+      "maxLength": 8
+    },
+    "Telefone": {
+      "maxLength": 11
+    },
+    "Email": {
+      "maxLength": 80
+    },
+    "CodigoObra": {
+      "maxLength": 15
+    },
+    "Art": {
+      "maxLength": 15
+    }
+  },
+  "rootComplexTypeName": "_anon_GerarNfseEnvio",
+  "rootElementName": "GerarNfseEnvio",
+  "bindingPathPrefix": "Rps.InfRps",
+  "bindings": {
+    "IdentificacaoRps.Numero": "TODO: manual mapping required",
+    "IdentificacaoRps.Serie": "Series",
+    "IdentificacaoRps.Tipo": "TODO: manual mapping required",
+    "DataEmissao": "IssuedOn | format:yyyy-MM-ddTHH:mm:sszzz",
+    "NaturezaOperacao": "TODO: manual mapping required",
+    "OptanteSimplesNacional": "Provider.TaxRegime",
+    "IncentivadorCultural": "TODO: manual mapping required",
+    "Status": "TODO: manual mapping required",
+    "RpsSubstituido.Numero": "TODO: manual mapping required",
+    "RpsSubstituido.Serie": "Series",
+    "RpsSubstituido.Tipo": "TODO: manual mapping required",
+    "Servico.Valores.ValorServicos": "Values.ServicesAmount",
+    "Servico.Valores.IssRetido": "Values.RetentionType",
+    "Servico.Valores.Aliquota": "Values.IssRate",
+    "Servico.ItemListaServico": "Service.FederalServiceCode",
+    "Servico.Discriminacao": "Service.Description",
+    "Servico.CodigoMunicipio": "Provider.MunicipalityCode",
+    "Prestador.Cnpj": "Provider.Cnpj",
+    "Prestador.InscricaoMunicipal": "Provider.MunicipalTaxNumber",
+    "Tomador.IdentificacaoTomador.CpfCnpj.Cpf": "Borrower.FederalTaxNumber",
+    "Tomador.IdentificacaoTomador.CpfCnpj.Cnpj": "Provider.Cnpj",
+    "Tomador.IdentificacaoTomador.InscricaoMunicipal": "Provider.MunicipalTaxNumber",
+    "Tomador.RazaoSocial": "Borrower.Name",
+    "Tomador.Endereco.CodigoMunicipio": "Provider.MunicipalityCode",
+    "Tomador.Contato.Telefone": "Borrower.PhoneNumber",
+    "Tomador.Contato.Email": "Borrower.Email",
+    "IntermediarioServico.RazaoSocial": "Borrower.Name",
+    "IntermediarioServico.CpfCnpj.Cpf": "Borrower.FederalTaxNumber",
+    "IntermediarioServico.CpfCnpj.Cnpj": "Provider.Cnpj",
+    "IntermediarioServico.InscricaoMunicipal": "Provider.MunicipalTaxNumber",
+    "ConstrucaoCivil.CodigoObra": "TODO: manual mapping required",
+    "ConstrucaoCivil.Art": "TODO: manual mapping required"
+  }
+}

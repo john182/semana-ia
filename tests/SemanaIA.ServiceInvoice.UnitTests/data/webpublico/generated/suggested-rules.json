@@ -1,0 +1,38 @@
+{
+  "provider": "webpublico",
+  "version": "1.01",
+  "formatting": {
+    "Numero": {
+      "maxLength": 15
+    },
+    "Cpf": {
+      "padLeft": 11,
+      "padChar": "0",
+      "maxLength": 11
+    },
+    "Cnpj": {
+      "padLeft": 14,
+      "padChar": "0",
+      "maxLength": 14
+    },
+    "InscricaoMunicipal": {
+      "maxLength": 10
+    },
+    "CodigoMunicipio": {
+      "maxLength": 7
+    }
+  },
+  "rootComplexTypeName": "_anon_tcRetCancelamento",
+  "rootElementName": "tcRetCancelamento",
+  "bindingPathPrefix": "NfseCancelamento.ConfirmacaoCancelamento",
+  "bindings": {
+    "Pedido.InfPedidoCancelamento.IdentificacaoNfse.Numero": "TODO: manual mapping required",
+    "Pedido.InfPedidoCancelamento.IdentificacaoNfse.CpfCnpj.Cpf": "Borrower.FederalTaxNumber",
+    "Pedido.InfPedidoCancelamento.IdentificacaoNfse.CpfCnpj.Cnpj": "Provider.Cnpj",
+    "Pedido.InfPedidoCancelamento.IdentificacaoNfse.InscricaoMunicipal": "Provider.MunicipalTaxNumber",
+    "Pedido.InfPedidoCancelamento.IdentificacaoNfse.CodigoMunicipio": "Provider.MunicipalityCode",
+    "Pedido.InfPedidoCancelamento.ChaveAcesso": "TODO: manual mapping required",
+    "Pedido.InfPedidoCancelamento.CodigoCancelamento": "TODO: manual mapping required",
+    "DataHora": "TODO: manual mapping required"
+  }
+}
