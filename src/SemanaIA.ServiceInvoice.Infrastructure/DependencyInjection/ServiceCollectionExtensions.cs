@@ -1,5 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using SemanaIA.ServiceInvoice.Domain.Services;
+using SemanaIA.ServiceInvoice.Infrastructure.Onboarding;
 using SemanaIA.ServiceInvoice.Infrastructure.Xml;
 using SemanaIA.ServiceInvoice.XmlGeneration.Manual;
 using SemanaIA.ServiceInvoice.XmlGeneration.SchemaEngine;
@@ -18,6 +19,15 @@ public static class ServiceCollectionExtensions
         services.AddScoped(_ => new ProviderResolver(providersBaseDir));
         services.AddScoped(sp => new ProviderSerializerFactory(sp.GetRequiredService<ProviderResolver>()));
         services.AddScoped<INfseXmlGenerator, SchemaEngineNfseXmlGenerator>();
+
+        services.AddScoped(_ => new ProviderConfigGenerator(providersBaseDir));
+        services.AddScoped<ProviderOnboardingValidator>();
+        services.AddScoped<IProviderOnboardingService>(sp =>
+            new ProviderOnboardingService(
+                sp.GetRequiredService<ProviderResolver>(),
+                sp.GetRequiredService<ProviderConfigGenerator>(),
+                sp.GetRequiredService<ProviderOnboardingValidator>(),
+                providersBaseDir));
 
         return services;
     }

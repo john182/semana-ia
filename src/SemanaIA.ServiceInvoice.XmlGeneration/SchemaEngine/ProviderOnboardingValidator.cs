@@ -8,27 +8,67 @@ public enum OnboardingGapKind
     SchemaIncompatibility
 }
 
+public enum OperationalStatus
+{
+    SupportReady,
+    SupportConfigOnly,
+    NeedsEngineering
+}
+
 public record OnboardingCheck(
     string Name,
     bool Passed,
     OnboardingGapKind? GapKind = null,
-    string? Details = null);
+    string? Details = null,
+    string? ActionableRecommendation = null);
 
 public record OnboardingReport(string ProviderName, List<OnboardingCheck> Checks)
 {
     public bool IsFullyOnboarded => Checks.All(check => check.Passed);
+    public OperationalStatus OperationalStatus => CalculateOperationalStatus();
+
+    private OperationalStatus CalculateOperationalStatus()
+    {
+        if (Checks.All(check => check.Passed))
+            return OperationalStatus.SupportReady;
+
+        var hasEngineGap = Checks.Any(check =>
+            !check.Passed && check.GapKind is OnboardingGapKind.EngineGap);
+        var hasSchemaIncompatibility = Checks.Any(check =>
+            !check.Passed && check.GapKind is OnboardingGapKind.SchemaIncompatibility);
+
+        if (hasEngineGap || hasSchemaIncompatibility)
+            return OperationalStatus.NeedsEngineering;
+
+        var schemaLoadable = Checks.Any(check => check.Name == "SchemaLoadable" && check.Passed);
+        var analysisOk = Checks.Any(check => check.Name == "AnalysisOk" && check.Passed);
+        var onlyConfigurationGaps = Checks
+            .Where(check => !check.Passed)
+            .All(check => check.GapKind is OnboardingGapKind.ConfigurationGap);
+
+        if (schemaLoadable && analysisOk && onlyConfigurationGaps)
+            return OperationalStatus.SupportConfigOnly;
+
+        return OperationalStatus.NeedsEngineering;
+    }
 }
 
 public class ProviderOnboardingValidator
 {
-
     private const string CheckSchemaLoadable = "SchemaLoadable";
     private const string CheckAnalysisOk = "AnalysisOk";
     private const string CheckBindingsPresent = "BindingsPresent";
     private const string CheckRuntimeProducible = "RuntimeProducible";
     private const string CheckXsdValid = "XsdValid";
 
+    private const string RecommendAddXsd = "Add XSD files to providers/{0}/xsd/";
+    private const string RecommendConfigureBindings =
+        "Configure bindings in providers/{0}/rules/base-rules.json or use ProviderConfigGenerator to auto-generate";
+    private const string RecommendReviewTodoBindings =
+        "Review and complete the TODO bindings in base-rules.json";
+
     private readonly XsdSchemaAnalyzer _analyzer = new();
+    private readonly ProviderSampleDocumentGenerator _sampleDocumentGenerator = new();
 
     public OnboardingReport Validate(string providerName, string providersBaseDir)
     {
@@ -45,11 +85,11 @@ public class ProviderOnboardingValidator
         checks.Add(analysisCheck);
 
         var profileLoadResult = LoadProfile(rulesPath);
-        var bindingsCheck = ValidateBindingsPresent(profileLoadResult);
+        var bindingsCheck = ValidateBindingsPresent(profileLoadResult, providerName);
         checks.Add(bindingsCheck);
 
         var runtimeCheck = ValidateRuntimeProducible(
-            xsdDir, profileLoadResult, analysisCheck.Passed, bindingsCheck.Passed);
+            xsdDir, profileLoadResult, analysisCheck.Passed, bindingsCheck.Passed, providerName);
         checks.Add(runtimeCheck);
 
         var xsdValidCheck = ValidateXsdCompilation(xsdDir, schemaLoadCheck.Passed);
@@ -84,13 +124,15 @@ public class ProviderOnboardingValidator
         if (!Directory.Exists(xsdDir))
             return new OnboardingCheck(CheckSchemaLoadable, false,
                 OnboardingGapKind.ConfigurationGap,
-                $"XSD directory not found: {xsdDir}");
+                $"XSD directory not found: {xsdDir}",
+                string.Format(RecommendAddXsd, providerName));
 
         var xsdFiles = Directory.GetFiles(xsdDir, ProviderProfile.XsdSearchPattern);
         if (xsdFiles.Length == 0)
             return new OnboardingCheck(CheckSchemaLoadable, false,
                 OnboardingGapKind.ConfigurationGap,
-                $"No XSD files found for provider '{providerName}'.");
+                $"No XSD files found for provider '{providerName}'.",
+                string.Format(RecommendAddXsd, providerName));
 
         return new OnboardingCheck(CheckSchemaLoadable, true);
     }
@@ -120,12 +162,13 @@ public class ProviderOnboardingValidator
         }
     }
 
-    private static OnboardingCheck ValidateBindingsPresent(ProviderProfile? profile)
+    private static OnboardingCheck ValidateBindingsPresent(ProviderProfile? profile, string providerName)
     {
         if (profile is null)
             return new OnboardingCheck(CheckBindingsPresent, false,
                 OnboardingGapKind.ConfigurationGap,
-                "Failed to load provider profile (base-rules.json missing or invalid).");
+                "Failed to load provider profile (base-rules.json missing or invalid).",
+                string.Format(RecommendConfigureBindings, providerName));
 
         var hasBindings = profile.Bindings is not null && profile.Bindings.Count > 0;
 
@@ -134,11 +177,12 @@ public class ProviderOnboardingValidator
                 Details: $"{profile.Bindings!.Count} bindings configured.")
             : new OnboardingCheck(CheckBindingsPresent, false,
                 OnboardingGapKind.ConfigurationGap,
-                "No bindings configured in base-rules.json.");
+                "No bindings configured in base-rules.json.",
+                string.Format(RecommendConfigureBindings, providerName));
     }
 
     private OnboardingCheck ValidateRuntimeProducible(
-        string xsdDir, ProviderProfile? profile, bool analysisOk, bool bindingsPresent)
+        string xsdDir, ProviderProfile? profile, bool analysisOk, bool bindingsPresent, string providerName)
     {
         if (!analysisOk || !bindingsPresent || profile is null)
             return new OnboardingCheck(CheckRuntimeProducible, false,
@@ -151,7 +195,7 @@ public class ProviderOnboardingValidator
             var schemaDocument = _analyzer.Analyze(xsdFiles[0]);
 
             var binder = new ServiceInvoiceSchemaDataBinder();
-            var sampleDocument = CreateMinimalSampleDocument();
+            var sampleDocument = _sampleDocumentGenerator.Generate(profile);
             var boundData = binder.Bind(sampleDocument, profile);
 
             var ruleResolver = new ProviderRuleResolver(profile);
@@ -167,8 +211,9 @@ public class ProviderOnboardingValidator
                 ? new OnboardingCheck(CheckRuntimeProducible, true,
                     Details: "XML produced successfully from sample data.")
                 : new OnboardingCheck(CheckRuntimeProducible, false,
-                    OnboardingGapKind.EngineGap,
-                    $"Serialization produced errors: {FormatSerializationErrors(serializationResult.Errors)}");
+                    OnboardingGapKind.ConfigurationGap,
+                    $"Serialization produced errors: {FormatSerializationErrors(serializationResult.Errors)}",
+                    RecommendReviewTodoBindings);
         }
         catch (Exception runtimeException)
         {
@@ -211,41 +256,6 @@ public class ProviderOnboardingValidator
                 OnboardingGapKind.SchemaIncompatibility,
                 $"XSD compilation failed: {xsdCompilationException.Message}");
         }
-    }
-
-    private static Domain.Models.DpsDocument CreateMinimalSampleDocument()
-    {
-        return new Domain.Models.DpsDocument
-        {
-            Environment = 2,
-            Version = "V_1.00.02",
-            Series = "WEB",
-            Number = 1,
-            IssuedOn = DateTimeOffset.UtcNow,
-            CompetenceDate = DateOnly.FromDateTime(DateTime.Today),
-            Provider = new Domain.Models.Provider
-            {
-                Cnpj = "12345678000199",
-                MunicipalityCode = "3550308",
-                FederalTaxNumber = 12345678000199,
-                TaxRegime = Domain.Models.TaxRegime.SimplesNacional
-            },
-            Borrower = new Domain.Models.Borrower
-            {
-                Name = "Sample Borrower",
-                FederalTaxNumber = 98765432100
-            },
-            Service = new Domain.Models.Service
-            {
-                FederalServiceCode = "010101",
-                Description = "Sample service for onboarding validation"
-            },
-            Values = new Domain.Models.Values
-            {
-                ServicesAmount = 100.00m,
-                TaxationType = Domain.Models.TaxationType.WithinCity
-            }
-        };
     }
 
     private static string FormatSerializationErrors(List<SerializationError> errors)

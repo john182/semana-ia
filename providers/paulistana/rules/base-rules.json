@@ -1,7 +1,7 @@
 {
   "provider": "paulistana",
   "version": "02",
-  "description": "Regras complementares da Paulistana — schema da Prefeitura de SP",
+  "description": "Regras complementares da Paulistana - schema da Prefeitura de SP",
   "rootComplexTypeName": "_anon_PedidoEnvioLoteRPS",
   "rootElementName": "PedidoEnvioLoteRPS",
   "municipalityCodes": ["3550308"],
@@ -9,8 +9,38 @@
     "namespace": "http://www.prefeitura.sp.gov.br/nfe",
     "tiposNamespace": "http://www.prefeitura.sp.gov.br/nfe/tipos"
   },
+  "bindingPathPrefix": "Cabecalho",
+  "wrapperBindings": {
+    "Cabecalho.@Versao": "const:2",
+    "Cabecalho.CPFCNPJRemetente.CNPJ": "Provider.Cnpj | padLeft:14:0",
+    "Cabecalho.transacao": "const:true",
+    "Cabecalho.dtInicio": "CompetenceDate | format:yyyy-MM-dd",
+    "Cabecalho.dtFim": "CompetenceDate | format:yyyy-MM-dd",
+    "Cabecalho.QtdRPS": "const:1"
+  },
   "defaults": {},
   "enums": {},
   "formatting": {},
-  "conditionals": {}
+  "conditionals": {},
+  "bindings": {
+    "RPS.Assinatura": "TODO: manual mapping required - digital signature hash",
+    "RPS.ChaveRPS.InscricaoPrestador": "Provider.MunicipalTaxNumber",
+    "RPS.ChaveRPS.SerieRPS": "Series",
+    "RPS.ChaveRPS.NumeroRPS": "Number",
+    "RPS.TipoRPS": "const:RPS",
+    "RPS.DataEmissao": "IssuedOn | format:yyyy-MM-dd",
+    "RPS.StatusRPS": "const:N",
+    "RPS.TributacaoRPS": "const:T",
+    "RPS.ValorDeducoes": "const:0",
+    "RPS.ValorPIS": "const:0",
+    "RPS.ValorCOFINS": "const:0",
+    "RPS.ValorINSS": "const:0",
+    "RPS.ValorIR": "const:0",
+    "RPS.ValorCSLL": "const:0",
+    "RPS.CodigoServico": "Service.FederalServiceCode",
+    "RPS.AliquotaServicos": "Values.IssRate | decimal:4 | nullable:0",
+    "RPS.ISSRetido": "const:false",
+    "RPS.Discriminacao": "Service.Description",
+    "RPS.ValorInicialCobrado": "Values.ServicesAmount | decimal:2"
+  }
 }
