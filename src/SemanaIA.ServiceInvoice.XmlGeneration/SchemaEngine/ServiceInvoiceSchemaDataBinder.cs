@@ -9,17 +9,34 @@ public class ServiceInvoiceSchemaDataBinder
     public Dictionary<string, object?> Bind(DpsDocument document, ProviderProfile profile)
     {
         var data = new Dictionary<string, object?>();
+        var resolver = new ProviderRuleResolver(profile);
+
+        if (profile.WrapperBindings is not null)
+        {
+            foreach (var (schemaPath, expression) in profile.WrapperBindings)
+            {
+                var resolvedValue = ResolveExpression(document, expression, resolver, profile);
+                if (resolvedValue is not null)
+                    data[schemaPath] = resolvedValue;
+            }
+        }
 
         if (profile.Bindings is null)
             return data;
 
-        var resolver = new ProviderRuleResolver(profile);
+        var hasPathPrefix = !string.IsNullOrEmpty(profile.BindingPathPrefix);
 
         foreach (var (schemaPath, expression) in profile.Bindings)
         {
-            var value = ResolveExpression(document, expression, resolver, profile);
-            if (value is not null)
-                data[schemaPath] = value;
+            var resolvedValue = ResolveExpression(document, expression, resolver, profile);
+            if (resolvedValue is null)
+                continue;
+
+            var fullSchemaPath = hasPathPrefix
+                ? $"{profile.BindingPathPrefix}.{schemaPath}"
+                : schemaPath;
+
+            data[fullSchemaPath] = resolvedValue;
         }
 
         return data;

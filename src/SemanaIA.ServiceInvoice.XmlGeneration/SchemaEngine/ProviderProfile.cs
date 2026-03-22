@@ -22,6 +22,18 @@ public class ProviderProfile
     [JsonPropertyName("conditionals")]
     public Dictionary<string, ConditionalRule>? Conditionals { get; set; }
 
+    [JsonPropertyName("rootComplexTypeName")]
+    public string? RootComplexTypeName { get; init; }
+
+    [JsonPropertyName("rootElementName")]
+    public string? RootElementName { get; init; }
+
+    [JsonPropertyName("wrapperBindings")]
+    public Dictionary<string, string>? WrapperBindings { get; init; }
+
+    [JsonPropertyName("bindingPathPrefix")]
+    public string? BindingPathPrefix { get; init; }
+
     [JsonPropertyName("bindings")]
     public Dictionary<string, string>? Bindings { get; set; }
 }

@@ -60,10 +60,12 @@ public class SchemaSerializationPipeline
 
         var resolvedVersion = version ?? profile.Version;
         var resolver = new ProviderRuleResolver(profile);
+        var resolvedRootComplexTypeName = profile.RootComplexTypeName ?? rootComplexTypeName;
+        var resolvedRootElementName = profile.RootElementName ?? rootElementName;
 
         return _serializer.SerializeAndValidate(
             schema, data, resolver,
-            rootComplexTypeName, rootElementName,
+            resolvedRootComplexTypeName, resolvedRootElementName,
             xsdDir, resolvedVersion);
     }
 
