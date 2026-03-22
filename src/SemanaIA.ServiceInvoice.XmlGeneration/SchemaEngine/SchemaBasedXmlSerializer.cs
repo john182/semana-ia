@@ -6,6 +6,8 @@ namespace SemanaIA.ServiceInvoice.XmlGeneration.SchemaEngine;
 
 public class SchemaBasedXmlSerializer
 {
+    private const string VersaoAttributeName = "versao";
+
     public SerializationResult Serialize(
         SchemaDocument schema,
         Dictionary<string, object?> data,
@@ -37,8 +39,10 @@ public class SchemaBasedXmlSerializer
             XNamespace ns = schema.TargetNamespace;
             var rootElement = new XElement(ns + rootElementName);
 
+            AddNamespaceDeclarations(rootElement, schema.NamespaceMap, schema.TargetNamespace);
+
             if (version is not null)
-                rootElement.SetAttributeValue("versao", version);
+                rootElement.SetAttributeValue(VersaoAttributeName, version);
 
             BuildComplexTypeContent(rootElement, rootType, "", data, resolver, typeMap, ns, errors);
 
@@ -170,6 +174,7 @@ public class SchemaBasedXmlSerializer
 
             if (hasChildData)
             {
+                // Element itself stays in parent's namespace (where it's declared in XSD)
                 var childElement = new XElement(ns + element.Name);
 
                 var idPath = $"{path}.@Id";
@@ -179,14 +184,11 @@ public class SchemaBasedXmlSerializer
                 // Check for versao attribute
                 var versaoPath = $"{path}.@versao";
                 if (data.TryGetValue(versaoPath, out var versaoValue) && versaoValue is not null)
-                    childElement.SetAttributeValue("versao", versaoValue.ToString());
+                    childElement.SetAttributeValue(VersaoAttributeName, versaoValue.ToString());
 
-                // Check for Id attribute (without @)
-                var attrIdPath = $"{path}.@Id";
-                if (data.TryGetValue(attrIdPath, out var attrIdVal) && attrIdVal is not null)
-                    childElement.SetAttributeValue("Id", attrIdVal.ToString());
-
-                BuildComplexTypeContent(childElement, childType, path, data, resolver, typeMap, ns, errors);
+                // Children use the type's namespace (where the type is defined in XSD)
+                XNamespace childContentNamespace = childType.Namespace ?? ns.NamespaceName;
+                BuildComplexTypeContent(childElement, childType, path, data, resolver, typeMap, childContentNamespace, errors);
                 parent.Add(childElement);
             }
             else if (element.IsRequired)
@@ -244,6 +246,21 @@ public class SchemaBasedXmlSerializer
             result = result[..rule.MaxLength.Value];
 
         return result;
+    }
+
+    private static void AddNamespaceDeclarations(XElement rootElement, Dictionary<string, string>? namespaceMap, string rootNamespace)
+    {
+        if (namespaceMap is null || namespaceMap.Count <= 1)
+            return;
+
+        foreach (var (prefix, namespaceUri) in namespaceMap)
+        {
+            // Skip the root's own namespace — already declared as default xmlns
+            if (namespaceUri == rootNamespace)
+                continue;
+
+            rootElement.Add(new XAttribute(XNamespace.Xmlns + prefix, namespaceUri));
+        }
     }
 
     private static List<string> ValidateXmlAgainstXsd(string xml, string xsdDir)

@@ -1,0 +1,13 @@
+{
+  "provider": "paulistana",
+  "version": "2.00",
+  "description": "Regras complementares da Paulistana — schema da Prefeitura de SP",
+  "constants": {
+    "namespace": "http://www.prefeitura.sp.gov.br/nfe",
+    "tiposNamespace": "http://www.prefeitura.sp.gov.br/nfe/tipos"
+  },
+  "defaults": {},
+  "enums": {},
+  "formatting": {},
+  "conditionals": {}
+}

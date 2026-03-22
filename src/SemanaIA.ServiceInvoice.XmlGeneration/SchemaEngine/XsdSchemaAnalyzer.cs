@@ -31,6 +31,8 @@ public class XsdSchemaAnalyzer
         {
             if (schema.TargetNamespace == DsigNamespace) continue;
 
+            var schemaNamespace = schema.TargetNamespace;
+
             foreach (XmlSchemaElement element in schema.Elements.Values)
             {
                 if (string.IsNullOrEmpty(rootElementName))
@@ -40,7 +42,7 @@ public class XsdSchemaAnalyzer
                 if (element.ElementSchemaType is XmlSchemaComplexType inlineCt &&
                     string.IsNullOrEmpty(inlineCt.Name))
                 {
-                    var inlineAnalyzed = AnalyzeComplexType(inlineCt, $"_anon_{element.Name}");
+                    var inlineAnalyzed = AnalyzeComplexType(inlineCt, $"_anon_{element.Name}", schemaNamespace);
                     rootInlineTypes.Add(inlineAnalyzed);
 
                     if (rootInlineType is null)
@@ -52,29 +54,38 @@ public class XsdSchemaAnalyzer
         foreach (XmlSchemaType type in schemaSet.GlobalTypes.Values)
         {
             if (type is XmlSchemaComplexType ct && type.QualifiedName.Namespace != DsigNamespace)
-                complexTypes.Add(AnalyzeComplexType(ct));
+                complexTypes.Add(AnalyzeComplexType(ct, typeNamespace: ct.QualifiedName.Namespace));
         }
 
         // Add root inline types to the complexTypes list so they can be found by name
         complexTypes.AddRange(rootInlineTypes);
 
-        return new SchemaDocument(targetNamespace, rootElementName, complexTypes, rootInlineType);
+        var namespaceMap = BuildNamespaceMap(schemaSet);
+
+        return new SchemaDocument(targetNamespace, rootElementName, complexTypes, rootInlineType, namespaceMap);
     }
 
-    private static SchemaComplexType AnalyzeComplexType(XmlSchemaComplexType ct, string? nameOverride = null)
+    private static SchemaComplexType AnalyzeComplexType(
+        XmlSchemaComplexType ct,
+        string? nameOverride = null,
+        string? typeNamespace = null)
     {
         var elements = new List<SchemaElement>();
         var annotation = GetAnnotation(ct.Annotation);
 
         if (ct.ContentTypeParticle is XmlSchemaSequence sequence)
-            ExtractElements(sequence, elements);
+            ExtractElements(sequence, elements, typeNamespace: typeNamespace);
         else if (ct.ContentTypeParticle is XmlSchemaChoice topChoice)
-            ExtractElements(topChoice, elements, "choice_top");
+            ExtractElements(topChoice, elements, "choice_top", typeNamespace);
 
-        return new SchemaComplexType(nameOverride ?? ct.Name ?? "anonymous", elements, annotation);
+        return new SchemaComplexType(nameOverride ?? ct.Name ?? "anonymous", elements, annotation, typeNamespace);
     }
 
-    private static void ExtractElements(XmlSchemaGroupBase group, List<SchemaElement> elements, string? choiceGroup = null)
+    private static void ExtractElements(
+        XmlSchemaGroupBase group,
+        List<SchemaElement> elements,
+        string? choiceGroup = null,
+        string? typeNamespace = null)
     {
         var choiceIndex = 0;
 
@@ -90,7 +101,7 @@ public class XsdSchemaAnalyzer
                     if (el.ElementSchemaType is XmlSchemaComplexType inlineCt &&
                         string.IsNullOrEmpty(inlineCt.Name))
                     {
-                        inlineType = AnalyzeComplexType(inlineCt, $"_anon_{el.Name}");
+                        inlineType = AnalyzeComplexType(inlineCt, $"_anon_{el.Name}", typeNamespace);
                     }
 
                     elements.Add(new SchemaElement(
@@ -109,11 +120,11 @@ public class XsdSchemaAnalyzer
                 case XmlSchemaChoice choice:
                     choiceIndex++;
                     var groupName = $"choice_{choiceIndex}";
-                    ExtractElements(choice, elements, groupName);
+                    ExtractElements(choice, elements, groupName, typeNamespace);
                     break;
 
                 case XmlSchemaSequence innerSeq:
-                    ExtractElements(innerSeq, elements, choiceGroup);
+                    ExtractElements(innerSeq, elements, choiceGroup, typeNamespace);
                     break;
             }
         }
@@ -198,5 +209,48 @@ public class XsdSchemaAnalyzer
             MinLength: minLength,
             MaxLength: maxLength,
             Enumerations: enumerations.Count > 0 ? enumerations : null);
+    }
+
+    private static Dictionary<string, string> BuildNamespaceMap(XmlSchemaSet schemaSet)
+    {
+        var namespaceMap = new Dictionary<string, string>();
+        var prefixIndex = 0;
+
+        foreach (XmlSchema schema in schemaSet.Schemas())
+        {
+            var schemaTargetNamespace = schema.TargetNamespace;
+
+            if (string.IsNullOrWhiteSpace(schemaTargetNamespace) || schemaTargetNamespace == DsigNamespace)
+                continue;
+
+            if (namespaceMap.ContainsValue(schemaTargetNamespace))
+                continue;
+
+            var declaredPrefix = ResolveSchemaPrefix(schema, schemaTargetNamespace);
+
+            if (declaredPrefix is not null && !namespaceMap.ContainsKey(declaredPrefix))
+            {
+                namespaceMap[declaredPrefix] = schemaTargetNamespace;
+            }
+            else
+            {
+                prefixIndex++;
+                var generatedPrefix = $"ns{prefixIndex}";
+                namespaceMap[generatedPrefix] = schemaTargetNamespace;
+            }
+        }
+
+        return namespaceMap;
+    }
+
+    private static string? ResolveSchemaPrefix(XmlSchema schema, string targetNamespace)
+    {
+        foreach (var entry in schema.Namespaces.ToArray())
+        {
+            if (entry.Namespace == targetNamespace && !string.IsNullOrEmpty(entry.Name))
+                return entry.Name;
+        }
+
+        return null;
     }
 }

@@ -57,6 +57,40 @@ public class AllProvidersXsdValidationSummaryTests
     }
 
     [Fact]
+    public void Given_NacionalSchema_Should_PreserveSameNamespaceOnAllTypes()
+    {
+        // Arrange
+        const string xsdInfrastructureNamespace = "http://www.w3.org/2001/XMLSchema";
+        var schema = AnalyzeProvider("nacional", "DPS_v1.01.xsd");
+
+        // Act
+        var businessNamespaces = schema.ComplexTypes
+            .Where(ct => ct.Namespace is not null && ct.Namespace != xsdInfrastructureNamespace)
+            .Select(ct => ct.Namespace)
+            .Distinct()
+            .ToList();
+
+        // Assert
+        businessNamespaces.Count.ShouldBe(1, "Nacional should have a single business namespace across all types");
+        businessNamespaces[0].ShouldBe("http://www.sped.fazenda.gov.br/nfse");
+    }
+
+    [Fact]
+    public void Given_NacionalSchema_Should_HaveSingleNamespaceInMap()
+    {
+        // Arrange
+        var schema = AnalyzeProvider("nacional", "DPS_v1.01.xsd");
+
+        // Act
+        var namespaceMap = schema.NamespaceMap;
+
+        // Assert
+        namespaceMap.ShouldNotBeNull();
+        namespaceMap!.Count.ShouldBe(1);
+        namespaceMap.Values.ShouldContain("http://www.sped.fazenda.gov.br/nfse");
+    }
+
+    [Fact]
     public void Given_NacionalSequence_Should_EmitElementsInSchemaOrder()
     {
         // Arrange
@@ -140,6 +174,84 @@ public class AllProvidersXsdValidationSummaryTests
         schema.RootInlineType.ShouldNotBeNull("Root inline type should be captured");
     }
 
+    [Fact]
+    public void Given_GissonlineSchema_Should_PreserveNamespacePerComplexType()
+    {
+        // Arrange
+        var schema = AnalyzeProvider("gissonline", "enviar-lote-rps-envio-v2_04.xsd");
+
+        // Act
+        var tcLoteRps = schema.ComplexTypes.First(ct => ct.Name == "tcLoteRps");
+        var rootInlineType = schema.RootInlineType;
+
+        // Assert
+        tcLoteRps.Namespace.ShouldBe("http://www.giss.com.br/tipos-v2_04.xsd");
+        rootInlineType.ShouldNotBeNull();
+        rootInlineType!.Namespace.ShouldBe("http://www.giss.com.br/enviar-lote-rps-envio-v2_04.xsd");
+    }
+
+    [Fact]
+    public void Given_GissonlineSchema_Should_HaveMultipleNamespacesInMap()
+    {
+        // Arrange
+        var schema = AnalyzeProvider("gissonline", "enviar-lote-rps-envio-v2_04.xsd");
+
+        // Act
+        var namespaceMap = schema.NamespaceMap;
+
+        // Assert
+        namespaceMap.ShouldNotBeNull();
+        namespaceMap!.Count.ShouldBeGreaterThanOrEqualTo(2);
+        namespaceMap.Values.ShouldContain("http://www.giss.com.br/enviar-lote-rps-envio-v2_04.xsd");
+        namespaceMap.Values.ShouldContain("http://www.giss.com.br/tipos-v2_04.xsd");
+    }
+
+    [Fact]
+    public void Given_GissonlineMinimalData_Should_ProduceXsdValidXml()
+    {
+        // Arrange
+        var schema = AnalyzeProvider("gissonline", "enviar-lote-rps-envio-v2_04.xsd");
+        var resolver = LoadResolver("gissonline");
+        var data = GissonlineMinimalData();
+
+        // Act
+        var result = Serializer.SerializeAndValidate(schema, data, resolver,
+            "_anon_EnviarLoteRpsEnvio", "EnviarLoteRpsEnvio",
+            FindXsdDir("gissonline"));
+
+        // Assert
+        result.Xml.ShouldNotBeNull();
+        result.ValidationErrors.ShouldBeEmpty($"GISSOnline XSD errors:\n{string.Join("\n", result.ValidationErrors)}");
+    }
+
+    [Fact]
+    public void Given_GissonlineXml_Should_EmitLoteRpsChildrenInTiposNamespace()
+    {
+        // Arrange
+        var schema = AnalyzeProvider("gissonline", "enviar-lote-rps-envio-v2_04.xsd");
+        var resolver = LoadResolver("gissonline");
+        var data = GissonlineMinimalData();
+
+        // Act
+        var result = Serializer.Serialize(schema, data, resolver,
+            "_anon_EnviarLoteRpsEnvio", "EnviarLoteRpsEnvio");
+
+        // Assert
+        result.Xml.ShouldNotBeNull();
+        var doc = XDocument.Parse(result.Xml!);
+        var envioNs = XNamespace.Get("http://www.giss.com.br/enviar-lote-rps-envio-v2_04.xsd");
+        var tiposNs = XNamespace.Get("http://www.giss.com.br/tipos-v2_04.xsd");
+
+        var loteRps = doc.Descendants(envioNs + "LoteRps").First();
+        loteRps.Name.Namespace.NamespaceName.ShouldBe("http://www.giss.com.br/enviar-lote-rps-envio-v2_04.xsd");
+
+        var numeroLote = loteRps.Element(tiposNs + "NumeroLote");
+        numeroLote.ShouldNotBeNull("NumeroLote should be in tipos namespace");
+
+        var prestador = loteRps.Element(tiposNs + "Prestador");
+        prestador.ShouldNotBeNull("Prestador should be in tipos namespace");
+    }
+
     // ==========================================================
     // ISSNet — uses DPS nacional schema
     // ==========================================================
@@ -209,41 +321,70 @@ public class AllProvidersXsdValidationSummaryTests
         var report = new StringBuilder();
         report.AppendLine("# Runtime Serializer XSD Validation Summary");
         report.AppendLine();
-        report.AppendLine("| Provider | Schema Root | XSD Valid | Choice | Sequence | Required |");
-        report.AppendLine("|----------|------------|----------|--------|----------|----------|");
+        report.AppendLine("| Provider | Schema Root | Namespace | XSD Valid | Choice | Sequence | Required |");
+        report.AppendLine("|----------|------------|-----------|----------|--------|----------|----------|");
 
         // Nacional
+        var nacSchema = AnalyzeProvider("nacional", "DPS_v1.01.xsd");
         var nacResult = TestProvider("nacional", "DPS_v1.01.xsd", "TCDPS", "DPS", NacionalMinimalData(), "1.01");
-        report.AppendLine($"| Nacional | TCDPS/DPS | {FormatValidationStatus(nacResult)} | CNPJ/CPF/NIF/cNaoNIF | tpAmb→valores | tpAmb,dhEmi,serie,prest,serv,valores |");
+        report.AppendLine($"| Nacional | TCDPS/DPS | {FormatNamespaceType(nacSchema)} | {FormatValidationStatus(nacResult)} | CNPJ/CPF/NIF/cNaoNIF | tpAmb→valores | tpAmb,dhEmi,serie,prest,serv,valores |");
 
         // ABRASF
+        var abrasfSchema = AnalyzeProvider("abrasf", "wne_model_xsd_nota_fiscal_abrasf.xsd");
         var abrasfResult = TestProvider("abrasf", "wne_model_xsd_nota_fiscal_abrasf.xsd", "_anon_EnviarLoteRpsEnvio", "EnviarLoteRpsEnvio", AbrasfMinimalData(), null);
-        report.AppendLine($"| ABRASF | EnviarLoteRpsEnvio (inline) | {FormatValidationStatus(abrasfResult)} | Cpf/Cnpj choice | NumeroLote→ListaRps | {DescribeValidationGap(abrasfResult)} |");
+        report.AppendLine($"| ABRASF | EnviarLoteRpsEnvio (inline) | {FormatNamespaceType(abrasfSchema)} | {FormatValidationStatus(abrasfResult)} | Cpf/Cnpj choice | NumeroLote→ListaRps | {DescribeValidationGap(abrasfResult)} |");
 
         // GISSOnline
+        var gissSchema = AnalyzeProvider("gissonline", "enviar-lote-rps-envio-v2_04.xsd");
         var gissResult = TestProvider("gissonline", "enviar-lote-rps-envio-v2_04.xsd", "_anon_EnviarLoteRpsEnvio", "EnviarLoteRpsEnvio", GissonlineMinimalData(), null);
-        report.AppendLine($"| GISSOnline | EnviarLoteRpsEnvio (inline) | {FormatValidationStatus(gissResult)} | Cpf/Cnpj choice | NumeroLote→ListaRps+IBSCBS | {DescribeValidationGap(gissResult)} |");
+        report.AppendLine($"| GISSOnline | EnviarLoteRpsEnvio (inline) | {FormatNamespaceType(gissSchema)} | {FormatValidationStatus(gissResult)} | Cpf/Cnpj choice | NumeroLote→ListaRps+IBSCBS | {DescribeValidationGap(gissResult)} |");
 
         // ISSNet
+        var issnetSchema = AnalyzeProvider("issnet", "schema_v101.xsd");
         var issnetData = new Dictionary<string, object?>();
         foreach (var (k, v) in NacionalMinimalData()) issnetData[$"DPS.{k}"] = v;
         issnetData["DPS.infDPS.prest.IM"] = "12345";
         issnetData["DPS.infDPS.serv.cServ.cTribMun"] = "040101";
         var issnetResult = TestProvider("issnet", "schema_v101.xsd", "_anon_EnviarLoteDpsEnvio", "EnviarLoteDpsEnvio", issnetData, null);
-        report.AppendLine($"| ISSNet | EnviarLoteDpsEnvio (inline) | {FormatValidationStatus(issnetResult)} | CNPJ/CPF choice | tpAmb→valores via DPS | {DescribeValidationGap(issnetResult)} |");
+        report.AppendLine($"| ISSNet | EnviarLoteDpsEnvio (inline) | {FormatNamespaceType(issnetSchema)} | {FormatValidationStatus(issnetResult)} | CNPJ/CPF choice | tpAmb→valores via DPS | {DescribeValidationGap(issnetResult)} |");
 
         // Paulistana
         var paulistanaSchema = AnalyzeProvider("paulistana", "PedidoEnvioLoteRPS_v02.xsd");
-        report.AppendLine($"| Paulistana | PedidoEnvioLoteRPS (inline) | ANALYZED ({paulistanaSchema.ComplexTypes.Count} types) | CPF/CNPJ | Cabecalho→ListaRPS | Data bindings not yet configured |");
+        report.AppendLine($"| Paulistana | PedidoEnvioLoteRPS (inline) | {FormatNamespaceType(paulistanaSchema)} | ANALYZED ({paulistanaSchema.ComplexTypes.Count} types) | CPF/CNPJ | Cabecalho→ListaRPS | Data bindings not yet configured |");
+
+        // Simpliss — included only if provider directory exists
+        var simplissIncluded = ProviderXsdDirExists("simpliss");
+        SchemaDocument? simplissSchema = null;
+        if (simplissIncluded)
+        {
+            simplissSchema = AnalyzeProvider("simpliss", "nfse_v2-03.xsd");
+            report.AppendLine($"| Simpliss | nfse (ABRASF-based) | {FormatNamespaceType(simplissSchema)} | ANALYZED ({simplissSchema.ComplexTypes.Count} types) | Cpf/Cnpj | NumeroLote→ListaRps | Data bindings not yet configured |");
+        }
+
+        var totalProviders = simplissIncluded ? 6 : 5;
 
         report.AppendLine();
         report.AppendLine("## Summary");
         report.AppendLine();
-        report.AppendLine($"**Total providers:** 5");
+        report.AppendLine($"**Total providers:** {totalProviders}");
         var runtimePass = new[] { nacResult, abrasfResult, gissResult, issnetResult }.Count(result => result.IsValid);
         report.AppendLine($"**Runtime XML validated (XSD pass):** {runtimePass}/4 (Nacional, ABRASF, GISSOnline, ISSNet)");
-        report.AppendLine($"**Schema analyzed:** Paulistana ({paulistanaSchema.ComplexTypes.Count} types)");
+        var analyzedProviders = simplissIncluded
+            ? $"Paulistana ({paulistanaSchema.ComplexTypes.Count} types), Simpliss ({simplissSchema!.ComplexTypes.Count} types)"
+            : $"Paulistana ({paulistanaSchema.ComplexTypes.Count} types)";
+        report.AppendLine($"**Schema analyzed:** {analyzedProviders}");
         report.AppendLine($"**Inline type support:** Enabled — anonymous complexTypes resolved recursively");
+        report.AppendLine($"**Multi-namespace support:** Enabled — elements emitted in correct namespace per type");
+
+        report.AppendLine();
+        report.AppendLine("## Gaps");
+        report.AppendLine();
+        report.AppendLine("| Provider | Gap | Reason |");
+        report.AppendLine("|----------|-----|--------|");
+        report.AppendLine($"| ISSNet | {DescribeValidationGap(issnetResult)} | LoteDps wrapper requires specific data bindings not yet mapped |");
+        report.AppendLine($"| Paulistana | Schema analyzed only | Data bindings not yet configured for SP municipal schema |");
+        if (simplissIncluded)
+            report.AppendLine($"| Simpliss | Schema analyzed only | ABRASF-based schema; data bindings not yet configured |");
 
         var reportPath = Path.Combine(FindProvidersDir(), "runtime-xsd-validation-summary.md");
         File.WriteAllText(reportPath, report.ToString());
@@ -351,6 +492,21 @@ public class AllProvidersXsdValidationSummaryTests
 
     private static string FormatValidationStatus(SerializationResult result) =>
         result.IsValid ? "PASS" : "FAIL";
+
+    private static string FormatNamespaceType(SchemaDocument schema) =>
+        schema.NamespaceMap?.Count > 1 ? "Multi" : "Single";
+
+    private static bool ProviderXsdDirExists(string provider)
+    {
+        var dir = AppContext.BaseDirectory;
+        while (dir is not null)
+        {
+            var candidate = Path.Combine(dir, "providers", provider, "xsd");
+            if (Directory.Exists(candidate)) return true;
+            dir = Directory.GetParent(dir)?.FullName;
+        }
+        return false;
+    }
 
     private static string DescribeValidationGap(SerializationResult result)
     {
