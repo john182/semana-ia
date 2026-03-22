@@ -82,3 +82,23 @@ O projeto MUST ter um extension method centralizado `ShouldBeValidAgainstProvide
 #### Scenario: Centralized validation for any provider
 - **WHEN** `xml.ShouldBeValidAgainstProviderSchema("nacional")` é chamado
 - **THEN** valida contra os XSDs em `providers/nacional/xsd/`
+
+### Requirement: Domain-to-schema data binding
+
+O `ServiceInvoiceSchemaDataBinder` MUST converter `DpsDocument` em `Dictionary<string, object?>` compatível com o serializer runtime, usando bindings configuráveis por provider (seção `bindings` no `base-rules.json`). O `SchemaSerializationPipeline` MUST orquestrar binding → serialização → validação XSD a partir de `DpsDocument` + providerName.
+
+#### Scenario: End-to-end pipeline with DpsDocument
+- **WHEN** um DpsDocument válido é processado pelo pipeline para o provider nacional
+- **THEN** o resultado contém XML válido contra o XSD
+
+#### Scenario: Pipeline with production-like data
+- **WHEN** dados equivalentes a um documento real de produção (com provider, borrower, IbsCbs) são processados
+- **THEN** o XML gerado passa validação XSD e contém os CNPJs esperados
+
+### Requirement: All-provider validation summary
+
+O projeto MUST ter testes que validem todos os 5 providers (nacional, ABRASF, GISSOnline, ISSNet, Paulistana) com cobertura de schema analysis, choice identification e sequence order, gerando relatório sumarizado.
+
+#### Scenario: All providers analyzed and reported
+- **WHEN** os testes de sumário são executados
+- **THEN** um relatório é gerado com status por provider: runtime valid, analyzed, ou pending
