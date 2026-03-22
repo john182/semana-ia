@@ -6,7 +6,8 @@ public record SchemaDocument(
     string TargetNamespace,
     string RootElementName,
     List<SchemaComplexType> ComplexTypes,
-    SchemaComplexType? RootInlineType = null)
+    SchemaComplexType? RootInlineType = null,
+    Dictionary<string, string>? NamespaceMap = null)
 {
     public string ToMarkdownReport()
     {
@@ -37,7 +38,8 @@ public record SchemaDocument(
 public record SchemaComplexType(
     string Name,
     List<SchemaElement> Elements,
-    string? Annotation = null);
+    string? Annotation = null,
+    string? Namespace = null);
 
 public record SchemaElement(
     string Name,
