@@ -135,3 +135,15 @@ O `SchemaGenerationRunner` MUST processar o provider GISSOnline sem alterações
 #### Scenario: GISSOnline onboarding
 - **WHEN** o runner é executado para "gissonline" com XSDs e base-rules.json mínimo
 - **THEN** artefatos são gerados e XML mínimo válido passa validação contra os XSDs do GISSOnline
+
+### Requirement: Anonymous inline type support
+
+O `XsdSchemaAnalyzer` MUST processar anonymous inline types (complexType sem nome definido inline em elementos) e representá-los como `SchemaElement.InlineType`. O `SchemaBasedXmlSerializer` MUST priorizar `InlineType` sobre o typeMap global. Root elements com inline types MUST ser capturados como `SchemaDocument.RootInlineType` e adicionados ao complexTypes list.
+
+#### Scenario: Inline type in element
+- **WHEN** um elemento define complexType inline (ex: `ListaRps`)
+- **THEN** o `SchemaElement.InlineType` contém os sub-elementos extraídos
+
+#### Scenario: Runtime serialization with inline types
+- **WHEN** o serializer processa um schema com inline types (ex: ABRASF)
+- **THEN** o XML gerado é válido contra o XSD do provider

@@ -23,6 +23,10 @@ Regras:
 - sinalizar quando a implementação extrapolar o entendimento consolidado da mudança
 - não usar MCP como fonte principal de validação quando houver arquivos versionados da change
 - priorizar proposal, tasks e spec local como fonte de verdade
+- apontar como problema parâmetros de uma letra fora de lambdas triviais
+- apontar como problema métodos privados com nomes vagos ou sem contexto semântico
+- apontar como problema expressões complexas inline quando prejudicarem a leitura
+- exigir naming semântico em métodos, parâmetros e variáveis locais
 
 # Regras obrigatórias
 
@@ -51,6 +55,16 @@ Regras:
 - Recomendar centralização quando houver comportamento recorrente compartilhável repetido em mais de um ponto.
 - Verificar se a solução introduziu mais uma implementação paralela para algo que já tinha ponto reutilizável.
 - Validar se o novo código favorece reutilização e coesão em vez de duplicação local.
+
+# Regras adicionais para revisão de engine/schema/provider
+
+Quando a mudança envolver engine de schema, serializer runtime, providers ou XSD:
+
+- verificar se foram executadas validações para todos os providers da pasta `providers/`
+- verificar se foi gerado um resumo sumarizado por provider
+- apontar como problema quando a mudança validar apenas um provider sem justificativa explícita
+- apontar como problema quando faltarem status, gaps ou diagnóstico individual por provider
+- validar se a mudança registrou claramente os limites técnicos ainda existentes por provider
 
 # Saída esperada
 
