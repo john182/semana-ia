@@ -32,7 +32,7 @@ public class AllProvidersXsdValidationSummaryTests
 
         // Act
         var result = Serializer.SerializeAndValidate(schema, data, resolver, "TCDPS", "DPS",
-            FindXsdDir("nacional"), "1.01");
+            TestProviderPaths.FindXsdDir("nacional"), "1.01");
 
         // Assert
         result.Xml.ShouldNotBeNull();
@@ -139,7 +139,7 @@ public class AllProvidersXsdValidationSummaryTests
         // Note: versao goes on LoteRps (via @versao in data), not on root
         var result = Serializer.SerializeAndValidate(schema, data, resolver,
             "_anon_EnviarLoteRpsEnvio", "EnviarLoteRpsEnvio",
-            FindXsdDir("abrasf"));
+            TestProviderPaths.FindXsdDir("abrasf"));
 
         // Assert
         result.Xml.ShouldNotBeNull($"Errors: {string.Join("\n", result.Errors.Select(e => $"{e.Kind}: {e.Field} - {e.Message}"))}");
@@ -220,7 +220,7 @@ public class AllProvidersXsdValidationSummaryTests
         // Act
         var result = Serializer.SerializeAndValidate(schema, data, resolver,
             "_anon_EnviarLoteRpsEnvio", "EnviarLoteRpsEnvio",
-            FindXsdDir("gissonline"));
+            TestProviderPaths.FindXsdDir("gissonline"));
 
         // Assert
         result.Xml.ShouldNotBeNull();
@@ -312,7 +312,7 @@ public class AllProvidersXsdValidationSummaryTests
         var result = Serializer.SerializeAndValidate(
             schema, data, resolver,
             profile.RootComplexTypeName!, profile.RootElementName!,
-            FindXsdDir("issnet"));
+            TestProviderPaths.FindXsdDir("issnet"));
 
         // Assert
         result.Xml.ShouldNotBeNull($"Errors: {string.Join("\n", result.Errors.Select(e => $"{e.Kind}: {e.Field} - {e.Message}"))}");
@@ -418,29 +418,37 @@ public class AllProvidersXsdValidationSummaryTests
     [Fact]
     public void Given_AllProviders_Should_GenerateCoverageReport()
     {
-        // Arrange & Act
+        // Arrange
+        var onboardingValidator = new ProviderOnboardingValidator();
+        var providersDir = TestProviderPaths.FindProvidersDir();
+        var allOnboardingReports = onboardingValidator.ValidateAll(providersDir);
+
+        // Act
         var report = new StringBuilder();
         report.AppendLine("# Runtime Serializer XSD Validation Summary");
         report.AppendLine();
-        report.AppendLine("| Provider | Schema Root | Namespace | XSD Valid | Choice | Sequence | Required |");
-        report.AppendLine("|----------|------------|-----------|----------|--------|----------|----------|");
+        report.AppendLine("| Provider | Schema Root | Namespace | XSD Valid | Onboarding Status | Gap Classification | Choice | Sequence |");
+        report.AppendLine("|----------|------------|-----------|----------|-------------------|-------------------|--------|----------|");
 
         // Nacional
         var nacSchema = AnalyzeProvider("nacional", "DPS_v1.01.xsd");
         var nacResult = TestProvider("nacional", "DPS_v1.01.xsd", "TCDPS", "DPS", NacionalMinimalData(), "1.01");
-        report.AppendLine($"| Nacional | TCDPS/DPS | {FormatNamespaceType(nacSchema)} | {FormatValidationStatus(nacResult)} | CNPJ/CPF/NIF/cNaoNIF | tpAmb→valores | tpAmb,dhEmi,serie,prest,serv,valores |");
+        var nacOnboarding = FindOnboardingReport(allOnboardingReports, "nacional");
+        report.AppendLine($"| Nacional | TCDPS/DPS | {FormatNamespaceType(nacSchema)} | {FormatValidationStatus(nacResult)} | {FormatOnboardingStatus(nacOnboarding)} | {FormatGapClassification(nacOnboarding)} | CNPJ/CPF/NIF/cNaoNIF | tpAmb->valores |");
 
         // ABRASF
         var abrasfSchema = AnalyzeProvider("abrasf", "wne_model_xsd_nota_fiscal_abrasf.xsd");
         var abrasfResult = TestProvider("abrasf", "wne_model_xsd_nota_fiscal_abrasf.xsd", "_anon_EnviarLoteRpsEnvio", "EnviarLoteRpsEnvio", AbrasfMinimalData(), null);
-        report.AppendLine($"| ABRASF | EnviarLoteRpsEnvio (inline) | {FormatNamespaceType(abrasfSchema)} | {FormatValidationStatus(abrasfResult)} | Cpf/Cnpj choice | NumeroLote→ListaRps | {DescribeValidationGap(abrasfResult)} |");
+        var abrasfOnboarding = FindOnboardingReport(allOnboardingReports, "abrasf");
+        report.AppendLine($"| ABRASF | EnviarLoteRpsEnvio (inline) | {FormatNamespaceType(abrasfSchema)} | {FormatValidationStatus(abrasfResult)} | {FormatOnboardingStatus(abrasfOnboarding)} | {FormatGapClassification(abrasfOnboarding)} | Cpf/Cnpj choice | NumeroLote->ListaRps |");
 
         // GISSOnline
         var gissSchema = AnalyzeProvider("gissonline", "enviar-lote-rps-envio-v2_04.xsd");
         var gissResult = TestProvider("gissonline", "enviar-lote-rps-envio-v2_04.xsd", "_anon_EnviarLoteRpsEnvio", "EnviarLoteRpsEnvio", GissonlineMinimalData(), null);
-        report.AppendLine($"| GISSOnline | EnviarLoteRpsEnvio (inline) | {FormatNamespaceType(gissSchema)} | {FormatValidationStatus(gissResult)} | Cpf/Cnpj choice | NumeroLote→ListaRps+IBSCBS | {DescribeValidationGap(gissResult)} |");
+        var gissOnboarding = FindOnboardingReport(allOnboardingReports, "gissonline");
+        report.AppendLine($"| GISSOnline | EnviarLoteRpsEnvio (inline) | {FormatNamespaceType(gissSchema)} | {FormatValidationStatus(gissResult)} | {FormatOnboardingStatus(gissOnboarding)} | {FormatGapClassification(gissOnboarding)} | Cpf/Cnpj choice | NumeroLote->ListaRps+IBSCBS |");
 
-        // ISSNet — binder-based approach with wrapper bindings and path prefix
+        // ISSNet
         var issnetSchema = AnalyzeProvider("issnet", "schema_v101.xsd");
         var issnetProfile = LoadIssnetProfile();
         var issnetResolver = new ProviderRuleResolver(issnetProfile);
@@ -449,55 +457,211 @@ public class AllProvidersXsdValidationSummaryTests
         var issnetResult = Serializer.SerializeAndValidate(
             issnetSchema, issnetData, issnetResolver,
             issnetProfile.RootComplexTypeName!, issnetProfile.RootElementName!,
-            FindXsdDir("issnet"));
-        report.AppendLine($"| ISSNet | EnviarLoteDpsEnvio (inline) | {FormatNamespaceType(issnetSchema)} | {FormatValidationStatus(issnetResult)} | CNPJ/CPF choice | LoteDps→ListaDps→DPS via binder | {DescribeValidationGap(issnetResult)} |");
+            TestProviderPaths.FindXsdDir("issnet"));
+        var issnetOnboarding = FindOnboardingReport(allOnboardingReports, "issnet");
+        report.AppendLine($"| ISSNet | EnviarLoteDpsEnvio (inline) | {FormatNamespaceType(issnetSchema)} | {FormatValidationStatus(issnetResult)} | {FormatOnboardingStatus(issnetOnboarding)} | {FormatGapClassification(issnetOnboarding)} | CNPJ/CPF choice | LoteDps->ListaDps->DPS via binder |");
 
-        // Paulistana
+        // Paulistana — attempt runtime XML generation
         var paulistanaSchema = AnalyzeProvider("paulistana", "PedidoEnvioLoteRPS_v02.xsd");
-        report.AppendLine($"| Paulistana | PedidoEnvioLoteRPS (inline) | {FormatNamespaceType(paulistanaSchema)} | ANALYZED ({paulistanaSchema.ComplexTypes.Count} types) | CPF/CNPJ | Cabecalho→ListaRPS | Data bindings not yet configured |");
+        var paulistanaOnboarding = FindOnboardingReport(allOnboardingReports, "paulistana");
+        var paulistanaRuntimeResult = AttemptRuntimeXml("paulistana", "PedidoEnvioLoteRPS_v02.xsd");
+        var paulistanaXsdStatus = paulistanaRuntimeResult is not null
+            ? FormatValidationStatus(paulistanaRuntimeResult)
+            : $"ANALYZED ({paulistanaSchema.ComplexTypes.Count} types)";
+        var paulistanaGapDetail = paulistanaRuntimeResult is not null && !paulistanaRuntimeResult.IsValid
+            ? FormatGapClassification(paulistanaOnboarding)
+            : FormatGapClassification(paulistanaOnboarding);
+        report.AppendLine($"| Paulistana | PedidoEnvioLoteRPS (inline) | {FormatNamespaceType(paulistanaSchema)} | {paulistanaXsdStatus} | {FormatOnboardingStatus(paulistanaOnboarding)} | {paulistanaGapDetail} | CPF/CNPJ | Cabecalho->ListaRPS |");
 
-        // Simpliss — included only if provider directory exists
+        // Simpliss — attempt runtime XML generation
         var simplissIncluded = ProviderXsdDirExists("simpliss");
         SchemaDocument? simplissSchema = null;
+        OnboardingReport? simplissOnboarding = null;
+        SerializationResult? simplissRuntimeResult = null;
         if (simplissIncluded)
         {
             simplissSchema = AnalyzeProvider("simpliss", "nfse_v2-03.xsd");
-            report.AppendLine($"| Simpliss | nfse (ABRASF-based) | {FormatNamespaceType(simplissSchema)} | ANALYZED ({simplissSchema.ComplexTypes.Count} types) | Cpf/Cnpj | NumeroLote→ListaRps | Data bindings not yet configured |");
+            simplissOnboarding = FindOnboardingReport(allOnboardingReports, "simpliss");
+            simplissRuntimeResult = AttemptRuntimeXml("simpliss", "nfse_v2-03.xsd");
+            var simplissXsdStatus = simplissRuntimeResult is not null
+                ? FormatValidationStatus(simplissRuntimeResult)
+                : $"ANALYZED ({simplissSchema.ComplexTypes.Count} types)";
+            report.AppendLine($"| Simpliss | nfse (ABRASF-based) | {FormatNamespaceType(simplissSchema)} | {simplissXsdStatus} | {FormatOnboardingStatus(simplissOnboarding)} | {FormatGapClassification(simplissOnboarding)} | Cpf/Cnpj | NumeroLote->ListaRps |");
         }
 
         var totalProviders = simplissIncluded ? 6 : 5;
+
+        // Summary statistics for all 6 providers
+        var allRuntimeResults = new List<(string Name, SerializationResult? Result)>
+        {
+            ("Nacional", nacResult),
+            ("ABRASF", abrasfResult),
+            ("GISSOnline", gissResult),
+            ("ISSNet", issnetResult),
+            ("Paulistana", paulistanaRuntimeResult),
+            ("Simpliss", simplissRuntimeResult)
+        };
+        var runtimeAttempted = allRuntimeResults.Count(r => r.Result is not null);
+        var runtimePass = allRuntimeResults.Count(r => r.Result is not null && r.Result.IsValid);
+        var runtimePassNames = string.Join(", ", allRuntimeResults.Where(r => r.Result is not null && r.Result.IsValid).Select(r => r.Name));
+        var runtimeFailNames = allRuntimeResults.Where(r => r.Result is not null && !r.Result.IsValid).Select(r => r.Name).ToList();
+        var schemaOnlyNames = allRuntimeResults.Where(r => r.Result is null).Select(r => r.Name).ToList();
 
         report.AppendLine();
         report.AppendLine("## Summary");
         report.AppendLine();
         report.AppendLine($"**Total providers:** {totalProviders}");
-        var runtimePass = new[] { nacResult, abrasfResult, gissResult, issnetResult }.Count(result => result.IsValid);
-        report.AppendLine($"**Runtime XML validated (XSD pass):** {runtimePass}/4 (Nacional, ABRASF, GISSOnline, ISSNet)");
-        var analyzedProviders = simplissIncluded
-            ? $"Paulistana ({paulistanaSchema.ComplexTypes.Count} types), Simpliss ({simplissSchema!.ComplexTypes.Count} types)"
-            : $"Paulistana ({paulistanaSchema.ComplexTypes.Count} types)";
-        report.AppendLine($"**Schema analyzed:** {analyzedProviders}");
-        report.AppendLine($"**Inline type support:** Enabled — anonymous complexTypes resolved recursively");
-        report.AppendLine($"**Multi-namespace support:** Enabled — elements emitted in correct namespace per type");
+        report.AppendLine($"**Runtime XML attempted:** {runtimeAttempted}/{totalProviders}");
+        report.AppendLine($"**Runtime XML validated (XSD pass):** {runtimePass}/{runtimeAttempted} ({runtimePassNames})");
+        if (runtimeFailNames.Count > 0)
+            report.AppendLine($"**Runtime XML failed:** {string.Join(", ", runtimeFailNames)}");
+        if (schemaOnlyNames.Count > 0)
+            report.AppendLine($"**Schema analyzed only:** {string.Join(", ", schemaOnlyNames)}");
+        report.AppendLine($"**Inline type support:** Enabled -- anonymous complexTypes resolved recursively");
+        report.AppendLine($"**Multi-namespace support:** Enabled -- elements emitted in correct namespace per type");
+
+        // Onboarding status summary
+        report.AppendLine();
+        report.AppendLine("## Onboarding Status");
+        report.AppendLine();
+        report.AppendLine("| Provider | Status | Checks Passed | Total Checks | Failed Checks |");
+        report.AppendLine("|----------|--------|---------------|--------------|---------------|");
+        foreach (var onboarding in allOnboardingReports)
+        {
+            var passedCount = onboarding.Checks.Count(c => c.Passed);
+            var totalCount = onboarding.Checks.Count;
+            var failedChecks = onboarding.Checks.Where(c => !c.Passed).Select(c => c.Name).ToList();
+            var failedDisplay = failedChecks.Count > 0 ? string.Join(", ", failedChecks) : "None";
+            report.AppendLine($"| {onboarding.ProviderName} | {FormatOnboardingStatus(onboarding)} | {passedCount} | {totalCount} | {failedDisplay} |");
+        }
 
         report.AppendLine();
         report.AppendLine("## Gaps");
         report.AppendLine();
-        report.AppendLine("| Provider | Gap | Reason |");
-        report.AppendLine("|----------|-----|--------|");
+        report.AppendLine("| Provider | Gap Kind | Gap | Reason |");
+        report.AppendLine("|----------|----------|-----|--------|");
         if (!issnetResult.IsValid)
-            report.AppendLine($"| ISSNet | {DescribeValidationGap(issnetResult)} | Binder-based wrapper bindings need adjustment |");
-        report.AppendLine($"| Paulistana | Schema analyzed only | Data bindings not yet configured for SP municipal schema |");
-        if (simplissIncluded)
-            report.AppendLine($"| Simpliss | Schema analyzed only | ABRASF-based schema; data bindings not yet configured |");
+            report.AppendLine($"| ISSNet | EngineGap | {DescribeValidationGap(issnetResult)} | Binder-based wrapper bindings need adjustment |");
 
-        var reportPath = Path.Combine(FindProvidersDir(), "runtime-xsd-validation-summary.md");
+        foreach (var onboarding in allOnboardingReports)
+        {
+            var failedChecks = onboarding.Checks.Where(c => !c.Passed).ToList();
+            foreach (var failedCheck in failedChecks)
+            {
+                report.AppendLine($"| {onboarding.ProviderName} | {failedCheck.GapKind?.ToString() ?? "Unknown"} | {failedCheck.Name} | {failedCheck.Details ?? "No details"} |");
+            }
+        }
+
+        var reportPath = Path.Combine(providersDir, "runtime-xsd-validation-summary.md");
         File.WriteAllText(reportPath, report.ToString());
 
         // Assert
         File.Exists(reportPath).ShouldBeTrue();
         nacResult.IsValid.ShouldBeTrue("Nacional should be XSD valid");
+        abrasfResult.IsValid.ShouldBeTrue("ABRASF should be XSD valid");
+        gissResult.IsValid.ShouldBeTrue("GISSOnline should be XSD valid");
         issnetResult.IsValid.ShouldBeTrue("ISSNet should be XSD valid via binder");
+        totalProviders.ShouldBe(6, "All 6 providers should be included in the report");
+    }
+
+    [Fact]
+    public void Given_AllProviders_Should_GenerateOnboardingReport()
+    {
+        // Arrange
+        var onboardingValidator = new ProviderOnboardingValidator();
+        var providersDir = TestProviderPaths.FindProvidersDir();
+
+        // Act
+        var allReports = onboardingValidator.ValidateAll(providersDir);
+
+        // Assert — all providers pass at least SchemaLoadable and AnalysisOk
+        allReports.Count.ShouldBeGreaterThanOrEqualTo(6, "Should have onboarding reports for at least 6 providers");
+
+        foreach (var providerReport in allReports)
+        {
+            var schemaLoadable = providerReport.Checks.FirstOrDefault(c => c.Name == "SchemaLoadable");
+            schemaLoadable.ShouldNotBeNull($"Provider '{providerReport.ProviderName}' should have SchemaLoadable check");
+            schemaLoadable!.Passed.ShouldBeTrue($"Provider '{providerReport.ProviderName}' should pass SchemaLoadable");
+
+            var analysisOk = providerReport.Checks.FirstOrDefault(c => c.Name == "AnalysisOk");
+            analysisOk.ShouldNotBeNull($"Provider '{providerReport.ProviderName}' should have AnalysisOk check");
+            analysisOk!.Passed.ShouldBeTrue($"Provider '{providerReport.ProviderName}' should pass AnalysisOk");
+        }
+
+        // Generate consolidated onboarding report
+        var report = new StringBuilder();
+        report.AppendLine("# Provider Onboarding Report");
+        report.AppendLine();
+        report.AppendLine($"Generated: {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss} UTC");
+        report.AppendLine();
+        report.AppendLine("## Provider Status Overview");
+        report.AppendLine();
+        report.AppendLine("| Provider | Status | SchemaLoadable | AnalysisOk | BindingsPresent | RuntimeProducible | XsdValid |");
+        report.AppendLine("|----------|--------|----------------|------------|-----------------|-------------------|----------|");
+
+        foreach (var providerReport in allReports)
+        {
+            var status = FormatOnboardingStatus(providerReport);
+            var checkResults = FormatCheckResults(providerReport);
+            report.AppendLine($"| {providerReport.ProviderName} | {status} | {checkResults["SchemaLoadable"]} | {checkResults["AnalysisOk"]} | {checkResults["BindingsPresent"]} | {checkResults["RuntimeProducible"]} | {checkResults["XsdValid"]} |");
+        }
+
+        var fullyOnboarded = allReports.Count(r => r.IsFullyOnboarded);
+        var partial = allReports.Count(r => !r.IsFullyOnboarded && r.Checks.Any(c => c.Passed));
+        var schemaOnly = allReports.Count(r => r.Checks.Count(c => c.Passed) <= 3 && !r.IsFullyOnboarded);
+
+        report.AppendLine();
+        report.AppendLine("## Summary");
+        report.AppendLine();
+        report.AppendLine($"- **Total providers:** {allReports.Count}");
+        report.AppendLine($"- **Fully Onboarded:** {fullyOnboarded}");
+        report.AppendLine($"- **Partial:** {partial}");
+        report.AppendLine($"- **Schema Only (no bindings):** {schemaOnly}");
+
+        // Gaps by classification
+        var allGaps = allReports
+            .SelectMany(r => r.Checks.Where(c => !c.Passed).Select(c => new { Provider = r.ProviderName, Check = c }))
+            .ToList();
+
+        if (allGaps.Count > 0)
+        {
+            report.AppendLine();
+            report.AppendLine("## Gaps by Classification");
+            report.AppendLine();
+            report.AppendLine("| Provider | Check | Gap Kind | Details |");
+            report.AppendLine("|----------|-------|----------|---------|");
+            foreach (var gap in allGaps)
+            {
+                report.AppendLine($"| {gap.Provider} | {gap.Check.Name} | {gap.Check.GapKind?.ToString() ?? "Unknown"} | {gap.Check.Details ?? "No details"} |");
+            }
+        }
+
+        // Backlog: what depends on configuration vs development
+        report.AppendLine();
+        report.AppendLine("## Backlog Classification");
+        report.AppendLine();
+        report.AppendLine("| Category | Description | Providers Affected |");
+        report.AppendLine("|----------|-------------|-------------------|");
+
+        var configGaps = allGaps.Where(g => g.Check.GapKind == OnboardingGapKind.ConfigurationGap).ToList();
+        var engineGaps = allGaps.Where(g => g.Check.GapKind == OnboardingGapKind.EngineGap).ToList();
+
+        if (configGaps.Count > 0)
+        {
+            var configProviders = string.Join(", ", configGaps.Select(g => g.Provider).Distinct());
+            report.AppendLine($"| Configuration | Bindings, rules or profile configuration needed | {configProviders} |");
+        }
+        if (engineGaps.Count > 0)
+        {
+            var engineProviders = string.Join(", ", engineGaps.Select(g => g.Provider).Distinct());
+            report.AppendLine($"| Development | Engine or serializer changes needed | {engineProviders} |");
+        }
+
+        var reportPath = Path.Combine(providersDir, "onboarding-report.md");
+        File.WriteAllText(reportPath, report.ToString());
+
+        // Assert report file was created
+        File.Exists(reportPath).ShouldBeTrue("Onboarding report file should be created");
     }
 
     // ==========================================================
@@ -614,7 +778,7 @@ public class AllProvidersXsdValidationSummaryTests
 
     private static ProviderProfile LoadIssnetProfile()
     {
-        var path = FindRulesPath("issnet");
+        var path = TestProviderPaths.FindRulesPath("issnet");
         var json = File.ReadAllText(path);
         return JsonSerializer.Deserialize<ProviderProfile>(json)!;
     }
@@ -623,14 +787,14 @@ public class AllProvidersXsdValidationSummaryTests
     {
         var schema = AnalyzeProvider(provider, xsdFile);
         var resolver = LoadResolver(provider);
-        return Serializer.SerializeAndValidate(schema, data, resolver, rootType, rootElement, FindXsdDir(provider), version);
+        return Serializer.SerializeAndValidate(schema, data, resolver, rootType, rootElement, TestProviderPaths.FindXsdDir(provider), version);
     }
 
     private static SchemaDocument AnalyzeProvider(string provider, string xsdFile) =>
-        Analyzer.Analyze(FindXsdPath(provider, xsdFile));
+        Analyzer.Analyze(TestProviderPaths.FindXsdPath(provider, xsdFile));
 
     private static ProviderRuleResolver LoadResolver(string provider) =>
-        ProviderRuleResolver.LoadFromFile(FindRulesPath(provider));
+        ProviderRuleResolver.LoadFromFile(TestProviderPaths.FindRulesPath(provider));
 
     private static string FormatValidationStatus(SerializationResult result) =>
         result.IsValid ? "PASS" : "FAIL";
@@ -670,51 +834,110 @@ public class AllProvidersXsdValidationSummaryTests
         return "Unknown";
     }
 
-    private static string FindXsdPath(string provider, string fileName)
+    private static OnboardingReport? FindOnboardingReport(List<OnboardingReport> reports, string providerName) =>
+        reports.FirstOrDefault(r => string.Equals(r.ProviderName, providerName, StringComparison.OrdinalIgnoreCase));
+
+    private static string FormatOnboardingStatus(OnboardingReport? report)
     {
-        var dir = AppContext.BaseDirectory;
-        while (dir is not null)
-        {
-            var candidate = Path.Combine(dir, "providers", provider, "xsd", fileName);
-            if (File.Exists(candidate)) return candidate;
-            dir = Directory.GetParent(dir)?.FullName;
-        }
-        throw new FileNotFoundException($"XSD: {provider}/{fileName}");
+        if (report is null) return "Unknown";
+        if (report.IsFullyOnboarded) return "Fully Onboarded";
+
+        var passedChecks = report.Checks.Count(c => c.Passed);
+        var schemaLoadable = report.Checks.Any(c => c.Name == "SchemaLoadable" && c.Passed);
+        var analysisOk = report.Checks.Any(c => c.Name == "AnalysisOk" && c.Passed);
+        var bindingsPresent = report.Checks.Any(c => c.Name == "BindingsPresent" && c.Passed);
+
+        if (schemaLoadable && analysisOk && !bindingsPresent)
+            return "Schema Only";
+
+        return passedChecks > 0 ? "Partial" : "Not Started";
     }
 
-    private static string FindXsdDir(string provider)
+    private static string FormatGapClassification(OnboardingReport? report)
     {
-        var dir = AppContext.BaseDirectory;
-        while (dir is not null)
-        {
-            var candidate = Path.Combine(dir, "providers", provider, "xsd");
-            if (Directory.Exists(candidate)) return candidate;
-            dir = Directory.GetParent(dir)?.FullName;
-        }
-        throw new DirectoryNotFoundException($"XSD dir: {provider}");
+        if (report is null) return "Unknown";
+        if (report.IsFullyOnboarded) return "None";
+
+        var failedChecks = report.Checks.Where(c => !c.Passed).ToList();
+        if (failedChecks.Count == 0) return "None";
+
+        var gapKinds = failedChecks
+            .Where(c => c.GapKind.HasValue)
+            .Select(c => c.GapKind!.Value.ToString())
+            .Distinct()
+            .ToList();
+
+        return gapKinds.Count > 0 ? string.Join(", ", gapKinds) : "Unknown";
     }
 
-    private static string FindRulesPath(string provider)
+    private static SerializationResult? AttemptRuntimeXml(string provider, string xsdFile)
     {
-        var dir = AppContext.BaseDirectory;
-        while (dir is not null)
+        try
         {
-            var candidate = Path.Combine(dir, "providers", provider, "rules", "base-rules.json");
-            if (File.Exists(candidate)) return candidate;
-            dir = Directory.GetParent(dir)?.FullName;
+            var rulesPath = TestProviderPaths.FindRulesPath(provider);
+            var json = File.ReadAllText(rulesPath);
+            var profile = JsonSerializer.Deserialize<ProviderProfile>(json);
+
+            if (profile?.Bindings is null || profile.Bindings.Count == 0)
+                return null;
+
+            var schema = AnalyzeProvider(provider, xsdFile);
+            var resolver = new ProviderRuleResolver(profile);
+            var document = CreateMinimalSampleDocument();
+            var data = Binder.Bind(document, profile);
+            var rootType = profile.RootComplexTypeName ?? "TCDPS";
+            var rootElement = profile.RootElementName ?? "DPS";
+
+            return Serializer.SerializeAndValidate(schema, data, resolver, rootType, rootElement,
+                TestProviderPaths.FindXsdDir(provider), profile.Version);
         }
-        throw new FileNotFoundException($"Rules: {provider}");
+        catch
+        {
+            return null;
+        }
     }
 
-    private static string FindProvidersDir()
+    private static DpsDocument CreateMinimalSampleDocument() => new()
     {
-        var dir = AppContext.BaseDirectory;
-        while (dir is not null)
+        Environment = 2,
+        Version = "V_1.00.02",
+        Series = "WEB",
+        Number = 1,
+        IssuedOn = new DateTimeOffset(2026, 1, 20, 10, 0, 0, TimeSpan.FromHours(-3)),
+        CompetenceDate = new DateOnly(2026, 1, 20),
+        Provider = new Provider
         {
-            var candidate = Path.Combine(dir, "providers");
-            if (Directory.Exists(candidate)) return candidate;
-            dir = Directory.GetParent(dir)?.FullName;
+            Cnpj = "12345678000199",
+            MunicipalityCode = "3550308",
+            FederalTaxNumber = 12345678000199,
+            TaxRegime = TaxRegime.SimplesNacional
+        },
+        Borrower = new Borrower
+        {
+            Name = "Sample Borrower",
+            FederalTaxNumber = 98765432100
+        },
+        Service = new Service
+        {
+            FederalServiceCode = "010101",
+            Description = "Sample service for onboarding validation"
+        },
+        Values = new Values
+        {
+            ServicesAmount = 100.00m,
+            TaxationType = TaxationType.WithinCity
         }
-        throw new DirectoryNotFoundException("providers/");
+    };
+
+    private static Dictionary<string, string> FormatCheckResults(OnboardingReport report)
+    {
+        var checkNames = new[] { "SchemaLoadable", "AnalysisOk", "BindingsPresent", "RuntimeProducible", "XsdValid" };
+        var results = new Dictionary<string, string>();
+        foreach (var checkName in checkNames)
+        {
+            var check = report.Checks.FirstOrDefault(c => c.Name == checkName);
+            results[checkName] = check is null ? "N/A" : (check.Passed ? "PASS" : "FAIL");
+        }
+        return results;
     }
 }

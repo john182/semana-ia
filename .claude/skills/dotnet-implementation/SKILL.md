@@ -5,7 +5,7 @@ description: Implementa código C#/.NET seguindo estritamente o padrão oficial 
 
 # Objetivo
 
-Gerar ou refatorar código C#/.NET de produção seguindo estritamente os padrões do projeto, com foco em clareza, coesão, reutilização, domínio e baixo acoplamento.
+Gerar ou refatorar código C#/.NET de produção seguindo estritamente os padrões do projeto, com foco em clareza, coesão, reutilização, domínio, baixo acoplamento e aderência total à arquitetura já adotada pelo projeto.
 
 # Regras obrigatórias
 
@@ -24,6 +24,54 @@ Gerar ou refatorar código C#/.NET de produção seguindo estritamente os padrõ
 - Não deixar números mágicos; extrair constantes ou tipos apropriados.
 - Sempre que um campo possuir conjunto finito de valores possíveis, preferir `enum`.
 - Preservar o comportamento existente em refatorações, salvo quando a mudança solicitada exigir alteração funcional explícita.
+
+# Regras obrigatórias de aderência arquitetural
+
+- Antes de implementar, identificar explicitamente qual arquitetura o projeto já utiliza.
+- A implementação deve seguir a arquitetura já existente no projeto, e não a arquitetura que o agente considera ideal.
+- Se o projeto usar Onion Architecture, manter Onion Architecture.
+- Se o projeto usar Arquitetura Hexagonal, manter Arquitetura Hexagonal.
+- Se o projeto usar MVC, manter MVC.
+- Se o projeto usar Clean Architecture, manter Clean Architecture.
+- Se o projeto usar modularização por feature, manter a organização por feature.
+- Se o projeto usar organização por camada técnica, manter a organização por camada técnica.
+- Não introduzir um novo estilo arquitetural em um projeto que já possui padrão estabelecido.
+- Não misturar padrões arquiteturais incompatíveis sem solicitação explícita.
+- Não transformar projeto em Onion, Hexagonal, MVC, Clean Architecture, Vertical Slice, CQRS ou qualquer outro estilo se isso não fizer parte da arquitetura já adotada.
+- Respeitar a separação de camadas, módulos, diretórios, dependências e convenções já presentes no projeto.
+- Respeitar os pontos de entrada e saída já definidos pela arquitetura atual.
+- Respeitar a direção de dependências já adotada no projeto.
+- Não mover código entre camadas sem necessidade real.
+- Não criar novas camadas, novos módulos ou novos projetos sem necessidade clara e sem alinhamento com a estrutura já existente.
+- Não introduzir abstrações arquiteturais novas apenas porque seriam “mais corretas” teoricamente.
+- Se a arquitetura atual tiver limitações, ainda assim manter coerência com ela, salvo solicitação explícita de evolução arquitetural.
+- Só propor alteração arquitetural quando isso for pedido explicitamente pelo usuário.
+- Quando houver dúvida sobre a arquitetura dominante do projeto, primeiro inferir pela estrutura existente de pastas, namespaces, dependências, convenções e tipos já implementados.
+- Em caso de dúvida entre duas interpretações possíveis, preferir a abordagem que menos altera a arquitetura atual do projeto.
+- Componentes novos devem nascer no mesmo estilo arquitetural dos componentes equivalentes já existentes.
+- Classes, interfaces, handlers, services, controllers, repositories, use cases, presenters, adapters, gateways, mappers e validators devem ser posicionados de acordo com a arquitetura vigente no projeto, não com preferência pessoal do agente.
+
+# Regras obrigatórias de leitura estrutural do projeto
+
+- Antes de criar qualquer arquivo novo, localizar componentes equivalentes já existentes no projeto.
+- Observar onde o projeto normalmente coloca:
+    - controllers
+    - services
+    - handlers
+    - repositories
+    - validators
+    - mappers
+    - DTOs
+    - entities
+    - value objects
+    - adapters
+    - gateways
+    - casos de aplicação
+- Repetir o padrão estrutural já adotado.
+- Repetir o padrão de injeção de dependência já adotado.
+- Repetir o padrão de composição de respostas, erros e validações já adotado.
+- Repetir o padrão de organização de namespaces e pastas já adotado.
+- Não inventar nova convenção de nomes, agrupamento ou separação de responsabilidade se já existir padrão claro no projeto.
 
 # Regras obrigatórias de reutilização e centralização
 
@@ -48,16 +96,25 @@ Gerar ou refatorar código C#/.NET de produção seguindo estritamente os padrõ
 - Evitar duplicação de lógica.
 - Em fluxos de transformação, manter clareza entre entrada, processamento e saída.
 - Quando houver mapeamento ou serialização, evitar acoplamento excessivo entre contrato externo e estrutura interna.
-- Antes de finalizar, revisar se a implementação introduziu duplicação, complexidade desnecessária ou violação de padrão do projeto.
+- Antes de finalizar, revisar se a implementação introduziu duplicação, complexidade desnecessária, violação arquitetural ou violação de padrão do projeto.
+
+# Regras obrigatórias de decisão
+
+- Sempre perguntar internamente: “como este projeto já resolve problemas parecidos?”
+- A nova implementação deve parecer nativa do projeto.
+- O código novo não deve parecer importado de outra arquitetura ou de outro estilo de projeto.
+- Se existir componente equivalente, copiar o padrão estrutural e de dependência dele.
+- Priorizar consistência com o projeto acima de preferência teórica de arquitetura.
 
 # Saída esperada
 
 Ao implementar:
 1. gerar código pronto para uso
 2. manter aderência aos padrões do projeto
-3. minimizar impacto desnecessário
-4. reutilizar o que já existe antes de criar novas abstrações
-5. explicar de forma objetiva qualquer decisão técnica relevante
+3. manter aderência total à arquitetura existente
+4. minimizar impacto desnecessário
+5. reutilizar o que já existe antes de criar novas abstrações
+6. explicar de forma objetiva qualquer decisão técnica relevante
 
 ## Naming obrigatório
 

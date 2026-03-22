@@ -8,7 +8,6 @@
 
     <ItemGroup>
       <ProjectReference Include="..\SemanaIA.ServiceInvoice.Domain\SemanaIA.ServiceInvoice.Domain.csproj" />
-      <ProjectReference Include="..\SemanaIA.ServiceInvoice.Infrastructure\SemanaIA.ServiceInvoice.Infrastructure.csproj" />
     </ItemGroup>
 
 </Project>

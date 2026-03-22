@@ -3,7 +3,7 @@ using System.Text;
 using System.Xml;
 using System.Xml.Linq;
 
-namespace SemanaIA.ServiceInvoice.Infrastructure.Xml;
+namespace SemanaIA.ServiceInvoice.XmlGeneration.Xml;
 
 
 public class XBuilder : DynamicObject

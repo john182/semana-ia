@@ -24,7 +24,7 @@ public class ServiceIncoiceController : ControllerBase
             request.ExternalId,
             result.Xml,
             result.RootElement,
-            result.XmlFramework,
+            result.GeneratedBy,
             message = "XML gerado com sucesso na POC usando XBuilder na infraestrutura"
         });
     }

@@ -8,11 +8,11 @@ public class SchemaGenerationRunner
     public SchemaDocument RunForProvider(string providerName, string providersBaseDir)
     {
         var providerDir = Path.Combine(providersBaseDir, providerName);
-        var xsdDir = Path.Combine(providerDir, "xsd");
-        var rulesPath = Path.Combine(providerDir, "rules", "base-rules.json");
+        var xsdDir = Path.Combine(providerDir, ProviderProfile.XsdDirectoryName);
+        var rulesPath = Path.Combine(providerDir, ProviderProfile.RulesDirectoryName, ProviderProfile.RulesFileName);
         var outputDir = Path.Combine(providerDir, "generated");
 
-        var xsdFiles = Directory.GetFiles(xsdDir, "*.xsd");
+        var xsdFiles = Directory.GetFiles(xsdDir, ProviderProfile.XsdSearchPattern);
         if (xsdFiles.Length == 0)
             throw new FileNotFoundException($"No XSD files found in {xsdDir}");
 

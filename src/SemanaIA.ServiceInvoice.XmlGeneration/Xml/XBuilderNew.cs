@@ -1,4 +1,4 @@
-namespace SemanaIA.ServiceInvoice.Infrastructure.Xml;
+namespace SemanaIA.ServiceInvoice.XmlGeneration.Xml;
 
 using System.Dynamic;
 using System.Text;

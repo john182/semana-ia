@@ -25,7 +25,7 @@ public class SchemaBasedXmlSerializerTests
         var result = _sut.SerializeAndValidate(
             schema, data, resolver,
             "TCDPS", "DPS",
-            FindXsdDir("nacional"),
+            TestProviderPaths.FindXsdDir("nacional"),
             "1.01");
 
         // Assert
@@ -161,10 +161,10 @@ public class SchemaBasedXmlSerializerTests
     // ==========================================================
 
     private static SchemaDocument AnalyzeNacional() =>
-        new XsdSchemaAnalyzer().Analyze(FindXsdPath("nacional", "DPS_v1.01.xsd"));
+        new XsdSchemaAnalyzer().Analyze(TestProviderPaths.FindXsdPath("nacional", "DPS_v1.01.xsd"));
 
     private static ProviderRuleResolver LoadNacionalResolver() =>
-        ProviderRuleResolver.LoadFromFile(FindRulesPath("nacional"));
+        ProviderRuleResolver.LoadFromFile(TestProviderPaths.FindRulesPath("nacional"));
 
     private static Dictionary<string, object?> NacionalMinimalData() => new()
     {
@@ -192,39 +192,4 @@ public class SchemaBasedXmlSerializerTests
         ["infDPS.valores.trib.totTrib.vTotTrib.vTotTribMun"] = "0.00"
     };
 
-    private static string FindXsdPath(string provider, string fileName)
-    {
-        var dir = AppContext.BaseDirectory;
-        while (dir is not null)
-        {
-            var candidate = Path.Combine(dir, "providers", provider, "xsd", fileName);
-            if (File.Exists(candidate)) return candidate;
-            dir = Directory.GetParent(dir)?.FullName;
-        }
-        throw new FileNotFoundException($"XSD not found: {provider}/{fileName}");
-    }
-
-    private static string FindXsdDir(string provider)
-    {
-        var dir = AppContext.BaseDirectory;
-        while (dir is not null)
-        {
-            var candidate = Path.Combine(dir, "providers", provider, "xsd");
-            if (Directory.Exists(candidate)) return candidate;
-            dir = Directory.GetParent(dir)?.FullName;
-        }
-        throw new DirectoryNotFoundException($"XSD dir not found: {provider}");
-    }
-
-    private static string FindRulesPath(string provider)
-    {
-        var dir = AppContext.BaseDirectory;
-        while (dir is not null)
-        {
-            var candidate = Path.Combine(dir, "providers", provider, "rules", "base-rules.json");
-            if (File.Exists(candidate)) return candidate;
-            dir = Directory.GetParent(dir)?.FullName;
-        }
-        throw new FileNotFoundException($"Rules not found: {provider}");
-    }
 }

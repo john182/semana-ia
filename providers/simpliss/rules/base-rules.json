@@ -1,10 +1,12 @@
 {
-  "provider": "paulistana",
-  "version": "2.00",
-  "description": "Regras complementares da Paulistana — schema da Prefeitura de SP",
+  "provider": "simpliss",
+  "version": "2.03",
+  "description": "Regras complementares do Simpliss — usa schema ABRASF v2.03",
+  "rootComplexTypeName": "_anon_EnviarLoteRpsEnvio",
+  "rootElementName": "EnviarLoteRpsEnvio",
+  "municipalityCodes": ["3106200"],
   "constants": {
-    "namespace": "http://www.prefeitura.sp.gov.br/nfe",
-    "tiposNamespace": "http://www.prefeitura.sp.gov.br/nfe/tipos"
+    "namespace": "http://www.abrasf.org.br/nfse.xsd"
   },
   "defaults": {},
   "enums": {},

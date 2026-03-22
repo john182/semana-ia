@@ -1,7 +1,10 @@
 {
   "provider": "paulistana",
-  "version": "2.00",
+  "version": "02",
   "description": "Regras complementares da Paulistana — schema da Prefeitura de SP",
+  "rootComplexTypeName": "_anon_PedidoEnvioLoteRPS",
+  "rootElementName": "PedidoEnvioLoteRPS",
+  "municipalityCodes": ["3550308"],
   "constants": {
     "namespace": "http://www.prefeitura.sp.gov.br/nfe",
     "tiposNamespace": "http://www.prefeitura.sp.gov.br/nfe/tipos"
