@@ -38,4 +38,5 @@ node_modules/
 dist/
 
 # GENERATED ARTIFACTS (build-time, not versioned)
-providers/*/generated/
+providers/*/generated/providers/load-*/
+providers/load-test-*
