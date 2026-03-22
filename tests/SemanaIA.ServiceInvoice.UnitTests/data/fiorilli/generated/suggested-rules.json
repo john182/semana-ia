@@ -1,0 +1,27 @@
+{
+  "provider": "fiorilli",
+  "version": "1.01",
+  "formatting": {
+    "Numero": {
+      "maxLength": 15
+    },
+    "Serie": {
+      "maxLength": 5
+    },
+    "Codigo": {
+      "maxLength": 4
+    },
+    "Mensagem": {
+      "maxLength": 200
+    }
+  },
+  "rootComplexTypeName": "_anon_ListaMensagemRetornoLote",
+  "rootElementName": "ListaMensagemRetornoLote",
+  "bindings": {
+    "MensagemRetorno.IdentificacaoRps.Numero": "TODO: manual mapping required",
+    "MensagemRetorno.IdentificacaoRps.Serie": "Series",
+    "MensagemRetorno.IdentificacaoRps.Tipo": "TODO: manual mapping required",
+    "MensagemRetorno.Codigo": "TODO: manual mapping required",
+    "MensagemRetorno.Mensagem": "TODO: manual mapping required"
+  }
+}

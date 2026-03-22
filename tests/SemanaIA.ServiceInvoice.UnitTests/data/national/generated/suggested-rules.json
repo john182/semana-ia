@@ -1,0 +1,462 @@
+{
+  "provider": "national",
+  "version": "1.01",
+  "formatting": {
+    "verAplic": {
+      "maxLength": 20
+    },
+    "serie": {
+      "maxLength": 5
+    },
+    "nDPS": {
+      "maxLength": 15
+    },
+    "chNFSeRej": {
+      "padLeft": 50,
+      "padChar": "0",
+      "digitsOnly": true,
+      "maxLength": 50
+    },
+    "cLocEmi": {
+      "padLeft": 7,
+      "padChar": "0",
+      "digitsOnly": true
+    },
+    "chSubstda": {
+      "padLeft": 50,
+      "padChar": "0",
+      "digitsOnly": true,
+      "maxLength": 50
+    },
+    "xMotivo": {
+      "maxLength": 255
+    },
+    "CNPJ": {
+      "padLeft": 14,
+      "padChar": "0",
+      "digitsOnly": true,
+      "maxLength": 14
+    },
+    "CPF": {
+      "padLeft": 11,
+      "padChar": "0",
+      "digitsOnly": true,
+      "maxLength": 11
+    },
+    "NIF": {
+      "maxLength": 40
+    },
+    "CAEPF": {
+      "padLeft": 14,
+      "padChar": "0",
+      "digitsOnly": true,
+      "maxLength": 14
+    },
+    "IM": {
+      "maxLength": 15
+    },
+    "xNome": {
+      "maxLength": 150
+    },
+    "cMun": {
+      "padLeft": 7,
+      "padChar": "0",
+      "digitsOnly": true
+    },
+    "CEP": {
+      "padLeft": 8,
+      "padChar": "0",
+      "digitsOnly": true
+    },
+    "cEndPost": {
+      "maxLength": 11
+    },
+    "xCidade": {
+      "maxLength": 60
+    },
+    "xEstProvReg": {
+      "maxLength": 60
+    },
+    "xLgr": {
+      "maxLength": 255
+    },
+    "nro": {
+      "maxLength": 60
+    },
+    "xCpl": {
+      "maxLength": 156
+    },
+    "xBairro": {
+      "maxLength": 60
+    },
+    "email": {
+      "maxLength": 80
+    },
+    "cLocPrestacao": {
+      "padLeft": 7,
+      "padChar": "0",
+      "digitsOnly": true
+    },
+    "cTribNac": {
+      "padLeft": 6,
+      "padChar": "0",
+      "digitsOnly": true
+    },
+    "cTribMun": {
+      "padLeft": 3,
+      "padChar": "0",
+      "digitsOnly": true
+    },
+    "xDescServ": {
+      "maxLength": 2000
+    },
+    "cNBS": {
+      "padLeft": 9,
+      "padChar": "0",
+      "digitsOnly": true
+    },
+    "cIntContrib": {
+      "maxLength": 20
+    },
+    "tpMoeda": {
+      "padLeft": 3,
+      "padChar": "0",
+      "digitsOnly": true,
+      "maxLength": 3
+    },
+    "nDI": {
+      "maxLength": 12
+    },
+    "nRE": {
+      "maxLength": 12
+    },
+    "inscImobFisc": {
+      "maxLength": 30
+    },
+    "cObra": {
+      "maxLength": 30
+    },
+    "cCIB": {
+      "padLeft": 8,
+      "padChar": "0",
+      "maxLength": 8
+    },
+    "idAtvEvt": {
+      "maxLength": 30
+    },
+    "idDocTec": {
+      "maxLength": 40
+    },
+    "docRef": {
+      "maxLength": 255
+    },
+    "xPed": {
+      "maxLength": 60
+    },
+    "xItemPed": {
+      "maxLength": 60
+    },
+    "xInfComp": {
+      "maxLength": 2000
+    },
+    "chNFSe": {
+      "padLeft": 50,
+      "padChar": "0",
+      "digitsOnly": true,
+      "maxLength": 50
+    },
+    "chNFe": {
+      "padLeft": 44,
+      "padChar": "0",
+      "digitsOnly": true,
+      "maxLength": 44
+    },
+    "cMunNFSeMun": {
+      "padLeft": 7,
+      "padChar": "0",
+      "digitsOnly": true
+    },
+    "nNFSeMun": {
+      "padLeft": 15,
+      "padChar": "0",
+      "digitsOnly": true,
+      "maxLength": 15
+    },
+    "cVerifNFSeMun": {
+      "maxLength": 9
+    },
+    "nNFS": {
+      "padLeft": 7,
+      "padChar": "0",
+      "digitsOnly": true,
+      "maxLength": 7
+    },
+    "modNFS": {
+      "padLeft": 15,
+      "padChar": "0",
+      "digitsOnly": true,
+      "maxLength": 15
+    },
+    "serieNFS": {
+      "maxLength": 15
+    },
+    "nDocFisc": {
+      "maxLength": 255
+    },
+    "nDoc": {
+      "maxLength": 255
+    },
+    "xDescOutDed": {
+      "maxLength": 150
+    },
+    "nProcesso": {
+      "padLeft": 30,
+      "padChar": "0",
+      "digitsOnly": true
+    },
+    "nBM": {
+      "padLeft": 14,
+      "padChar": "0",
+      "digitsOnly": true
+    },
+    "cIndOp": {
+      "padLeft": 6,
+      "padChar": "0",
+      "digitsOnly": true
+    },
+    "refNFSe": {
+      "padLeft": 50,
+      "padChar": "0",
+      "digitsOnly": true,
+      "maxLength": 50
+    },
+    "xTipoChaveDFe": {
+      "maxLength": 255
+    },
+    "chaveDFe": {
+      "maxLength": 50
+    },
+    "cMunDocFiscal": {
+      "padLeft": 7,
+      "padChar": "0",
+      "digitsOnly": true,
+      "maxLength": 7
+    },
+    "nDocFiscal": {
+      "maxLength": 255
+    },
+    "xDocFiscal": {
+      "maxLength": 255
+    },
+    "xDoc": {
+      "maxLength": 255
+    },
+    "xTpReeRepRes": {
+      "maxLength": 150
+    },
+    "CST": {
+      "padLeft": 3,
+      "padChar": "0",
+      "digitsOnly": true
+    },
+    "cClassTrib": {
+      "padLeft": 6,
+      "padChar": "0",
+      "digitsOnly": true
+    },
+    "cCredPres": {
+      "padLeft": 2,
+      "padChar": "0",
+      "digitsOnly": true
+    },
+    "CSTReg": {
+      "padLeft": 3,
+      "padChar": "0",
+      "digitsOnly": true
+    },
+    "cClassTribReg": {
+      "padLeft": 6,
+      "padChar": "0",
+      "digitsOnly": true
+    }
+  },
+  "rootComplexTypeName": "TCDPS",
+  "rootElementName": "DPS",
+  "bindings": {
+    "infDPS.tpAmb": "Environment",
+    "infDPS.dhEmi": "IssuedOn | format:yyyy-MM-ddTHH:mm:sszzz",
+    "infDPS.verAplic": "TODO: manual mapping required",
+    "infDPS.serie": "Series",
+    "infDPS.nDPS": "Number",
+    "infDPS.dCompet": "CompetenceDate",
+    "infDPS.tpEmit": "TODO: manual mapping required",
+    "infDPS.cLocEmi": "Provider.MunicipalityCode",
+    "infDPS.subst.chSubstda": "TODO: manual mapping required",
+    "infDPS.subst.cMotivo": "TODO: manual mapping required",
+    "infDPS.prest.CNPJ": "Provider.Cnpj",
+    "infDPS.prest.CPF": "Borrower.FederalTaxNumber",
+    "infDPS.prest.IM": "Provider.MunicipalTaxNumber",
+    "infDPS.prest.xNome": "Borrower.Name",
+    "infDPS.prest.end.endNac.cMun": "TODO: manual mapping required",
+    "infDPS.prest.end.endNac.CEP": "TODO: manual mapping required",
+    "infDPS.prest.end.endExt.cPais": "TODO: manual mapping required",
+    "infDPS.prest.end.endExt.cEndPost": "TODO: manual mapping required",
+    "infDPS.prest.end.endExt.xCidade": "TODO: manual mapping required",
+    "infDPS.prest.end.endExt.xEstProvReg": "TODO: manual mapping required",
+    "infDPS.prest.end.xLgr": "TODO: manual mapping required",
+    "infDPS.prest.end.nro": "TODO: manual mapping required",
+    "infDPS.prest.end.xBairro": "TODO: manual mapping required",
+    "infDPS.prest.fone": "Borrower.PhoneNumber",
+    "infDPS.prest.email": "Borrower.Email",
+    "infDPS.prest.regTrib.opSimpNac": "Provider.TaxRegime",
+    "infDPS.prest.regTrib.regEspTrib": "Provider.SpecialTaxRegime",
+    "infDPS.toma.CNPJ": "Provider.Cnpj",
+    "infDPS.toma.CPF": "Borrower.FederalTaxNumber",
+    "infDPS.toma.IM": "Provider.MunicipalTaxNumber",
+    "infDPS.toma.xNome": "Borrower.Name",
+    "infDPS.toma.end.endNac.cMun": "TODO: manual mapping required",
+    "infDPS.toma.end.endNac.CEP": "TODO: manual mapping required",
+    "infDPS.toma.end.endExt.cPais": "TODO: manual mapping required",
+    "infDPS.toma.end.endExt.cEndPost": "TODO: manual mapping required",
+    "infDPS.toma.end.endExt.xCidade": "TODO: manual mapping required",
+    "infDPS.toma.end.endExt.xEstProvReg": "TODO: manual mapping required",
+    "infDPS.toma.end.xLgr": "TODO: manual mapping required",
+    "infDPS.toma.end.nro": "TODO: manual mapping required",
+    "infDPS.toma.end.xBairro": "TODO: manual mapping required",
+    "infDPS.toma.fone": "Borrower.PhoneNumber",
+    "infDPS.toma.email": "Borrower.Email",
+    "infDPS.interm.CNPJ": "Provider.Cnpj",
+    "infDPS.interm.CPF": "Borrower.FederalTaxNumber",
+    "infDPS.interm.IM": "Provider.MunicipalTaxNumber",
+    "infDPS.interm.xNome": "Borrower.Name",
+    "infDPS.interm.end.endNac.cMun": "TODO: manual mapping required",
+    "infDPS.interm.end.endNac.CEP": "TODO: manual mapping required",
+    "infDPS.interm.end.endExt.cPais": "TODO: manual mapping required",
+    "infDPS.interm.end.endExt.cEndPost": "TODO: manual mapping required",
+    "infDPS.interm.end.endExt.xCidade": "TODO: manual mapping required",
+    "infDPS.interm.end.endExt.xEstProvReg": "TODO: manual mapping required",
+    "infDPS.interm.end.xLgr": "TODO: manual mapping required",
+    "infDPS.interm.end.nro": "TODO: manual mapping required",
+    "infDPS.interm.end.xBairro": "TODO: manual mapping required",
+    "infDPS.interm.fone": "Borrower.PhoneNumber",
+    "infDPS.interm.email": "Borrower.Email",
+    "infDPS.serv.cServ.cTribNac": "Service.FederalServiceCode",
+    "infDPS.serv.cServ.cTribMun": "CityServiceCode",
+    "infDPS.serv.cServ.xDescServ": "Service.Description",
+    "infDPS.serv.cServ.cNBS": "Service.NbsCode",
+    "infDPS.serv.comExt.mdPrestacao": "TODO: manual mapping required",
+    "infDPS.serv.comExt.vincPrest": "TODO: manual mapping required",
+    "infDPS.serv.comExt.tpMoeda": "TODO: manual mapping required",
+    "infDPS.serv.comExt.vServMoeda": "TODO: manual mapping required",
+    "infDPS.serv.comExt.mecAFComexP": "TODO: manual mapping required",
+    "infDPS.serv.comExt.mecAFComexT": "TODO: manual mapping required",
+    "infDPS.serv.comExt.movTempBens": "TODO: manual mapping required",
+    "infDPS.serv.comExt.mdic": "TODO: manual mapping required",
+    "infDPS.serv.obra.end.endExt.cEndPost": "TODO: manual mapping required",
+    "infDPS.serv.obra.end.endExt.xCidade": "TODO: manual mapping required",
+    "infDPS.serv.obra.end.endExt.xEstProvReg": "TODO: manual mapping required",
+    "infDPS.serv.obra.end.xLgr": "TODO: manual mapping required",
+    "infDPS.serv.obra.end.nro": "TODO: manual mapping required",
+    "infDPS.serv.obra.end.xBairro": "TODO: manual mapping required",
+    "infDPS.serv.atvEvento.xNome": "Borrower.Name",
+    "infDPS.serv.atvEvento.dtIni": "TODO: manual mapping required",
+    "infDPS.serv.atvEvento.dtFim": "TODO: manual mapping required",
+    "infDPS.serv.atvEvento.end.endExt.cEndPost": "TODO: manual mapping required",
+    "infDPS.serv.atvEvento.end.endExt.xCidade": "TODO: manual mapping required",
+    "infDPS.serv.atvEvento.end.endExt.xEstProvReg": "TODO: manual mapping required",
+    "infDPS.serv.atvEvento.end.xLgr": "TODO: manual mapping required",
+    "infDPS.serv.atvEvento.end.nro": "TODO: manual mapping required",
+    "infDPS.serv.atvEvento.end.xBairro": "TODO: manual mapping required",
+    "infDPS.serv.explRod.categVeic": "TODO: manual mapping required",
+    "infDPS.serv.explRod.nEixos": "TODO: manual mapping required",
+    "infDPS.serv.explRod.rodagem": "TODO: manual mapping required",
+    "infDPS.serv.explRod.sentido": "TODO: manual mapping required",
+    "infDPS.serv.explRod.placa": "TODO: manual mapping required",
+    "infDPS.serv.explRod.codAcessoPed": "TODO: manual mapping required",
+    "infDPS.serv.explRod.codContrato": "TODO: manual mapping required",
+    "infDPS.serv.infoCompl.gItemPed.xItemPed": "TODO: manual mapping required",
+    "infDPS.valores.vServPrest.vServ": "Values.ServicesAmount",
+    "infDPS.valores.vDedRed.documentos.docDedRed.NFSeMun.cMunNFSeMun": "TODO: manual mapping required",
+    "infDPS.valores.vDedRed.documentos.docDedRed.NFSeMun.nNFSeMun": "TODO: manual mapping required",
+    "infDPS.valores.vDedRed.documentos.docDedRed.NFSeMun.cVerifNFSeMun": "TODO: manual mapping required",
+    "infDPS.valores.vDedRed.documentos.docDedRed.NFNFS.nNFS": "TODO: manual mapping required",
+    "infDPS.valores.vDedRed.documentos.docDedRed.NFNFS.modNFS": "TODO: manual mapping required",
+    "infDPS.valores.vDedRed.documentos.docDedRed.NFNFS.serieNFS": "TODO: manual mapping required",
+    "infDPS.valores.vDedRed.documentos.docDedRed.tpDedRed": "TODO: manual mapping required",
+    "infDPS.valores.vDedRed.documentos.docDedRed.dtEmiDoc": "TODO: manual mapping required",
+    "infDPS.valores.vDedRed.documentos.docDedRed.vDedutivelRedutivel": "TODO: manual mapping required",
+    "infDPS.valores.vDedRed.documentos.docDedRed.vDeducaoReducao": "TODO: manual mapping required",
+    "infDPS.valores.vDedRed.documentos.docDedRed.fornec.CNPJ": "Provider.Cnpj",
+    "infDPS.valores.vDedRed.documentos.docDedRed.fornec.CPF": "Borrower.FederalTaxNumber",
+    "infDPS.valores.vDedRed.documentos.docDedRed.fornec.IM": "Provider.MunicipalTaxNumber",
+    "infDPS.valores.vDedRed.documentos.docDedRed.fornec.xNome": "Borrower.Name",
+    "infDPS.valores.vDedRed.documentos.docDedRed.fornec.end.endNac.cMun": "TODO: manual mapping required",
+    "infDPS.valores.vDedRed.documentos.docDedRed.fornec.end.endNac.CEP": "TODO: manual mapping required",
+    "infDPS.valores.vDedRed.documentos.docDedRed.fornec.end.endExt.cPais": "TODO: manual mapping required",
+    "infDPS.valores.vDedRed.documentos.docDedRed.fornec.end.endExt.cEndPost": "TODO: manual mapping required",
+    "infDPS.valores.vDedRed.documentos.docDedRed.fornec.end.endExt.xCidade": "TODO: manual mapping required",
+    "infDPS.valores.vDedRed.documentos.docDedRed.fornec.end.endExt.xEstProvReg": "TODO: manual mapping required",
+    "infDPS.valores.vDedRed.documentos.docDedRed.fornec.end.xLgr": "TODO: manual mapping required",
+    "infDPS.valores.vDedRed.documentos.docDedRed.fornec.end.nro": "TODO: manual mapping required",
+    "infDPS.valores.vDedRed.documentos.docDedRed.fornec.end.xBairro": "TODO: manual mapping required",
+    "infDPS.valores.vDedRed.documentos.docDedRed.fornec.fone": "Borrower.PhoneNumber",
+    "infDPS.valores.vDedRed.documentos.docDedRed.fornec.email": "Borrower.Email",
+    "infDPS.valores.trib.tribMun.tribISSQN": "Values.TaxationType",
+    "infDPS.valores.trib.tribMun.exigSusp.tpSusp": "TODO: manual mapping required",
+    "infDPS.valores.trib.tribMun.exigSusp.nProcesso": "TODO: manual mapping required",
+    "infDPS.valores.trib.tribMun.BM.nBM": "TODO: manual mapping required",
+    "infDPS.valores.trib.tribMun.tpRetISSQN": "TODO: manual mapping required",
+    "infDPS.valores.trib.tribFed.piscofins.CST": "TODO: manual mapping required",
+    "infDPS.valores.trib.totTrib.vTotTrib.vTotTribFed": "const:0.00",
+    "infDPS.valores.trib.totTrib.vTotTrib.vTotTribEst": "const:0.00",
+    "infDPS.valores.trib.totTrib.vTotTrib.vTotTribMun": "const:0.00",
+    "infDPS.valores.trib.totTrib.pTotTrib.pTotTribFed": "TODO: manual mapping required",
+    "infDPS.valores.trib.totTrib.pTotTrib.pTotTribEst": "TODO: manual mapping required",
+    "infDPS.valores.trib.totTrib.pTotTrib.pTotTribMun": "TODO: manual mapping required",
+    "infDPS.IBSCBS.finNFSe": "TODO: manual mapping required",
+    "infDPS.IBSCBS.cIndOp": "TODO: manual mapping required",
+    "infDPS.IBSCBS.gRefNFSe.refNFSe": "TODO: manual mapping required",
+    "infDPS.IBSCBS.indDest": "TODO: manual mapping required",
+    "infDPS.IBSCBS.dest.CNPJ": "Provider.Cnpj",
+    "infDPS.IBSCBS.dest.CPF": "Borrower.FederalTaxNumber",
+    "infDPS.IBSCBS.dest.xNome": "Borrower.Name",
+    "infDPS.IBSCBS.dest.end.endNac.cMun": "TODO: manual mapping required",
+    "infDPS.IBSCBS.dest.end.endNac.CEP": "TODO: manual mapping required",
+    "infDPS.IBSCBS.dest.end.endExt.cPais": "TODO: manual mapping required",
+    "infDPS.IBSCBS.dest.end.endExt.cEndPost": "TODO: manual mapping required",
+    "infDPS.IBSCBS.dest.end.endExt.xCidade": "TODO: manual mapping required",
+    "infDPS.IBSCBS.dest.end.endExt.xEstProvReg": "TODO: manual mapping required",
+    "infDPS.IBSCBS.dest.end.xLgr": "TODO: manual mapping required",
+    "infDPS.IBSCBS.dest.end.nro": "TODO: manual mapping required",
+    "infDPS.IBSCBS.dest.end.xBairro": "TODO: manual mapping required",
+    "infDPS.IBSCBS.dest.fone": "Borrower.PhoneNumber",
+    "infDPS.IBSCBS.dest.email": "Borrower.Email",
+    "infDPS.IBSCBS.imovel.end.endExt.cEndPost": "TODO: manual mapping required",
+    "infDPS.IBSCBS.imovel.end.endExt.xCidade": "TODO: manual mapping required",
+    "infDPS.IBSCBS.imovel.end.endExt.xEstProvReg": "TODO: manual mapping required",
+    "infDPS.IBSCBS.imovel.end.xLgr": "TODO: manual mapping required",
+    "infDPS.IBSCBS.imovel.end.nro": "TODO: manual mapping required",
+    "infDPS.IBSCBS.imovel.end.xBairro": "TODO: manual mapping required",
+    "infDPS.IBSCBS.valores.gReeRepRes.documentos.dFeNacional.tipoChaveDFe": "TODO: manual mapping required",
+    "infDPS.IBSCBS.valores.gReeRepRes.documentos.dFeNacional.chaveDFe": "TODO: manual mapping required",
+    "infDPS.IBSCBS.valores.gReeRepRes.documentos.docFiscalOutro.cMunDocFiscal": "TODO: manual mapping required",
+    "infDPS.IBSCBS.valores.gReeRepRes.documentos.docFiscalOutro.nDocFiscal": "TODO: manual mapping required",
+    "infDPS.IBSCBS.valores.gReeRepRes.documentos.docFiscalOutro.xDocFiscal": "TODO: manual mapping required",
+    "infDPS.IBSCBS.valores.gReeRepRes.documentos.docOutro.nDoc": "TODO: manual mapping required",
+    "infDPS.IBSCBS.valores.gReeRepRes.documentos.docOutro.xDoc": "TODO: manual mapping required",
+    "infDPS.IBSCBS.valores.gReeRepRes.documentos.fornec.CNPJ": "Provider.Cnpj",
+    "infDPS.IBSCBS.valores.gReeRepRes.documentos.fornec.CPF": "Borrower.FederalTaxNumber",
+    "infDPS.IBSCBS.valores.gReeRepRes.documentos.fornec.xNome": "Borrower.Name",
+    "infDPS.IBSCBS.valores.gReeRepRes.documentos.dtEmiDoc": "TODO: manual mapping required",
+    "infDPS.IBSCBS.valores.gReeRepRes.documentos.dtCompDoc": "TODO: manual mapping required",
+    "infDPS.IBSCBS.valores.gReeRepRes.documentos.tpReeRepRes": "TODO: manual mapping required",
+    "infDPS.IBSCBS.valores.gReeRepRes.documentos.vlrReeRepRes": "TODO: manual mapping required",
+    "infDPS.IBSCBS.valores.trib.gIBSCBS.CST": "TODO: manual mapping required",
+    "infDPS.IBSCBS.valores.trib.gIBSCBS.cClassTrib": "TODO: manual mapping required",
+    "infDPS.IBSCBS.valores.trib.gIBSCBS.gTribRegular.CSTReg": "TODO: manual mapping required",
+    "infDPS.IBSCBS.valores.trib.gIBSCBS.gTribRegular.cClassTribReg": "TODO: manual mapping required",
+    "infDPS.IBSCBS.valores.trib.gIBSCBS.gDif.pDifUF": "TODO: manual mapping required",
+    "infDPS.IBSCBS.valores.trib.gIBSCBS.gDif.pDifMun": "TODO: manual mapping required",
+    "infDPS.IBSCBS.valores.trib.gIBSCBS.gDif.pDifCBS": "TODO: manual mapping required"
+  }
+}

@@ -7,6 +7,7 @@ public class ProviderProfile
 {
     public const string XsdDirectoryName = "xsd";
     public const string XsdSearchPattern = "*.xsd";
+    public const string XmlDsigFilePattern = "xmldsig";
     public const string RulesDirectoryName = "rules";
     public const string RulesFileName = "base-rules.json";
 
@@ -61,6 +62,9 @@ public class ProviderProfile
 
     [JsonPropertyName("municipalityCodes")]
     public List<string>? MunicipalityCodes { get; init; }
+
+    [JsonPropertyName("primaryXsdFile")]
+    public string? PrimaryXsdFile { get; init; }
 }
 
 public class FormattingRule

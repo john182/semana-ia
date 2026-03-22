@@ -1,0 +1,95 @@
+{
+  "provider": "memory",
+  "version": "1.01",
+  "formatting": {
+    "Cnpj": {
+      "padLeft": 14,
+      "padChar": "0",
+      "digitsOnly": true
+    },
+    "Discriminacao": {
+      "maxLength": 2000
+    },
+    "Observacoes": {
+      "maxLength": 2000
+    },
+    "CodigoMunicipio": {
+      "padLeft": 7,
+      "padChar": "0",
+      "digitsOnly": true
+    },
+    "RazaoSocial": {
+      "maxLength": 100
+    },
+    "Endereco": {
+      "maxLength": 100
+    },
+    "Complemento": {
+      "maxLength": 60
+    },
+    "Bairro": {
+      "maxLength": 50
+    },
+    "Cep": {
+      "padLeft": 8,
+      "padChar": "0",
+      "digitsOnly": true
+    },
+    "Email": {
+      "maxLength": 255
+    },
+    "Telefone": {
+      "maxLength": 11
+    }
+  },
+  "rootComplexTypeName": "_anon_EnviarLoteRpsEnvio",
+  "rootElementName": "EnviarLoteRpsEnvio",
+  "wrapperBindings": {
+    "LoteRps.NumeroLote": "const:1",
+    "LoteRps.Cnpj": "Provider.Cnpj",
+    "LoteRps.InscricaoMunicipal": "Provider.MunicipalTaxNumber",
+    "LoteRps.QuantidadeRps": "const:1"
+  },
+  "bindingPathPrefix": "LoteRps.ListaRps",
+  "bindings": {
+    "LoteRps.NumeroLote": "const:1",
+    "LoteRps.Cnpj": "Provider.Cnpj",
+    "LoteRps.InscricaoMunicipal": "Provider.MunicipalTaxNumber",
+    "LoteRps.QuantidadeRps": "const:1",
+    "Rps.InfRps.IdentificacaoRps.Numero": "TODO: manual mapping required",
+    "Rps.InfRps.IdentificacaoRps.Serie": "Series",
+    "Rps.InfRps.IdentificacaoRps.Tipo": "TODO: manual mapping required",
+    "Rps.InfRps.DataEmissao": "IssuedOn | format:yyyy-MM-ddTHH:mm:sszzz",
+    "Rps.InfRps.NaturezaOperacao": "TODO: manual mapping required",
+    "Rps.InfRps.Status": "TODO: manual mapping required",
+    "Rps.InfRps.Servico.Valores.ValorServicos": "Values.ServicesAmount",
+    "Rps.InfRps.Servico.Valores.ValorDeducoes": "TODO: manual mapping required",
+    "Rps.InfRps.Servico.Valores.ValorPis": "TODO: manual mapping required",
+    "Rps.InfRps.Servico.Valores.ValorCofins": "TODO: manual mapping required",
+    "Rps.InfRps.Servico.Valores.ValorInss": "TODO: manual mapping required",
+    "Rps.InfRps.Servico.Valores.ValorIr": "TODO: manual mapping required",
+    "Rps.InfRps.Servico.Valores.ValorCsll": "TODO: manual mapping required",
+    "Rps.InfRps.Servico.Valores.IssRetido": "Values.RetentionType",
+    "Rps.InfRps.Servico.Valores.ValorIss": "TODO: manual mapping required",
+    "Rps.InfRps.Servico.Valores.OutrasRetencoes": "TODO: manual mapping required",
+    "Rps.InfRps.Servico.Valores.Aliquota": "Values.IssRate",
+    "Rps.InfRps.Servico.Valores.DescontoIncondicionado": "TODO: manual mapping required",
+    "Rps.InfRps.Servico.Valores.DescontoCondicionado": "TODO: manual mapping required",
+    "Rps.InfRps.Servico.CodigoTributacaoMunicipio": "TODO: manual mapping required",
+    "Rps.InfRps.Servico.CodigoCnae": "TODO: manual mapping required",
+    "Rps.InfRps.Servico.Discriminacao": "Service.Description",
+    "Rps.InfRps.Servico.CodigoMunicipio": "Provider.MunicipalityCode",
+    "Rps.InfRps.Prestador.Cnpj": "Provider.Cnpj",
+    "Rps.InfRps.Prestador.InscricaoMunicipal": "Provider.MunicipalTaxNumber",
+    "Rps.InfRps.Tomador.IdentificacaoTomador.CpfCnpj.Cnpj": "Provider.Cnpj",
+    "Rps.InfRps.Tomador.IdentificacaoTomador.CpfCnpj.Cpf": "Borrower.FederalTaxNumber",
+    "Rps.InfRps.Tomador.IdentificacaoTomador.InscricaoMunicipal": "Provider.MunicipalTaxNumber",
+    "Rps.InfRps.Tomador.RazaoSocial": "Borrower.Name",
+    "Rps.InfRps.Tomador.Endereco.CodigoMunicipio": "Provider.MunicipalityCode",
+    "Rps.InfRps.Tomador.Email": "Borrower.Email",
+    "Rps.InfRps.Tomador.Telefone": "Borrower.PhoneNumber",
+    "Rps.InfRps.IntermediarioServico.RazaoSocial": "Borrower.Name",
+    "Rps.InfRps.IntermediarioServico.CpfCnpj.Cnpj": "Provider.Cnpj",
+    "Rps.InfRps.IntermediarioServico.InscricaoMunicipal": "Provider.MunicipalTaxNumber"
+  }
+}
