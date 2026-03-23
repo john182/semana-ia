@@ -253,6 +253,14 @@ public class ProviderConfigGenerator
 
             if (childType is not null)
             {
+                // Skip optional complex elements at depth > 1 — these are conditional sub-structures
+                // (obra, atvEvento, interm, vDedRed, IBSCBS, etc.) that should only have bindings
+                // when explicitly configured by the operator, not auto-generated from the dictionary.
+                // This prevents phantom data from causing empty optional structures in the XML.
+                var depth = elementPath.Count(c => c == '.') + 1;
+                if (!element.IsRequired && depth > 2)
+                    continue;
+
                 WalkSchemaTree(childType, elementPath, typeMap, bindings, formatting, dataPathPrefix);
                 continue;
             }
