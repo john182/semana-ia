@@ -28,6 +28,7 @@
 | nacional | SupportReady | Fully Onboarded | 5 | 5 | None |
 | paulistana | SupportConfigOnly | Partial | 4 | 5 | RuntimeProducible |
 | simpliss | SupportReady | Fully Onboarded | 5 | 5 | None |
+| webiss | SupportConfigOnly | Partial | 4 | 5 | RuntimeProducible |
 
 ## Gaps
 
@@ -38,3 +39,4 @@
 | gissonline | ConfigurationGap | BindingsPresent | No bindings configured in base-rules.json. |
 | gissonline | EngineGap | RuntimeProducible | Skipped: analysis or bindings not available. |
 | paulistana | ConfigurationGap | RuntimeProducible | Serialization produced errors: [InputError] RPS: Required complex element 'RPS' has no data; [InputError] : Required element '' has no value and no default |
+| webiss | ConfigurationGap | RuntimeProducible | Serialization produced errors: [InputError] MensagemRetorno.IdentificacaoRps.Numero: Required element 'Numero' has no value and no default; [InputError] MensagemRetorno.IdentificacaoRps.Tipo: Required element 'Tipo' has no value and no default; [InputError] MensagemRetorno.Codigo: Required element 'Codigo' has no value and no default; [InputError] MensagemRetorno.Mensagem: Required element 'Mensagem' has no value and no default |

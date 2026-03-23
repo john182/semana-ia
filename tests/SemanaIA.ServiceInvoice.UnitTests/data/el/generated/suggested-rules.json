@@ -35,8 +35,10 @@
   "rootComplexTypeName": "tcEndereco",
   "rootElementName": "LoteRps",
   "bindings": {
+    "Bairro": "Borrower.Address.District",
     "CodigoMunicipio": "Provider.MunicipalityCode",
     "Municipio": "TODO: manual mapping required",
-    "Uf": "TODO: manual mapping required"
+    "Uf": "Borrower.Address.State",
+    "Cep": "Borrower.Address.PostalCode"
   }
 }

@@ -13,7 +13,7 @@
     }
   },
   "rootComplexTypeName": "_anon_ListaMensagemRetorno",
-  "rootElementName": "CompNfse",
+  "rootElementName": "ListaMensagemRetorno",
   "bindings": {
     "MensagemRetorno.Codigo": "TODO: manual mapping required",
     "MensagemRetorno.Mensagem": "TODO: manual mapping required"

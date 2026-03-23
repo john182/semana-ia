@@ -223,6 +223,94 @@ public class SendXsdSelectorTests
     }
 
     // ==========================================================
+    // Exclusion patterns: CompNfse, ConsultarNfse, SubstituirNfse
+    // ==========================================================
+
+    [Fact]
+    public void Given_DirectoryWithCompNfseAndEnvioXsd_Should_ExcludeCompNfseAndSelectEnvio()
+    {
+        // Arrange
+        var tempDir = CreateTempXsdDirectory("CompNfse_v1.00.xsd", "servico_enviar_lote_v1.00.xsd");
+
+        // Act
+        var selectionResult = _sut.Select(tempDir);
+
+        // Assert
+        selectionResult.IsSelected.ShouldBeTrue();
+        Path.GetFileName(selectionResult.SelectedFile).ShouldBe("servico_enviar_lote_v1.00.xsd");
+
+        CleanupTempDirectory(tempDir);
+    }
+
+    [Fact]
+    public void Given_DirectoryWithConsultarNfseXsd_Should_ExcludeIt()
+    {
+        // Arrange
+        var tempDir = CreateTempXsdDirectory("ConsultarNfse_v2.02.xsd", "enviar_lote_v2.02.xsd");
+
+        // Act
+        var selectionResult = _sut.Select(tempDir);
+
+        // Assert
+        selectionResult.IsSelected.ShouldBeTrue();
+        Path.GetFileName(selectionResult.SelectedFile).ShouldBe("enviar_lote_v2.02.xsd");
+
+        CleanupTempDirectory(tempDir);
+    }
+
+    // ==========================================================
+    // Send patterns: RecepcionarLoteRps, GerarNfse, EnviarLoteRps
+    // ==========================================================
+
+    [Fact]
+    public void Given_DirectoryWithRecepcionarLoteRpsXsd_Should_SelectAsStrongCandidate()
+    {
+        // Arrange
+        var tempDir = CreateTempXsdDirectory("RecepcionarLoteRps_v2.02.xsd", "custom-other.xsd");
+
+        // Act
+        var selectionResult = _sut.Select(tempDir);
+
+        // Assert
+        selectionResult.IsSelected.ShouldBeTrue();
+        Path.GetFileName(selectionResult.SelectedFile).ShouldBe("RecepcionarLoteRps_v2.02.xsd");
+
+        CleanupTempDirectory(tempDir);
+    }
+
+    [Fact]
+    public void Given_DirectoryWithGerarNfseXsd_Should_SelectAsStrongCandidate()
+    {
+        // Arrange
+        var tempDir = CreateTempXsdDirectory("GerarNfse_v2.02.xsd", "custom-other.xsd");
+
+        // Act
+        var selectionResult = _sut.Select(tempDir);
+
+        // Assert
+        selectionResult.IsSelected.ShouldBeTrue();
+        Path.GetFileName(selectionResult.SelectedFile).ShouldBe("GerarNfse_v2.02.xsd");
+
+        CleanupTempDirectory(tempDir);
+    }
+
+    [Fact]
+    public void Given_DirectoryWithEnviarLoteRpsXsd_Should_SelectAsStrongCandidate()
+    {
+        // Arrange
+        var tempDir = CreateTempXsdDirectory("EnviarLoteRps_v2.02.xsd", "custom-other.xsd");
+
+        // Act
+        var selectionResult = _sut.Select(tempDir);
+
+        // Assert
+        selectionResult.IsSelected.ShouldBeTrue();
+        Path.GetFileName(selectionResult.SelectedFile).ShouldBe("EnviarLoteRps_v2.02.xsd");
+
+        CleanupTempDirectory(tempDir);
+    }
+
+    // ==========================================================
     // All real providers should select without error
     // ==========================================================
 

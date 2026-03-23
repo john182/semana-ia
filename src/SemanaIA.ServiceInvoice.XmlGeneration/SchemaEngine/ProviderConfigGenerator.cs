@@ -17,6 +17,7 @@ public class ProviderConfigGenerator
 
     private readonly string _providersBaseDir;
     private readonly XsdSchemaAnalyzer _analyzer = new();
+    private readonly SendXsdSelector _selector = new();
 
     public ProviderConfigGenerator(string providersBaseDir)
     {
@@ -27,16 +28,16 @@ public class ProviderConfigGenerator
     {
         var providerDir = Path.Combine(_providersBaseDir, providerName);
         var xsdDir = Path.Combine(providerDir, ProviderProfile.XsdDirectoryName);
-        var xsdFiles = Directory.GetFiles(xsdDir, ProviderProfile.XsdSearchPattern);
 
-        if (xsdFiles.Length == 0)
-            throw new InvalidOperationException($"No XSD files found in {xsdDir}");
+        var selection = _selector.Select(xsdDir);
+        if (selection.SelectedFile is null)
+            throw new InvalidOperationException($"No suitable send XSD found in {xsdDir}: {selection.Reason}");
 
-        var schemaDocument = _analyzer.Analyze(xsdFiles[0]);
+        var schemaDocument = _analyzer.Analyze(selection.SelectedFile);
         var typeMap = schemaDocument.ComplexTypes.ToDictionary(ct => ct.Name, ct => ct);
 
         var rootComplexTypeName = ResolveRootComplexTypeName(schemaDocument, typeMap);
-        var rootElementName = schemaDocument.RootElementName;
+        var rootElementName = ResolveRootElementName(schemaDocument, rootComplexTypeName);
 
         var bindings = new Dictionary<string, string>();
         var formatting = new Dictionary<string, FormattingRule>();
@@ -49,9 +50,11 @@ public class ProviderConfigGenerator
             WalkSchemaTree(rootType, "", typeMap, bindings, formatting, envelopeDetection?.DataPathPrefix);
         }
 
+        var schemaVersion = schemaDocument.RootVersionAttribute ?? DefaultVersion;
+
         var profile = BuildProfile(
             providerName, rootComplexTypeName, rootElementName,
-            bindings, formatting, envelopeDetection);
+            bindings, formatting, envelopeDetection, schemaVersion);
 
         WriteSuggestedRules(providerDir, profile);
 
@@ -59,6 +62,15 @@ public class ProviderConfigGenerator
     }
 
     // --- Private methods ---
+
+    private static string ResolveRootElementName(SchemaDocument schemaDocument, string rootComplexTypeName)
+    {
+        // When using an inline type, the root element name is encoded in the type name (_anon_ElementName)
+        if (rootComplexTypeName.StartsWith(XsdSchemaAnalyzer.AnonymousTypePrefix, StringComparison.Ordinal))
+            return rootComplexTypeName[XsdSchemaAnalyzer.AnonymousTypePrefix.Length..];
+
+        return schemaDocument.RootElementName;
+    }
 
     private static string ResolveRootComplexTypeName(
         SchemaDocument schemaDocument, Dictionary<string, SchemaComplexType> typeMap)
@@ -260,12 +272,13 @@ public class ProviderConfigGenerator
         string rootElementName,
         Dictionary<string, string> bindings,
         Dictionary<string, FormattingRule> formatting,
-        EnvelopeDetectionResult? envelopeDetection)
+        EnvelopeDetectionResult? envelopeDetection,
+        string version)
     {
         return new ProviderProfile
         {
             Provider = providerName,
-            Version = DefaultVersion,
+            Version = version,
             RootComplexTypeName = rootComplexTypeName,
             RootElementName = rootElementName,
             Bindings = bindings,

@@ -1,6 +1,6 @@
 # Provider Onboarding Report
 
-Generated: 2026-03-22 16:25:50 UTC
+Generated: 2026-03-23 00:55:30 UTC
 
 ## Provider Status Overview
 
@@ -12,12 +12,13 @@ Generated: 2026-03-22 16:25:50 UTC
 | nacional | SupportReady | Fully Onboarded | PASS | PASS | PASS | PASS | PASS |
 | paulistana | SupportConfigOnly | Partial | PASS | PASS | PASS | FAIL | PASS |
 | simpliss | SupportReady | Fully Onboarded | PASS | PASS | PASS | PASS | PASS |
+| webiss | SupportConfigOnly | Partial | PASS | PASS | PASS | FAIL | PASS |
 
 ## Summary
 
-- **Total providers:** 6
+- **Total providers:** 7
 - **Fully Onboarded:** 3
-- **Partial:** 3
+- **Partial:** 4
 - **Schema Only (no bindings):** 2
 
 ## Gaps by Classification
@@ -29,12 +30,13 @@ Generated: 2026-03-22 16:25:50 UTC
 | gissonline | BindingsPresent | ConfigurationGap | No bindings configured in base-rules.json. | Configure bindings in providers/gissonline/rules/base-rules.json or use ProviderConfigGenerator to auto-generate |
 | gissonline | RuntimeProducible | EngineGap | Skipped: analysis or bindings not available. | No recommendation |
 | paulistana | RuntimeProducible | ConfigurationGap | Serialization produced errors: [InputError] RPS: Required complex element 'RPS' has no data; [InputError] : Required element '' has no value and no default | Review and complete the TODO bindings in base-rules.json |
+| webiss | RuntimeProducible | ConfigurationGap | Serialization produced errors: [InputError] MensagemRetorno.IdentificacaoRps.Numero: Required element 'Numero' has no value and no default; [InputError] MensagemRetorno.IdentificacaoRps.Tipo: Required element 'Tipo' has no value and no default; [InputError] MensagemRetorno.Codigo: Required element 'Codigo' has no value and no default; [InputError] MensagemRetorno.Mensagem: Required element 'Mensagem' has no value and no default | Review and complete the TODO bindings in base-rules.json |
 
 ## Backlog Classification
 
 | Category | Description | Providers Affected |
 |----------|-------------|-------------------|
-| Configuration | Bindings, rules or profile configuration needed | abrasf, gissonline, paulistana |
+| Configuration | Bindings, rules or profile configuration needed | abrasf, gissonline, paulistana, webiss |
 | Development | Engine or serializer changes needed | abrasf, gissonline |
 
 ## Onboarding Workflow

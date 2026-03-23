@@ -26,7 +26,7 @@
   "rootElementName": "tcRetCancelamento",
   "bindingPathPrefix": "NfseCancelamento.ConfirmacaoCancelamento",
   "bindings": {
-    "Pedido.InfPedidoCancelamento.IdentificacaoNfse.Numero": "TODO: manual mapping required",
+    "Pedido.InfPedidoCancelamento.IdentificacaoNfse.Numero": "Number",
     "Pedido.InfPedidoCancelamento.IdentificacaoNfse.CpfCnpj.Cpf": "Borrower.FederalTaxNumber",
     "Pedido.InfPedidoCancelamento.IdentificacaoNfse.CpfCnpj.Cnpj": "Provider.Cnpj",
     "Pedido.InfPedidoCancelamento.IdentificacaoNfse.InscricaoMunicipal": "Provider.MunicipalTaxNumber",

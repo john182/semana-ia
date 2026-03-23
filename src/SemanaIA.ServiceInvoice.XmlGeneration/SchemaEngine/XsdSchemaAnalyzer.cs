@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Xml;
 using System.Xml.Schema;
 
@@ -6,6 +7,8 @@ namespace SemanaIA.ServiceInvoice.XmlGeneration.SchemaEngine;
 public class XsdSchemaAnalyzer
 {
     private const string DsigNamespace = "http://www.w3.org/2000/09/xmldsig#";
+    private const string VersaoAttributeName = "versao";
+    internal const string AnonymousTypePrefix = "_anon_";
 
     public SchemaDocument Analyze(string xsdPath)
     {
@@ -26,6 +29,7 @@ public class XsdSchemaAnalyzer
 
         SchemaComplexType? rootInlineType = null;
         var rootInlineTypes = new List<SchemaComplexType>();
+        string? rootVersionAttribute = null;
 
         foreach (XmlSchema schema in schemaSet.Schemas())
         {
@@ -38,11 +42,16 @@ public class XsdSchemaAnalyzer
                 if (string.IsNullOrEmpty(rootElementName))
                     rootElementName = element.Name ?? string.Empty;
 
+                // Detect versao attribute on root element
+                if (rootVersionAttribute is null)
+                    rootVersionAttribute = ExtractVersionAttribute(element);
+
                 // Capture inline types from all root elements
                 if (element.ElementSchemaType is XmlSchemaComplexType inlineCt &&
                     string.IsNullOrEmpty(inlineCt.Name))
                 {
-                    var inlineAnalyzed = AnalyzeComplexType(inlineCt, $"_anon_{element.Name}", schemaNamespace);
+                    var effectiveNamespace = schemaNamespace ?? targetNamespace;
+                    var inlineAnalyzed = AnalyzeComplexType(inlineCt, $"{AnonymousTypePrefix}{element.Name}", effectiveNamespace);
                     rootInlineTypes.Add(inlineAnalyzed);
 
                     if (rootInlineType is null)
@@ -62,7 +71,7 @@ public class XsdSchemaAnalyzer
 
         var namespaceMap = BuildNamespaceMap(schemaSet);
 
-        return new SchemaDocument(targetNamespace, rootElementName, complexTypes, rootInlineType, namespaceMap);
+        return new SchemaDocument(targetNamespace, rootElementName, complexTypes, rootInlineType, namespaceMap, rootVersionAttribute);
     }
 
     private static SchemaComplexType AnalyzeComplexType(
@@ -101,7 +110,7 @@ public class XsdSchemaAnalyzer
                     if (el.ElementSchemaType is XmlSchemaComplexType inlineCt &&
                         string.IsNullOrEmpty(inlineCt.Name))
                     {
-                        inlineType = AnalyzeComplexType(inlineCt, $"_anon_{el.Name}", typeNamespace);
+                        inlineType = AnalyzeComplexType(inlineCt, $"{AnonymousTypePrefix}{el.Name}", typeNamespace);
                     }
 
                     elements.Add(new SchemaElement(
@@ -253,4 +262,30 @@ public class XsdSchemaAnalyzer
 
         return null;
     }
+
+    private static string? ExtractVersionAttribute(XmlSchemaElement element)
+    {
+        if (element.ElementSchemaType is not XmlSchemaComplexType rootComplexType)
+            return null;
+
+        // Check declared attributes
+        foreach (XmlSchemaAttribute attribute in rootComplexType.Attributes)
+        {
+            if (string.Equals(attribute.Name, VersaoAttributeName, StringComparison.OrdinalIgnoreCase))
+                return attribute.FixedValue ?? attribute.DefaultValue;
+        }
+
+        // Check compiled AttributeUses for resolved attributes
+        foreach (DictionaryEntry entry in rootComplexType.AttributeUses)
+        {
+            if (entry.Value is XmlSchemaAttribute compiledAttribute &&
+                string.Equals(compiledAttribute.Name, VersaoAttributeName, StringComparison.OrdinalIgnoreCase))
+            {
+                return compiledAttribute.FixedValue ?? compiledAttribute.DefaultValue;
+            }
+        }
+
+        return null;
+    }
+
 }
