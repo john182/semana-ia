@@ -61,7 +61,7 @@ public class SchemaBasedXmlSerializer
             BuildComplexTypeContent(rootElement, rootType, "", data, resolver, typeMap, ns, errors);
 
             var doc = new XDocument(new XDeclaration("1.0", "utf-8", null), rootElement);
-            var xml = doc.Declaration + Environment.NewLine + doc.Root;
+            var xml = doc.Declaration + doc.Root.ToString(SaveOptions.DisableFormatting);
 
             return errors.Count > 0
                 ? new SerializationResult(xml, false, errors, [])
