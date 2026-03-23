@@ -368,4 +368,330 @@ public static class NfseRequestExamplesFactory
             interestAmount = 750.00m
         }
     };
+
+    public static object IssWithholdingExample() => new
+    {
+        borrower = new
+        {
+            type = "LegalEntity",
+            name = "EMPRESA CONTRATANTE LTDA",
+            federalTaxNumber = 33444555000188L,
+            address = new
+            {
+                country = "BRA",
+                postalCode = "04538-132",
+                street = "AV BRIGADEIRO FARIA LIMA",
+                number = "3477",
+                district = "ITAIM BIBI",
+                city = new { code = "3550308" },
+                state = "SP"
+            }
+        },
+        externalId = "NFSE-RETISS-V4-0005",
+        federalServiceCode = "01.05",
+        cnaeCode = "6311900",
+        description = "Serviço de processamento de dados com retenção de ISS na fonte pelo tomador, conforme art. 6 da LC 116/2003.",
+        servicesAmount = 15000.00m,
+        issuedOn = "2026-02-15T14:30:00-03:00",
+        taxationType = "WithinCity",
+        issRate = 0.05m,
+        issTaxAmount = 750.00m,
+        issAmountWithheld = 750.00m,
+        retentionType = "WithheldByBuyer",
+        location = new
+        {
+            country = "BRA",
+            postalCode = "04538-132",
+            street = "AV BRIGADEIRO FARIA LIMA",
+            number = "3477",
+            district = "ITAIM BIBI",
+            city = new { code = "3550308" },
+            state = "SP"
+        },
+        nbsCode = "106050100",
+        ibsCbs = new
+        {
+            isDonation = false,
+            operationIndicator = "1005011",
+            personalUse = false,
+            classCode = "000001"
+        }
+    };
+
+    public static object IndividualBorrowerExample() => new
+    {
+        borrower = new
+        {
+            type = "Individual",
+            name = "JOAO DA SILVA SANTOS",
+            federalTaxNumber = 12345678901L,
+            phoneNumber = "5511999998888",
+            email = "joao.silva@email.com",
+            address = new
+            {
+                country = "BRA",
+                postalCode = "01310-100",
+                street = "AV PAULISTA",
+                number = "1578",
+                additionalInformation = "APTO 42",
+                district = "BELA VISTA",
+                city = new { code = "3550308" },
+                state = "SP"
+            }
+        },
+        externalId = "NFSE-PF-V4-0006",
+        federalServiceCode = "06.01",
+        cnaeCode = "8690999",
+        description = "Serviço de fisioterapia domiciliar prestado a pessoa física, sessão de reabilitação.",
+        servicesAmount = 350.00m,
+        issuedOn = "2026-03-10T09:00:00-03:00",
+        taxationType = "WithinCity",
+        issRate = 0.02m,
+        issTaxAmount = 7.00m,
+        location = new
+        {
+            country = "BRA",
+            postalCode = "01310-100",
+            street = "AV PAULISTA",
+            number = "1578",
+            district = "BELA VISTA",
+            city = new { code = "3550308" },
+            state = "SP"
+        },
+        nbsCode = "106010100",
+        ibsCbs = new
+        {
+            isDonation = false,
+            operationIndicator = "1005011",
+            personalUse = true,
+            classCode = "000001"
+        }
+    };
+
+    public static object DeductionSubcontractingExample() => new
+    {
+        borrower = new
+        {
+            type = "LegalEntity",
+            name = "CONSTRUTORA MASTER ENGENHARIA S.A.",
+            federalTaxNumber = 55667788000144L,
+            address = new
+            {
+                country = "BRA",
+                postalCode = "01310-000",
+                street = "RUA CONSOLACAO",
+                number = "2500",
+                district = "CONSOLACAO",
+                city = new { code = "3550308" },
+                state = "SP"
+            }
+        },
+        externalId = "NFSE-DED-V4-0007",
+        federalServiceCode = "07.02",
+        cnaeCode = "4120400",
+        description = "Execução de obra de construção civil com dedução de materiais e subcontratação de mão de obra especializada.",
+        servicesAmount = 80000.00m,
+        deductionsAmount = 25000.00m,
+        issuedOn = "2026-03-20T08:00:00-03:00",
+        taxationType = "WithinCity",
+        issRate = 0.03m,
+        issTaxAmount = 1650.00m,
+        location = new
+        {
+            country = "BRA",
+            postalCode = "01310-000",
+            street = "RUA CONSOLACAO",
+            number = "2500",
+            district = "CONSOLACAO",
+            city = new { code = "3550308" },
+            state = "SP"
+        },
+        deduction = new
+        {
+            documents = new[]
+            {
+                new
+                {
+                    nfseKey = "22223333444455556666777788889999000011112222",
+                    deductionType = "Subcontracting",
+                    issueDate = "2026-02-28",
+                    deductibleTotal = 15000.00m,
+                    usedAmount = 15000.00m,
+                    supplier = new
+                    {
+                        type = "LegalEntity",
+                        name = "ELETRICA INSTALACOES LTDA",
+                        federalTaxNumber = 99887766000155L,
+                        address = new
+                        {
+                            country = "BRA",
+                            postalCode = "03000-000",
+                            street = "RUA DOS ELETRICISTAS",
+                            number = "45",
+                            district = "BRAS",
+                            city = new { code = "3550308" },
+                            state = "SP"
+                        }
+                    }
+                },
+                new
+                {
+                    nfseKey = "33334444555566667777888899990000111122223333",
+                    deductionType = "Materials",
+                    issueDate = "2026-03-05",
+                    deductibleTotal = 10000.00m,
+                    usedAmount = 10000.00m,
+                    supplier = new
+                    {
+                        type = "LegalEntity",
+                        name = "DISTRIBUIDORA DE MATERIAIS LTDA",
+                        federalTaxNumber = 11223344000166L,
+                        address = new
+                        {
+                            country = "BRA",
+                            postalCode = "09000-000",
+                            street = "AV INDUSTRIAL",
+                            number = "1200",
+                            district = "DISTRITO INDUSTRIAL",
+                            city = new { code = "3548708" },
+                            state = "SP"
+                        }
+                    }
+                }
+            }
+        },
+        nbsCode = "107020100",
+        ibsCbs = new
+        {
+            isDonation = false,
+            operationIndicator = "1005011",
+            personalUse = false,
+            classCode = "000001"
+        }
+    };
+
+    public static object ConstructionServiceExample() => new
+    {
+        borrower = new
+        {
+            type = "LegalEntity",
+            name = "INCORPORADORA SKYLINE S.A.",
+            federalTaxNumber = 77889900000111L,
+            address = new
+            {
+                country = "BRA",
+                postalCode = "04543-011",
+                street = "AV ENGENHEIRO LUIS CARLOS BERRINI",
+                number = "1681",
+                district = "CIDADE MONCOES",
+                city = new { code = "3550308" },
+                state = "SP"
+            }
+        },
+        externalId = "NFSE-OBRA-V4-0008",
+        federalServiceCode = "07.05",
+        cnaeCode = "4399103",
+        description = "Reparação e reforma de edifício comercial, incluindo instalações hidráulicas e elétricas, com acompanhamento de engenheiro responsável.",
+        servicesAmount = 120000.00m,
+        deductionsAmount = 30000.00m,
+        issuedOn = "2026-04-01T07:30:00-03:00",
+        taxationType = "WithinCity",
+        issRate = 0.03m,
+        issTaxAmount = 2700.00m,
+        location = new
+        {
+            country = "BRA",
+            postalCode = "04543-011",
+            street = "AV ENGENHEIRO LUIS CARLOS BERRINI",
+            number = "1681",
+            district = "CIDADE MONCOES",
+            city = new { code = "3550308" },
+            state = "SP"
+        },
+        construction = new
+        {
+            propertyFiscalRegistration = "FISCAL-OBRA-2026-001",
+            workId = new { scheme = "bra.cei", value = "CEI-REFORMA-2026-SKYLINE" },
+            cibCode = "CIB-SKYLINE-001",
+            siteAddress = new
+            {
+                country = "BRA",
+                postalCode = "04543-011",
+                street = "AV ENGENHEIRO LUIS CARLOS BERRINI",
+                number = "1681",
+                district = "CIDADE MONCOES",
+                city = new { code = "3550308" },
+                state = "SP"
+            }
+        },
+        nbsCode = "107050100",
+        ibsCbs = new
+        {
+            isDonation = false,
+            operationIndicator = "1005011",
+            personalUse = false,
+            classCode = "000001"
+        }
+    };
+
+    public static object ExportServiceExample() => new
+    {
+        borrower = new
+        {
+            type = "LegalEntity",
+            name = "GLOBAL TECH SOLUTIONS INC",
+            federalTaxNumber = 0L,
+            noTaxIdReason = "ForeignEntity",
+            address = new
+            {
+                country = "USA",
+                postalCode = "94105",
+                street = "MARKET STREET",
+                number = "525",
+                additionalInformation = "SUITE 300",
+                district = "FINANCIAL DISTRICT",
+                city = new { name = "SAN FRANCISCO", code = "9999999" },
+                state = "CA"
+            }
+        },
+        externalId = "NFSE-EXPORT-V4-0009",
+        federalServiceCode = "01.07",
+        cnaeCode = "6201501",
+        description = "Desenvolvimento de software sob demanda para cliente no exterior, com exportação de resultado. Isenção de ISS conforme LC 116/2003, art. 2.",
+        servicesAmount = 50000.00m,
+        issuedOn = "2026-04-15T10:00:00-03:00",
+        taxationType = "Export",
+        issRate = 0.00m,
+        issTaxAmount = 0.00m,
+        location = new
+        {
+            country = "BRA",
+            postalCode = "04538-132",
+            street = "AV BRIGADEIRO FARIA LIMA",
+            number = "3477",
+            district = "ITAIM BIBI",
+            city = new { code = "3550308" },
+            state = "SP"
+        },
+        foreignTrade = new
+        {
+            serviceMode = "CrossBorderSupply",
+            relationShip = "noRelationship",
+            currency = "220",
+            serviceAmountInCurrency = 10000.00m,
+            supportMechanismProvider = "None",
+            supportMechanismReceiver = "None",
+            temporaryGoods = "no",
+            exportRegistration = "RE-SW-2026-GLOBAL-001",
+            mdicDelivery = false
+        },
+        nbsCode = "101070100",
+        ibsCbs = new
+        {
+            isDonation = false,
+            operationIndicator = "1005011",
+            personalUse = false,
+            classCode = "000001"
+        }
+    };
 }

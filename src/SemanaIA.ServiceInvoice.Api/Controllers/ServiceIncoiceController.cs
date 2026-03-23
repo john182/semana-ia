@@ -5,10 +5,23 @@ using SemanaIA.ServiceInvoice.Application;
 
 namespace SemanaIA.ServiceInvoice.Api.Controllers;
 
+/// <summary>
+/// API de emissao de NFS-e: geracao de XML a partir de dados estruturados.
+/// O provider e resolvido automaticamente pelo codigo IBGE do municipio informado na requisicao.
+/// </summary>
 [ApiController]
 [Route("api/v1/nfse")]
+[Tags("Emissao de NFS-e")]
 public class ServiceIncoiceController : ControllerBase
 {
+    /// <summary>
+    /// Gerar XML de NFS-e (DPS) a partir dos dados do documento.
+    /// O provider e resolvido automaticamente pelo codigo IBGE do municipio (campo borrower.address.city.code ou location.city.code).
+    /// Se nenhum provider especifico atender o municipio, o provider nacional e usado como fallback.
+    /// </summary>
+    /// <param name="request">Dados completos do documento de prestacao de servicos (DPS) para geracao do XML.</param>
+    /// <param name="useCase">Caso de uso injetado automaticamente pelo container de DI.</param>
+    /// <returns>XML gerado com informacoes do provider resolvido e do municipio utilizado na resolucao.</returns>
     [HttpPost("xml")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -16,7 +29,6 @@ public class ServiceIncoiceController : ControllerBase
         [FromBody] NfseGenerateXmlRequest request,
         [FromServices] GenerateNfseXmlUseCase useCase)
     {
-        
         var result = useCase.Execute(NfseRequestToDpsDocumentModelMapper.Map(request));
 
         return Ok(new
@@ -25,7 +37,10 @@ public class ServiceIncoiceController : ControllerBase
             result.Xml,
             result.RootElement,
             result.GeneratedBy,
-            message = "XML gerado com sucesso na POC usando XBuilder na infraestrutura"
+            result.ProviderName,
+            result.MunicipalityCode,
+            result.IsFallback,
+            result.FallbackReason,
         });
     }
 }

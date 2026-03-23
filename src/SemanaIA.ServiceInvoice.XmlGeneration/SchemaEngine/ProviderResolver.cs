@@ -45,7 +45,7 @@ public class ProviderResolver
         return availableProviders;
     }
 
-    public ProviderResolution ResolveByMunicipalityCode(string municipalityCode)
+    public virtual ProviderResolution ResolveByMunicipalityCode(string municipalityCode)
     {
         var providerDirectories = Directory.GetDirectories(_providersBaseDir);
 

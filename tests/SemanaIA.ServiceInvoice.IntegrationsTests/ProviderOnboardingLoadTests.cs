@@ -5,18 +5,18 @@ using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.VisualStudio.TestPlatform.TestHost;
 using Shouldly;
 
 namespace SemanaIA.ServiceInvoice.IntegrationsTests;
 
 /// <summary>
-/// Load tests: auto-discover and onboard ALL providers from production XSD assets,
+/// Load tests: auto-discover and onboard ALL providers from test data XSD assets,
 /// then generate XML under load for each onboarded provider.
-/// Uses XSDs from D:\projetos\nfeio-service-invoices\src\test\DFeTech.Serialization.Tests\Assets.
+/// Uses XSDs from tests/SemanaIA.ServiceInvoice.UnitTests/data/{provider}/xsd/.
 /// </summary>
 public class ProviderOnboardingLoadTests : IClassFixture<WebApplicationFactory<Program>>, IAsyncLifetime
 {
-    private const string ExternalAssetsBasePath = @"D:\projetos\nfeio-service-invoices\src\test\DFeTech.Serialization.Tests\Assets";
     private const int ConcurrentRequestsPerProvider = 5;
     private const int TotalSustainedIterations = 50;
 
@@ -253,17 +253,17 @@ public class ProviderOnboardingLoadTests : IClassFixture<WebApplicationFactory<P
 
     private static List<OnboardingTarget> DiscoverAllProviders()
     {
-        var assetsDir = ExternalAssetsBasePath;
-        if (!Directory.Exists(assetsDir))
+        var testDataDir = FindTestDataDir();
+        if (!Directory.Exists(testDataDir))
             return new List<OnboardingTarget>();
 
         var providers = new List<OnboardingTarget>();
         var municipalityCounter = 8000000;
 
-        foreach (var providerDir in Directory.GetDirectories(assetsDir).OrderBy(d => d))
+        foreach (var providerDir in Directory.GetDirectories(testDataDir).OrderBy(d => d))
         {
             var providerName = Path.GetFileName(providerDir);
-            var xsdDir = Path.Combine(providerDir, "XSD");
+            var xsdDir = Path.Combine(providerDir, "xsd");
 
             if (!Directory.Exists(xsdDir))
                 continue;
@@ -272,19 +272,27 @@ public class ProviderOnboardingLoadTests : IClassFixture<WebApplicationFactory<P
             if (xsdFiles.Length == 0)
                 continue;
 
-            // Skip providers that are just subdirectories or non-XSD folders
-            if (providerName is "Core" or "Certificate" or "Invoices" or "ReformaTributaria")
-                continue;
-
             municipalityCounter++;
-            var safeName = $"load-{providerName.ToLowerInvariant().Replace(" ", "-")}";
+            var safeName = $"load-{providerName!.ToLowerInvariant().Replace(" ", "-")}";
 
             providers.Add(new OnboardingTarget(
-                providerName, safeName, xsdDir, xsdFiles,
+                providerName!, safeName, xsdDir, xsdFiles,
                 municipalityCounter.ToString()));
         }
 
         return providers;
+    }
+
+    private static string FindTestDataDir()
+    {
+        var dir = AppContext.BaseDirectory;
+        while (dir is not null)
+        {
+            var candidate = Path.Combine(dir, "tests", "SemanaIA.ServiceInvoice.UnitTests", "data");
+            if (Directory.Exists(candidate)) return candidate;
+            dir = Directory.GetParent(dir)?.FullName;
+        }
+        throw new DirectoryNotFoundException("tests/SemanaIA.ServiceInvoice.UnitTests/data/");
     }
 
     private static string[] FindXsdFilesForOnboarding(string xsdDir)
@@ -318,7 +326,7 @@ public class ProviderOnboardingLoadTests : IClassFixture<WebApplicationFactory<P
             content.Add(xsdContent, "xsdFiles", Path.GetFileName(xsdPath));
         }
 
-        return await _client.PostAsync("/api/v1/providers/onboard", content);
+        return await _client.PostAsync("/api/v1/providers/onboarding/onboard", content);
     }
 
     private async Task<(HttpStatusCode Status, long ElapsedMs, bool HasXml)> GenerateXmlAndMeasure(object payload)
