@@ -42,7 +42,7 @@ public class SchemaBasedXmlSerializerXmlStructureTests
             """);
 
         var schema = _analyzer.Analyze(Path.Combine(tempDir, "versao-root.xsd"));
-        var resolver = new ProviderRuleResolver(new ProviderProfile { Provider = "test-versao" });
+        var resolver = new TypedRuleResolver([]);
 
         var data = new Dictionary<string, object?>
         {
@@ -89,7 +89,7 @@ public class SchemaBasedXmlSerializerXmlStructureTests
             """);
 
         var schema = _analyzer.Analyze(Path.Combine(tempDir, "no-versao.xsd"));
-        var resolver = new ProviderRuleResolver(new ProviderProfile { Provider = "test-no-versao" });
+        var resolver = new TypedRuleResolver([]);
 
         var data = new Dictionary<string, object?>
         {
@@ -142,7 +142,7 @@ public class SchemaBasedXmlSerializerXmlStructureTests
             """);
 
         var schema = _analyzer.Analyze(Path.Combine(tempDir, "default-versao.xsd"));
-        var resolver = new ProviderRuleResolver(new ProviderProfile { Provider = "test-default-versao" });
+        var resolver = new TypedRuleResolver([]);
 
         var data = new Dictionary<string, object?>
         {
@@ -195,7 +195,7 @@ public class SchemaBasedXmlSerializerXmlStructureTests
             """);
 
         var schema = _analyzer.Analyze(Path.Combine(tempDir, "inline-ns.xsd"));
-        var resolver = new ProviderRuleResolver(new ProviderProfile { Provider = "test-inline-ns" });
+        var resolver = new TypedRuleResolver([]);
 
         var data = new Dictionary<string, object?>
         {
@@ -254,7 +254,7 @@ public class SchemaBasedXmlSerializerXmlStructureTests
             """);
 
         var schema = _analyzer.Analyze(Path.Combine(tempDir, "mixed-types.xsd"));
-        var resolver = new ProviderRuleResolver(new ProviderProfile { Provider = "test-mixed" });
+        var resolver = new TypedRuleResolver([]);
 
         var data = new Dictionary<string, object?>
         {
@@ -309,7 +309,7 @@ public class SchemaBasedXmlSerializerXmlStructureTests
             """);
 
         var schema = _analyzer.Analyze(Path.Combine(tempDir, "inline-only.xsd"));
-        var resolver = new ProviderRuleResolver(new ProviderProfile { Provider = "test-inline-only" });
+        var resolver = new TypedRuleResolver([]);
 
         // The root type name will be _anon_PedidoEnvio (inline type)
         schema.RootInlineType.ShouldNotBeNull("Schema should detect inline root type");
@@ -367,7 +367,7 @@ public class SchemaBasedXmlSerializerXmlStructureTests
             """);
 
         var schema = _analyzer.Analyze(Path.Combine(tempDir, "full-inline.xsd"));
-        var resolver = new ProviderRuleResolver(new ProviderProfile { Provider = "test-full" });
+        var resolver = new TypedRuleResolver([]);
 
         var data = new Dictionary<string, object?>
         {

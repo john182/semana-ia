@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using SemanaIA.ServiceInvoice.Api.Contracts;
 using SemanaIA.ServiceInvoice.Application;
 using SemanaIA.ServiceInvoice.Domain.Models;
+using SemanaIA.ServiceInvoice.XmlGeneration.SchemaEngine;
 
 namespace SemanaIA.ServiceInvoice.Api.Controllers;
 
@@ -28,8 +29,7 @@ public class ProviderManagementController : ControllerBase
     /// <param name="name">Nome unico do provider (ex: "gissonline", "paulistana", "betha"). Nao pode repetir.</param>
     /// <param name="xsdFiles">Arquivos XSD do schema do provider. Selecione um ou mais arquivos .xsd. Esses schemas definem a estrutura do XML de NFS-e.</param>
     /// <param name="municipalityCodes">Codigos IBGE dos municipios atendidos, separados por virgula (ex: "3550308,3509502,3304557"). Cada codigo tem 7 digitos. Um municipio so pode pertencer a um provider.</param>
-    /// <param name="rulesJson">Configuracao de regras do provider em formato JSON (bindings, formatacao, defaults, enums). Se nao informado, a engine gera automaticamente a partir do XSD.</param>
-    /// <param name="primaryXsdFile">Nome do arquivo XSD principal para analise de schema, quando o provider possui multiplos arquivos XSD (ex: "servico_enviar_lote_rps_envio.xsd").</param>
+    /// <param name="primaryXsdFile">Nome do arquivo XSD principal para analise de schema. Obrigatorio quando o provider possui mais de um arquivo XSD (ex: "servico_enviar_lote_rps_envio.xsd"). Se o provider tem apenas um XSD, a engine seleciona automaticamente.</param>
     [HttpPost]
     [ProducesResponseType(typeof(ProviderResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -39,7 +39,6 @@ public class ProviderManagementController : ControllerBase
         [FromForm] string name,
         [FromForm] List<IFormFile> xsdFiles,
         [FromForm] string? municipalityCodes = null,
-        [FromForm] string? rulesJson = null,
         [FromForm] string? primaryXsdFile = null)
     {
         var xsdFileEntries = ConvertFormFilesToXsdEntries(xsdFiles);
@@ -47,7 +46,7 @@ public class ProviderManagementController : ControllerBase
 
         var result = await _managementService.Create(
             name, xsdFileEntries, parsedMunicipalityCodes,
-            rulesJson, primaryXsdFile);
+            primaryXsdFile: primaryXsdFile);
 
         if (!result.IsSuccess)
             return MapErrorResponse(result);
@@ -63,7 +62,6 @@ public class ProviderManagementController : ControllerBase
     /// <param name="id">Identificador unico do provider a ser atualizado.</param>
     /// <param name="name">Novo nome do provider (opcional). Deve ser unico.</param>
     /// <param name="xsdFiles">Novos arquivos XSD (opcional). Substitui todos os XSDs existentes.</param>
-    /// <param name="rulesJson">Nova configuracao de regras em JSON (opcional).</param>
     /// <param name="primaryXsdFile">Novo arquivo XSD principal (opcional).</param>
     /// <param name="version">Nova versao do provider (opcional).</param>
     [HttpPut("{id}")]
@@ -75,7 +73,6 @@ public class ProviderManagementController : ControllerBase
         string id,
         [FromForm] string? name = null,
         [FromForm] List<IFormFile>? xsdFiles = null,
-        [FromForm] string? rulesJson = null,
         [FromForm] string? primaryXsdFile = null,
         [FromForm] string? version = null)
     {
@@ -84,8 +81,8 @@ public class ProviderManagementController : ControllerBase
             : null;
 
         var result = await _managementService.Update(
-            id, name, xsdFileEntries, rulesJson,
-            primaryXsdFile, version);
+            id, name, xsdFileEntries,
+            primaryXsdFile: primaryXsdFile, version: version);
 
         if (!result.IsSuccess)
             return MapErrorResponse(result);
@@ -215,6 +212,81 @@ public class ProviderManagementController : ControllerBase
     }
 
     /// <summary>
+    /// Listar todas as rules tipadas configuradas para um provider.
+    /// Retorna a lista de regras deserializada a partir do RulesJson interno.
+    /// </summary>
+    /// <param name="id">Identificador unico do provider.</param>
+    [HttpGet("{id}/rules")]
+    [ProducesResponseType(typeof(List<ProviderRule>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetRules(string id)
+    {
+        var result = await _managementService.GetRules(id);
+        if (!result.IsSuccess)
+            return MapRulesErrorResponse(result);
+
+        return Ok(result.Rules);
+    }
+
+    /// <summary>
+    /// Substituir todas as rules de um provider pela lista informada.
+    /// A lista completa e validada pela engine antes de ser salva.
+    /// Este e o endpoint principal para configuracao de regras tipadas.
+    /// </summary>
+    /// <param name="id">Identificador unico do provider.</param>
+    /// <param name="rules">Lista completa de regras tipadas que substituira as regras atuais do provider.</param>
+    [HttpPut("{id}/rules")]
+    [ProducesResponseType(typeof(List<ProviderRule>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> ReplaceRules(string id, [FromBody] List<ProviderRule> rules)
+    {
+        var result = await _managementService.ReplaceRules(id, rules);
+        if (!result.IsSuccess)
+            return MapRulesErrorResponse(result);
+
+        return Ok(result.Rules);
+    }
+
+    /// <summary>
+    /// Adicionar uma ou mais rules ao provider sem remover as existentes.
+    /// As novas regras sao adicionadas ao final da lista e o conjunto completo e validado.
+    /// </summary>
+    /// <param name="id">Identificador unico do provider.</param>
+    /// <param name="rules">Lista de regras tipadas a serem adicionadas ao provider.</param>
+    [HttpPost("{id}/rules")]
+    [ProducesResponseType(typeof(List<ProviderRule>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> AddRules(string id, [FromBody] List<ProviderRule> rules)
+    {
+        var result = await _managementService.AddRules(id, rules);
+        if (!result.IsSuccess)
+            return MapRulesErrorResponse(result);
+
+        return Ok(result.Rules);
+    }
+
+    /// <summary>
+    /// Remover uma rule especifica do provider por indice (posicao na lista, base zero).
+    /// Apos a remocao, a lista e reindexada automaticamente.
+    /// </summary>
+    /// <param name="id">Identificador unico do provider.</param>
+    /// <param name="index">Indice da regra a remover (base zero). Use GET rules para consultar indices.</param>
+    [HttpDelete("{id}/rules/{index:int}")]
+    [ProducesResponseType(typeof(List<ProviderRule>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> RemoveRule(string id, int index)
+    {
+        var result = await _managementService.RemoveRule(id, index);
+        if (!result.IsSuccess)
+            return MapRulesErrorResponse(result);
+
+        return Ok(result.Rules);
+    }
+
+    /// <summary>
     /// Executar validacao sob demanda para um provider. Atualiza o status conforme o resultado.
     /// </summary>
     [HttpPost("{id}/validate")]
@@ -266,11 +338,28 @@ public class ProviderManagementController : ControllerBase
         XsdFileNames = provider.XsdFiles.Select(xsd => xsd.FileName).ToList(),
         MunicipalityCodes = provider.MunicipalityCodes,
         HasRulesConfig = provider.RulesJson is not null,
+        TypedRuleCount = CountTypedRules(provider),
         PrimaryXsdFile = provider.PrimaryXsdFile,
         ValidationCount = provider.ValidationHistory.Count,
         CreatedAt = provider.CreatedAt,
         UpdatedAt = provider.UpdatedAt,
     };
+
+    private static int CountTypedRules(ManagedProvider provider)
+    {
+        if (provider.RulesJson is null) return 0;
+
+        try
+        {
+            var profile = System.Text.Json.JsonSerializer.Deserialize<XmlGeneration.SchemaEngine.ProviderProfile>(
+                provider.RulesJson);
+            return profile?.Rules?.Count ?? 0;
+        }
+        catch
+        {
+            return 0;
+        }
+    }
 
     private static ProviderSummaryResponse MapToSummaryResponse(ManagedProvider provider) => new()
     {
@@ -312,6 +401,21 @@ public class ProviderManagementController : ControllerBase
         ProviderManagementErrorKind.NotFound => NotFound(new { error = result.ErrorMessage }),
         ProviderManagementErrorKind.Conflict => Conflict(new { error = result.ErrorMessage }),
         ProviderManagementErrorKind.ValidationError => BadRequest(new { error = result.ErrorMessage }),
+        _ => BadRequest(new { error = result.ErrorMessage }),
+    };
+
+    private IActionResult MapRulesErrorResponse(ProviderRulesResult result) => result.ErrorKind switch
+    {
+        ProviderManagementErrorKind.NotFound => NotFound(new { error = result.ErrorMessage }),
+        ProviderManagementErrorKind.ValidationError => BadRequest(new
+        {
+            error = result.ErrorMessage,
+            ruleValidationErrors = result.RuleValidationErrors?.Select(ruleError => new
+            {
+                rule = ruleError.RuleDescription,
+                message = ruleError.Message
+            })
+        }),
         _ => BadRequest(new { error = result.ErrorMessage }),
     };
 }

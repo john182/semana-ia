@@ -1,0 +1,35 @@
+{
+  "provider": "simpliss",
+  "version": "2.03",
+  "rootComplexTypeName": "_anon_EnviarLoteRpsEnvio",
+  "rootElementName": "EnviarLoteRpsEnvio",
+  "municipalityCodes": ["3106200"],
+  "bindingPathPrefix": "LoteRps.ListaRps.Rps",
+  "wrapperBindings": {
+    "LoteRps.@Id": "const:lote1",
+    "LoteRps.@versao": "const:2.03",
+    "LoteRps.NumeroLote": "const:1",
+    "LoteRps.CpfCnpj.Cnpj": "Provider.Cnpj | padLeft:14:0",
+    "LoteRps.InscricaoMunicipal": "Provider.MunicipalTaxNumber",
+    "LoteRps.QuantidadeRps": "const:1"
+  },
+  "rules": [
+    { "type": "Binding", "target": "InfDeclaracaoPrestacaoServico.Competencia", "source": "CompetenceDate", "format": "yyyy-MM-dd" },
+    { "type": "Binding", "target": "InfDeclaracaoPrestacaoServico.Servico.Valores.ValorServicos", "source": "Values.ServicesAmount", "format": "F2" },
+    { "type": "Binding", "target": "InfDeclaracaoPrestacaoServico.Servico.IssRetido", "sourceType": "constant", "constantValue": "2" },
+    { "type": "Binding", "target": "InfDeclaracaoPrestacaoServico.Servico.ItemListaServico", "source": "Service.FederalServiceCode" },
+    { "type": "Binding", "target": "InfDeclaracaoPrestacaoServico.Servico.CodigoNbs", "source": "Service.NbsCode" },
+    { "type": "Binding", "target": "InfDeclaracaoPrestacaoServico.Servico.Discriminacao", "source": "Service.Description" },
+    { "type": "Binding", "target": "InfDeclaracaoPrestacaoServico.Servico.CodigoMunicipio", "source": "Service.MunicipalityCode" },
+    { "type": "Binding", "target": "InfDeclaracaoPrestacaoServico.Servico.ExigibilidadeISS", "sourceType": "constant", "constantValue": "1" },
+    { "type": "Binding", "target": "InfDeclaracaoPrestacaoServico.Prestador.CpfCnpj.Cnpj", "source": "Provider.Cnpj", "padLeft": 14, "padChar": "0" },
+    { "type": "Binding", "target": "InfDeclaracaoPrestacaoServico.Prestador.InscricaoMunicipal", "source": "Provider.MunicipalTaxNumber" },
+    {
+      "type": "Default",
+      "target": "InfDeclaracaoPrestacaoServico.OptanteSimplesNacional",
+      "source": "Provider.TaxRegime",
+      "fallbackValue": "2"
+    },
+    { "type": "Binding", "target": "InfDeclaracaoPrestacaoServico.IncentivoFiscal", "sourceType": "constant", "constantValue": "2" }
+  ]
+}

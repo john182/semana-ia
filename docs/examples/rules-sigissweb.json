@@ -1,0 +1,254 @@
+{
+  "provider": "sigissweb",
+  "description": "Regras tipadas para o provider SIGISSWeb — serializer proprietário flat (sem envelope ABRASF)",
+  "rules": [
+    {
+      "type": "Binding",
+      "target": "cnpj_cpf_prestador",
+      "source": "Provider.FederalTaxNumber",
+      "digitsOnly": true,
+      "padLeft": 14,
+      "padChar": "0"
+    },
+    {
+      "type": "Binding",
+      "target": "exterior_dest",
+      "sourceType": "constant",
+      "constantValue": "0"
+    },
+    {
+      "type": "Choice",
+      "target": "cnpj_cpf_destinatario",
+      "choiceField": "Borrower.PersonType",
+      "options": {
+        "LegalEntity": { "element": "cnpj_cpf_destinatario", "source": "Borrower.FederalTaxNumber", "padLeft": 14, "padChar": "0" },
+        "NaturalPerson": { "element": "cnpj_cpf_destinatario", "source": "Borrower.FederalTaxNumber", "padLeft": 11, "padChar": "0" }
+      }
+    },
+    {
+      "type": "EnumMapping",
+      "target": "pessoa_destinatario",
+      "source": "Borrower.PersonType",
+      "mappings": { "LegalEntity": "J", "NaturalPerson": "F" },
+      "defaultMapping": "F"
+    },
+    {
+      "type": "Default",
+      "target": "ie_destinatario",
+      "source": "Borrower.RegionalTaxNumber",
+      "fallbackValue": "isento"
+    },
+    {
+      "type": "Default",
+      "target": "im_destinatario",
+      "source": "Borrower.MunicipalTaxNumber",
+      "fallbackValue": "isento"
+    },
+    {
+      "type": "Binding",
+      "target": "razao_social_destinatario",
+      "source": "Borrower.Name"
+    },
+    {
+      "type": "Default",
+      "target": "endereco_destinatario",
+      "source": "Borrower.Address.Street",
+      "fallbackValue": " "
+    },
+    {
+      "type": "Default",
+      "target": "numero_ende_destinatario",
+      "source": "Borrower.Address.Number",
+      "fallbackValue": "S/N"
+    },
+    {
+      "type": "Default",
+      "target": "complemento_ende_destinatario",
+      "source": "Borrower.Address.AdditionalInformation",
+      "fallbackValue": "ND"
+    },
+    {
+      "type": "Default",
+      "target": "bairro_destinatario",
+      "source": "Borrower.Address.District",
+      "fallbackValue": " "
+    },
+    {
+      "type": "Default",
+      "target": "cep_destinatario",
+      "source": "Borrower.Address.PostalCode",
+      "fallbackValue": " "
+    },
+    {
+      "type": "Binding",
+      "target": "cidade_destinatario",
+      "source": "Borrower.Address.City.Name"
+    },
+    {
+      "type": "Binding",
+      "target": "uf_destinatario",
+      "source": "Borrower.Address.State"
+    },
+    {
+      "type": "Binding",
+      "target": "pais_destinatario",
+      "sourceType": "constant",
+      "constantValue": "Brasil"
+    },
+    {
+      "type": "Default",
+      "target": "fone_destinatario",
+      "source": "Borrower.PhoneNumber",
+      "fallbackValue": " "
+    },
+    {
+      "type": "Default",
+      "target": "email_destinatario",
+      "source": "Borrower.Email",
+      "fallbackValue": " "
+    },
+    {
+      "type": "Binding",
+      "target": "valor_nf",
+      "source": "Values.ServicesAmount",
+      "format": "0.00"
+    },
+    {
+      "type": "Default",
+      "target": "deducao",
+      "source": "Values.DeductionsAmount",
+      "fallbackValue": "0.00",
+      "format": "0.00"
+    },
+    {
+      "type": "Binding",
+      "target": "valor_servico",
+      "source": "Values.ServicesAmount",
+      "format": "0.00"
+    },
+    {
+      "type": "Binding",
+      "target": "data_emissao",
+      "source": "IssuedOn",
+      "format": "dd/MM/yyyy"
+    },
+    {
+      "type": "Binding",
+      "target": "forma_de_pagamento",
+      "sourceType": "constant",
+      "constantValue": ""
+    },
+    {
+      "type": "Binding",
+      "target": "descricao",
+      "source": "Service.Description"
+    },
+    {
+      "type": "Binding",
+      "target": "id_codigo_servico",
+      "source": "CityServiceCode"
+    },
+    {
+      "type": "Binding",
+      "target": "cancelada",
+      "sourceType": "constant",
+      "constantValue": "N"
+    },
+    {
+      "type": "ConditionalEmission",
+      "target": "iss_retido",
+      "sourceType": "constant",
+      "constantValue": "S",
+      "action": "Emit",
+      "condition": { "field": "Values.IssAmountWithheld", "operator": "GreaterThan", "value": "0" },
+      "fallbackValue": "N"
+    },
+    {
+      "type": "Default",
+      "target": "aliq_iss",
+      "source": "Values.IssRate",
+      "fallbackValue": "0.00",
+      "format": "0.00"
+    },
+    {
+      "type": "Default",
+      "target": "valor_iss",
+      "source": "Values.IssAmountWithheld",
+      "fallbackValue": "0.00",
+      "format": "0.00"
+    },
+    {
+      "type": "Default",
+      "target": "valor_pis",
+      "source": "Values.PisAmountWithheld",
+      "fallbackValue": "0.00",
+      "format": "0.00"
+    },
+    {
+      "type": "Default",
+      "target": "valor_cofins",
+      "source": "Values.CofinsAmountWithheld",
+      "fallbackValue": "0.00",
+      "format": "0.00"
+    },
+    {
+      "type": "Default",
+      "target": "valor_csll",
+      "source": "Values.CsllAmountWithheld",
+      "fallbackValue": "0.00",
+      "format": "0.00"
+    },
+    {
+      "type": "Default",
+      "target": "valor_irrf",
+      "source": "Values.IrAmountWithheld",
+      "fallbackValue": "0.00",
+      "format": "0.00"
+    },
+    {
+      "type": "Default",
+      "target": "valor_inss",
+      "source": "Values.InssAmountWithheld",
+      "fallbackValue": "0.00",
+      "format": "0.00"
+    },
+    {
+      "type": "Binding",
+      "target": "sistema_gerador",
+      "sourceType": "constant",
+      "constantValue": "NFE.io"
+    },
+    {
+      "type": "Binding",
+      "target": "serie_rps",
+      "source": "Series"
+    },
+    {
+      "type": "Binding",
+      "target": "rps",
+      "source": "Number"
+    },
+    {
+      "type": "ConditionalEmission",
+      "target": "codigo_nbs",
+      "source": "Service.NbsCode",
+      "action": "Emit",
+      "condition": { "field": "Service.NbsCode", "operator": "HasValue" }
+    },
+    {
+      "type": "ConditionalEmission",
+      "target": "exterior_prestacao_servico",
+      "sourceType": "constant",
+      "constantValue": "1",
+      "action": "Emit",
+      "condition": {
+        "logicalOperator": "And",
+        "conditions": [
+          { "field": "Borrower.Address.Country", "operator": "HasValue" },
+          { "field": "Borrower.Address.Country", "operator": "NotEquals", "value": "BRA" }
+        ]
+      },
+      "fallbackValue": "0"
+    }
+  ]
+}

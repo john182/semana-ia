@@ -1,0 +1,333 @@
+{
+  "provider": "abrasf203",
+  "description": "Regras tipadas para providers ABRASF v2.03 — padrão de envelope EnviarLoteRpsEnvio > LoteRps > ListaRps > Rps > InfDeclaracaoPrestacaoServico",
+  "rules": [
+    {
+      "type": "Binding",
+      "target": "LoteRps.NumeroLote",
+      "sourceType": "constant",
+      "constantValue": "1"
+    },
+    {
+      "type": "Binding",
+      "target": "LoteRps.CpfCnpj.Cnpj",
+      "source": "Provider.Cnpj",
+      "digitsOnly": true,
+      "padLeft": 14,
+      "padChar": "0"
+    },
+    {
+      "type": "ConditionalEmission",
+      "target": "LoteRps.InscricaoMunicipal",
+      "source": "Provider.MunicipalTaxNumber",
+      "action": "Emit",
+      "condition": { "field": "Provider.MunicipalTaxNumber", "operator": "HasValue" }
+    },
+    {
+      "type": "Binding",
+      "target": "LoteRps.QuantidadeRps",
+      "sourceType": "constant",
+      "constantValue": "1"
+    },
+    {
+      "type": "Binding",
+      "target": "IdentificacaoRps.Numero",
+      "source": "Number"
+    },
+    {
+      "type": "Binding",
+      "target": "IdentificacaoRps.Serie",
+      "source": "Series"
+    },
+    {
+      "type": "Binding",
+      "target": "IdentificacaoRps.Tipo",
+      "sourceType": "constant",
+      "constantValue": "1"
+    },
+    {
+      "type": "Binding",
+      "target": "DataEmissao",
+      "source": "IssuedOn",
+      "format": "yyyy-MM-dd"
+    },
+    {
+      "type": "EnumMapping",
+      "target": "Status",
+      "source": "RpsStatus",
+      "mappings": { "Normal": "1", "Canceled": "2", "Lost": "4" },
+      "defaultMapping": "1"
+    },
+    {
+      "type": "Binding",
+      "target": "Competencia",
+      "source": "CompetenceDate",
+      "format": "yyyy-MM-dd"
+    },
+    {
+      "type": "Binding",
+      "target": "Servico.Valores.ValorServicos",
+      "source": "Values.ServicesAmount",
+      "format": "0.00"
+    },
+    {
+      "type": "ConditionalEmission",
+      "target": "Servico.Valores.ValorDeducoes",
+      "source": "Values.DeductionsAmount",
+      "action": "Emit",
+      "condition": { "field": "Values.DeductionsAmount", "operator": "GreaterThan", "value": "0" },
+      "format": "0.00"
+    },
+    {
+      "type": "ConditionalEmission",
+      "target": "Servico.Valores.ValorPis",
+      "source": "Values.PisAmountWithheld",
+      "action": "Emit",
+      "condition": { "field": "Values.PisAmountWithheld", "operator": "GreaterThan", "value": "0" },
+      "format": "0.00"
+    },
+    {
+      "type": "ConditionalEmission",
+      "target": "Servico.Valores.ValorCofins",
+      "source": "Values.CofinsAmountWithheld",
+      "action": "Emit",
+      "condition": { "field": "Values.CofinsAmountWithheld", "operator": "GreaterThan", "value": "0" },
+      "format": "0.00"
+    },
+    {
+      "type": "ConditionalEmission",
+      "target": "Servico.Valores.ValorInss",
+      "source": "Values.InssAmountWithheld",
+      "action": "Emit",
+      "condition": { "field": "Values.InssAmountWithheld", "operator": "GreaterThan", "value": "0" },
+      "format": "0.00"
+    },
+    {
+      "type": "ConditionalEmission",
+      "target": "Servico.Valores.ValorIr",
+      "source": "Values.IrAmountWithheld",
+      "action": "Emit",
+      "condition": { "field": "Values.IrAmountWithheld", "operator": "GreaterThan", "value": "0" },
+      "format": "0.00"
+    },
+    {
+      "type": "ConditionalEmission",
+      "target": "Servico.Valores.ValorCsll",
+      "source": "Values.CsllAmountWithheld",
+      "action": "Emit",
+      "condition": { "field": "Values.CsllAmountWithheld", "operator": "GreaterThan", "value": "0" },
+      "format": "0.00"
+    },
+    {
+      "type": "ConditionalEmission",
+      "target": "Servico.Valores.OutrasRetencoes",
+      "source": "Values.OthersAmountWithheld",
+      "action": "Emit",
+      "condition": { "field": "Values.OthersAmountWithheld", "operator": "GreaterThan", "value": "0" },
+      "format": "0.00"
+    },
+    {
+      "type": "ConditionalEmission",
+      "target": "Servico.Valores.Aliquota",
+      "source": "Values.IssRate",
+      "action": "Emit",
+      "condition": { "field": "Values.IssRate", "operator": "GreaterThan", "value": "0" },
+      "format": "0.0000"
+    },
+    {
+      "type": "ConditionalEmission",
+      "target": "Servico.Valores.ValorIss",
+      "source": "Values.IssAmountWithheld",
+      "action": "Emit",
+      "condition": { "field": "Values.IssAmountWithheld", "operator": "GreaterThan", "value": "0" },
+      "format": "0.00"
+    },
+    {
+      "type": "ConditionalEmission",
+      "target": "Servico.IssRetido",
+      "sourceType": "constant",
+      "constantValue": "1",
+      "action": "Emit",
+      "condition": { "field": "Values.IssAmountWithheld", "operator": "GreaterThan", "value": "0" },
+      "fallbackValue": "2"
+    },
+    {
+      "type": "ConditionalEmission",
+      "target": "Servico.ItemListaServico",
+      "source": "Service.FederalServiceCode",
+      "action": "Emit",
+      "condition": { "field": "Service.FederalServiceCode", "operator": "HasValue" },
+      "digitsOnly": true,
+      "padLeft": 4,
+      "padChar": "0"
+    },
+    {
+      "type": "ConditionalEmission",
+      "target": "Servico.CodigoCnae",
+      "source": "Service.CnaeCode",
+      "action": "Emit",
+      "condition": { "field": "Service.CnaeCode", "operator": "HasValue" }
+    },
+    {
+      "type": "ConditionalEmission",
+      "target": "Servico.CodigoTributacaoMunicipio",
+      "source": "CityServiceCode",
+      "action": "Emit",
+      "condition": { "field": "CityServiceCode", "operator": "HasValue" }
+    },
+    {
+      "type": "ConditionalEmission",
+      "target": "Servico.CodigoNbs",
+      "source": "Service.NbsCode",
+      "action": "Emit",
+      "condition": { "field": "Service.NbsCode", "operator": "HasValue" },
+      "digitsOnly": true
+    },
+    {
+      "type": "Binding",
+      "target": "Servico.Discriminacao",
+      "source": "Service.Description"
+    },
+    {
+      "type": "Binding",
+      "target": "Servico.CodigoMunicipio",
+      "source": "Provider.MunicipalityCode"
+    },
+    {
+      "type": "EnumMapping",
+      "target": "Servico.ExigibilidadeISS",
+      "source": "Values.TaxationType",
+      "mappings": {
+        "WithinCity": "1",
+        "OutsideCity": "2",
+        "Free": "3",
+        "OutsideCityFree": "3",
+        "Export": "4",
+        "Immune": "5",
+        "OutsideCityImmune": "5",
+        "SuspendedCourtDecision": "6",
+        "SuspendedAdministrativeProcedure": "7",
+        "OutsideCitySuspended": "7"
+      },
+      "defaultMapping": "1"
+    },
+    {
+      "type": "ConditionalEmission",
+      "target": "Servico.MunicipioIncidencia",
+      "source": "Provider.MunicipalityCode",
+      "action": "Emit",
+      "condition": {
+        "field": "Values.TaxationType",
+        "operator": "In",
+        "value": "WithinCity,SuspendedCourtDecision,SuspendedAdministrativeProcedure,OutsideCitySuspended"
+      }
+    },
+    {
+      "type": "Binding",
+      "target": "Prestador.CpfCnpj.Cnpj",
+      "source": "Provider.Cnpj",
+      "digitsOnly": true,
+      "padLeft": 14,
+      "padChar": "0"
+    },
+    {
+      "type": "ConditionalEmission",
+      "target": "Prestador.InscricaoMunicipal",
+      "source": "Provider.MunicipalTaxNumber",
+      "action": "Emit",
+      "condition": { "field": "Provider.MunicipalTaxNumber", "operator": "HasValue" }
+    },
+    {
+      "type": "ConditionalEmission",
+      "target": "Tomador.IdentificacaoTomador.CpfCnpj",
+      "action": "Emit",
+      "condition": { "field": "Borrower.FederalTaxNumber", "operator": "GreaterThan", "value": "0" },
+      "choiceField": "Borrower.PersonType",
+      "options": {
+        "LegalEntity": { "element": "Cnpj", "source": "Borrower.FederalTaxNumber", "padLeft": 14, "padChar": "0" },
+        "NaturalPerson": { "element": "Cpf", "source": "Borrower.FederalTaxNumber", "padLeft": 11, "padChar": "0" }
+      }
+    },
+    {
+      "type": "Binding",
+      "target": "Tomador.RazaoSocial",
+      "source": "Borrower.Name"
+    },
+    {
+      "type": "ConditionalEmission",
+      "target": "Tomador.Endereco.Endereco",
+      "source": "Borrower.Address.Street",
+      "action": "Emit",
+      "condition": { "field": "Borrower.Address.Street", "operator": "HasValue" }
+    },
+    {
+      "type": "ConditionalEmission",
+      "target": "Tomador.Endereco.Numero",
+      "source": "Borrower.Address.Number",
+      "action": "Emit",
+      "condition": { "field": "Borrower.Address.Number", "operator": "HasValue" }
+    },
+    {
+      "type": "ConditionalEmission",
+      "target": "Tomador.Endereco.Bairro",
+      "source": "Borrower.Address.District",
+      "action": "Emit",
+      "condition": { "field": "Borrower.Address.District", "operator": "HasValue" }
+    },
+    {
+      "type": "ConditionalEmission",
+      "target": "Tomador.Endereco.CodigoMunicipio",
+      "source": "Borrower.Address.City.Code",
+      "action": "Emit",
+      "condition": { "field": "Borrower.Address.City.Code", "operator": "HasValue" }
+    },
+    {
+      "type": "ConditionalEmission",
+      "target": "Tomador.Endereco.Uf",
+      "source": "Borrower.Address.State",
+      "action": "Emit",
+      "condition": { "field": "Borrower.Address.State", "operator": "HasValue" }
+    },
+    {
+      "type": "ConditionalEmission",
+      "target": "Tomador.Endereco.Cep",
+      "source": "Borrower.Address.PostalCode",
+      "action": "Emit",
+      "condition": { "field": "Borrower.Address.PostalCode", "operator": "HasValue" }
+    },
+    {
+      "type": "EnumMapping",
+      "target": "RegimeEspecialTributacao",
+      "source": "Provider.SpecialTaxRegime",
+      "mappings": {
+        "Automatico": "0",
+        "CooperativeAct": "1",
+        "Estimate": "2",
+        "MicroMunicipal": "3",
+        "Notary": "4",
+        "AutonomousProfessional": "5",
+        "ProfessionalSociety": "6"
+      },
+      "defaultMapping": "0"
+    },
+    {
+      "type": "EnumMapping",
+      "target": "OptanteSimplesNacional",
+      "source": "Provider.TaxRegime",
+      "mappings": {
+        "SimplesNacional": "1",
+        "MicroempreendedorIndividual": "1",
+        "LucroPresumido": "2",
+        "LucroReal": "2",
+        "None": "2"
+      },
+      "defaultMapping": "2"
+    },
+    {
+      "type": "Binding",
+      "target": "IncentivoFiscal",
+      "sourceType": "constant",
+      "constantValue": "2"
+    }
+  ]
+}

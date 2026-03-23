@@ -69,10 +69,13 @@ public class ProviderSampleDocumentGenerator
     {
         var expressions = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-        if (profile.Bindings is not null)
+        if (profile.Rules is { Count: > 0 })
         {
-            foreach (var expression in profile.Bindings.Values)
-                expressions.Add(expression);
+            foreach (var rule in profile.Rules)
+            {
+                if (rule.Source is not null)
+                    expressions.Add(rule.Source);
+            }
         }
 
         if (profile.WrapperBindings is not null)

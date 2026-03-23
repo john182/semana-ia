@@ -18,9 +18,10 @@ public class SchemaGenerationRunner
 
         var schema = _analyzer.Analyze(xsdFiles[0]);
 
-        IProviderRuleResolver resolver = File.Exists(rulesPath)
-            ? ProviderRuleResolver.LoadFromFile(rulesPath)
-            : new ProviderRuleResolver(new ProviderProfile());
+        var profile = File.Exists(rulesPath)
+            ? ProviderProfile.LoadFromFile(rulesPath)
+            : null;
+        IProviderRuleResolver resolver = new TypedRuleResolver(profile?.Rules ?? []);
 
         var recordsDir = Path.Combine(outputDir, "Records");
         var buildersDir = Path.Combine(outputDir, "Builders");

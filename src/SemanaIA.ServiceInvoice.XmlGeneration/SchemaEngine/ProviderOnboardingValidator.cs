@@ -63,9 +63,9 @@ public class ProviderOnboardingValidator
 
     private const string RecommendAddXsd = "Add XSD files to providers/{0}/xsd/";
     private const string RecommendConfigureBindings =
-        "Configure bindings in providers/{0}/rules/base-rules.json or use ProviderConfigGenerator to auto-generate";
+        "Configure rules in providers/{0}/rules/rules.json or use ProviderConfigGenerator to auto-generate";
     private const string RecommendReviewTodoBindings =
-        "Review and complete the TODO bindings in base-rules.json";
+        "Review and complete the TODO bindings in rules.json";
 
     private readonly XsdSchemaAnalyzer _analyzer = new();
     private readonly ProviderSampleDocumentGenerator _sampleDocumentGenerator = new();
@@ -167,18 +167,19 @@ public class ProviderOnboardingValidator
         if (profile is null)
             return new OnboardingCheck(CheckBindingsPresent, false,
                 OnboardingGapKind.ConfigurationGap,
-                "Failed to load provider profile (base-rules.json missing or invalid).",
+                "Failed to load provider profile (rules.json missing or invalid).",
                 string.Format(RecommendConfigureBindings, providerName));
 
-        var hasBindings = profile.Bindings is not null && profile.Bindings.Count > 0;
+        var hasTypedRules = profile.Rules is { Count: > 0 };
 
-        return hasBindings
-            ? new OnboardingCheck(CheckBindingsPresent, true,
-                Details: $"{profile.Bindings!.Count} bindings configured.")
-            : new OnboardingCheck(CheckBindingsPresent, false,
-                OnboardingGapKind.ConfigurationGap,
-                "No bindings configured in base-rules.json.",
-                string.Format(RecommendConfigureBindings, providerName));
+        if (hasTypedRules)
+            return new OnboardingCheck(CheckBindingsPresent, true,
+                Details: $"{profile.Rules!.Count} typed rules configured.");
+
+        return new OnboardingCheck(CheckBindingsPresent, false,
+            OnboardingGapKind.ConfigurationGap,
+            "No typed rules configured.",
+            string.Format(RecommendConfigureBindings, providerName));
     }
 
     private OnboardingCheck ValidateRuntimeProducible(
@@ -196,9 +197,9 @@ public class ProviderOnboardingValidator
 
             var binder = new ServiceInvoiceSchemaDataBinder();
             var sampleDocument = _sampleDocumentGenerator.Generate(profile);
-            var boundData = binder.Bind(sampleDocument, profile);
+            var boundData = binder.Bind(sampleDocument, profile, schemaDocument);
 
-            var ruleResolver = new ProviderRuleResolver(profile);
+            IProviderRuleResolver ruleResolver = new TypedRuleResolver(profile.Rules ?? []);
             var rootComplexTypeName = profile.RootComplexTypeName ?? "TCDPS";
             var rootElementName = profile.RootElementName ?? "DPS";
 
@@ -267,6 +268,20 @@ public class ProviderOnboardingValidator
             $"[{serializationError.Kind}] {serializationError.Field}: {serializationError.Message}"));
     }
 
-    private static ProviderProfile? LoadProfile(string rulesPath) =>
-        ProviderProfile.LoadFromFile(rulesPath);
+    private static ProviderProfile? LoadProfile(string rulesPath)
+    {
+        if (File.Exists(rulesPath))
+            return ProviderProfile.LoadFromFile(rulesPath);
+
+        // Fallback to legacy rules file
+        var rulesDir = Path.GetDirectoryName(rulesPath);
+        if (rulesDir is not null)
+        {
+            var legacyRulesPath = Path.Combine(rulesDir, ProviderProfile.LegacyRulesFileName);
+            if (File.Exists(legacyRulesPath))
+                return ProviderProfile.LoadFromFile(legacyRulesPath);
+        }
+
+        return null;
+    }
 }

@@ -1,0 +1,36 @@
+{
+  "provider": "paulistana",
+  "version": "02",
+  "rootComplexTypeName": "_anon_PedidoEnvioLoteRPS",
+  "rootElementName": "PedidoEnvioLoteRPS",
+  "municipalityCodes": ["3550308"],
+  "bindingPathPrefix": "Cabecalho",
+  "wrapperBindings": {
+    "Cabecalho.@Versao": "const:2",
+    "Cabecalho.CPFCNPJRemetente.CNPJ": "Provider.Cnpj | padLeft:14:0",
+    "Cabecalho.transacao": "const:true",
+    "Cabecalho.dtInicio": "CompetenceDate | format:yyyy-MM-dd",
+    "Cabecalho.dtFim": "CompetenceDate | format:yyyy-MM-dd",
+    "Cabecalho.QtdRPS": "const:1"
+  },
+  "rules": [
+    { "type": "Binding", "target": "RPS.ChaveRPS.InscricaoPrestador", "source": "Provider.MunicipalTaxNumber" },
+    { "type": "Binding", "target": "RPS.ChaveRPS.SerieRPS", "source": "Series" },
+    { "type": "Binding", "target": "RPS.ChaveRPS.NumeroRPS", "source": "Number" },
+    { "type": "Binding", "target": "RPS.TipoRPS", "sourceType": "constant", "constantValue": "RPS" },
+    { "type": "Binding", "target": "RPS.DataEmissao", "source": "IssuedOn", "format": "yyyy-MM-dd" },
+    { "type": "Binding", "target": "RPS.StatusRPS", "sourceType": "constant", "constantValue": "N" },
+    { "type": "Binding", "target": "RPS.TributacaoRPS", "sourceType": "constant", "constantValue": "T" },
+    { "type": "Binding", "target": "RPS.ValorDeducoes", "sourceType": "constant", "constantValue": "0" },
+    { "type": "Binding", "target": "RPS.ValorPIS", "sourceType": "constant", "constantValue": "0" },
+    { "type": "Binding", "target": "RPS.ValorCOFINS", "sourceType": "constant", "constantValue": "0" },
+    { "type": "Binding", "target": "RPS.ValorINSS", "sourceType": "constant", "constantValue": "0" },
+    { "type": "Binding", "target": "RPS.ValorIR", "sourceType": "constant", "constantValue": "0" },
+    { "type": "Binding", "target": "RPS.ValorCSLL", "sourceType": "constant", "constantValue": "0" },
+    { "type": "Binding", "target": "RPS.CodigoServico", "source": "Service.FederalServiceCode" },
+    { "type": "Binding", "target": "RPS.AliquotaServicos", "source": "Values.IssRate", "format": "F4" },
+    { "type": "Binding", "target": "RPS.ISSRetido", "sourceType": "constant", "constantValue": "false" },
+    { "type": "Binding", "target": "RPS.Discriminacao", "source": "Service.Description" },
+    { "type": "Binding", "target": "RPS.ValorInicialCobrado", "source": "Values.ServicesAmount", "format": "F2" }
+  ]
+}

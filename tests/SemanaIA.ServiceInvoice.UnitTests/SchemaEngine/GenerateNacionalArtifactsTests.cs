@@ -10,7 +10,7 @@ public class GenerateNacionalArtifactsTests
     {
         // Arrange
         var xsdPath = FindPath("providers", "nacional", "xsd", "DPS_v1.01.xsd");
-        var rulesPath = FindPath("providers", "nacional", "rules", "base-rules.json");
+        var rulesPath = FindPath("providers", "nacional", "rules", "rules.json");
         var manualPath = FindPath("src", "SemanaIA.ServiceInvoice.XmlGeneration", "Manual", "NationalDpsManualSerializer.cs");
 
         var generatedDir = Path.Combine(FindPath("providers", "nacional"), "generated");
@@ -20,7 +20,8 @@ public class GenerateNacionalArtifactsTests
         Directory.CreateDirectory(buildersDir);
 
         var schema = new XsdSchemaAnalyzer().Analyze(xsdPath);
-        var resolver = ProviderRuleResolver.LoadFromFile(rulesPath);
+        var profile = ProviderProfile.LoadFromFile(rulesPath);
+        IProviderRuleResolver resolver = new TypedRuleResolver(profile?.Rules ?? []);
         var generator = new SchemaCodeGenerator();
 
         // Act

@@ -41,7 +41,7 @@ public class SchemaSerializationPipeline
         }
 
         ProviderProfile profile;
-        try { profile = LoadProfile(rulesPath); }
+        try { profile = LoadProfile(rulesPath, providerDir); }
         catch (Exception ex)
         {
             return SerializationResult.Failure([new SerializationError(
@@ -50,7 +50,7 @@ public class SchemaSerializationPipeline
         }
 
         Dictionary<string, object?> data;
-        try { data = _binder.Bind(document, profile); }
+        try { data = _binder.Bind(document, profile, schema); }
         catch (Exception ex)
         {
             return SerializationResult.Failure([new SerializationError(
@@ -59,7 +59,7 @@ public class SchemaSerializationPipeline
         }
 
         var resolvedVersion = version ?? profile.Version;
-        var resolver = new ProviderRuleResolver(profile);
+        var resolver = CreateResolver(profile);
         var resolvedRootComplexTypeName = profile.RootComplexTypeName ?? rootComplexTypeName;
         var resolvedRootElementName = profile.RootElementName ?? rootElementName;
 
@@ -71,6 +71,21 @@ public class SchemaSerializationPipeline
 
     // --- Private methods ---
 
-    private static ProviderProfile LoadProfile(string rulesPath) =>
-        ProviderProfile.LoadFromFile(rulesPath) ?? new ProviderProfile();
+    private static ProviderProfile LoadProfile(string rulesPath, string providerDir)
+    {
+        if (File.Exists(rulesPath))
+            return ProviderProfile.LoadFromFile(rulesPath) ?? new ProviderProfile();
+
+        // Fallback to legacy rules file
+        var legacyRulesPath = Path.Combine(providerDir, ProviderProfile.RulesDirectoryName, ProviderProfile.LegacyRulesFileName);
+        if (File.Exists(legacyRulesPath))
+            return ProviderProfile.LoadFromFile(legacyRulesPath) ?? new ProviderProfile();
+
+        return new ProviderProfile();
+    }
+
+    private static IProviderRuleResolver CreateResolver(ProviderProfile profile)
+    {
+        return new TypedRuleResolver(profile.Rules ?? []);
+    }
 }

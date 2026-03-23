@@ -19,17 +19,18 @@ public class ProviderRuleResolverTests
     }
 
     [Fact]
-    public void Given_NacionalProfile_Should_ResolveDefaultTpEmit()
+    public void Given_NacionalProfile_Should_NotHaveDefaultForConstantBinding()
     {
         // Arrange
+        // tpEmit is expressed as a Binding with sourceType=constant, not as a Default rule.
+        // ResolveDefault should return null because there's no Default-type rule for tpEmit.
         var resolver = LoadNacionalResolver();
 
         // Act
         var result = resolver.ResolveDefault("tpEmit");
 
-        // Assert
-        result.ShouldNotBeNull();
-        Convert.ToInt32(result).ShouldBe(1);
+        // Assert -- tpEmit is a constant binding, not a default
+        result.ShouldBeNull();
     }
 
     [Fact]
@@ -49,17 +50,6 @@ public class ProviderRuleResolverTests
     }
 
     [Fact]
-    public void Given_NacionalProfile_Should_DetectConditionalForTpImunidade()
-    {
-        // Arrange
-        var resolver = LoadNacionalResolver();
-
-        // Act & Assert
-        resolver.HasConditional("tpImunidade").ShouldBeTrue();
-        resolver.GetConditionalExpression("tpImunidade").ShouldBe("tribISSQN == 2");
-    }
-
-    [Fact]
     public void Given_NacionalProfile_Should_ReturnNullForUnknownField()
     {
         // Arrange
@@ -76,16 +66,19 @@ public class ProviderRuleResolverTests
     // Helpers privados (final da classe)
     // ==========================================================
 
-    private static ProviderRuleResolver LoadNacionalResolver()
+    private static IProviderRuleResolver LoadNacionalResolver()
     {
         var dir = AppContext.BaseDirectory;
         while (dir is not null)
         {
-            var candidate = Path.Combine(dir, "providers", "nacional", "rules", "base-rules.json");
+            var candidate = Path.Combine(dir, "providers", "nacional", "rules", "rules.json");
             if (File.Exists(candidate))
-                return ProviderRuleResolver.LoadFromFile(candidate);
+            {
+                var profile = ProviderProfile.LoadFromFile(candidate);
+                return new TypedRuleResolver(profile?.Rules ?? []);
+            }
             dir = Directory.GetParent(dir)?.FullName;
         }
-        throw new FileNotFoundException("base-rules.json not found");
+        throw new FileNotFoundException("rules.json not found");
     }
 }

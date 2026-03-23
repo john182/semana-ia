@@ -1,0 +1,313 @@
+{
+  "provider": "curitiba",
+  "description": "Regras tipadas para Curitiba — baseado em ABRASF v1.00 com namespace ISS Curitiba, atributo 'id' minúsculo e valores emitidos incondicionalmente",
+  "rules": [
+    {
+      "type": "Binding",
+      "target": "LoteRps.NumeroLote",
+      "sourceType": "constant",
+      "constantValue": "1"
+    },
+    {
+      "type": "Binding",
+      "target": "LoteRps.Cnpj",
+      "source": "Provider.Cnpj",
+      "digitsOnly": true,
+      "padLeft": 14,
+      "padChar": "0"
+    },
+    {
+      "type": "Binding",
+      "target": "LoteRps.InscricaoMunicipal",
+      "source": "Provider.MunicipalTaxNumber"
+    },
+    {
+      "type": "Binding",
+      "target": "LoteRps.QuantidadeRps",
+      "sourceType": "constant",
+      "constantValue": "1"
+    },
+    {
+      "type": "Binding",
+      "target": "InfRps.IdentificacaoRps.Numero",
+      "source": "Number"
+    },
+    {
+      "type": "Binding",
+      "target": "InfRps.IdentificacaoRps.Serie",
+      "source": "Series"
+    },
+    {
+      "type": "Binding",
+      "target": "InfRps.IdentificacaoRps.Tipo",
+      "sourceType": "constant",
+      "constantValue": "1"
+    },
+    {
+      "type": "Binding",
+      "target": "InfRps.DataEmissao",
+      "source": "IssuedOn",
+      "format": "yyyy-MM-ddTHH:mm:ss"
+    },
+    {
+      "type": "EnumMapping",
+      "target": "InfRps.NaturezaOperacao",
+      "source": "Values.TaxationType",
+      "mappings": {
+        "WithinCity": "1",
+        "OutsideCity": "2",
+        "Free": "3",
+        "OutsideCityFree": "3",
+        "Export": "4",
+        "Immune": "5",
+        "OutsideCityImmune": "5",
+        "SuspendedCourtDecision": "6",
+        "SuspendedAdministrativeProcedure": "7",
+        "OutsideCitySuspended": "7"
+      },
+      "defaultMapping": "1"
+    },
+    {
+      "type": "EnumMapping",
+      "target": "InfRps.OptanteSimplesNacional",
+      "source": "Provider.TaxRegime",
+      "mappings": {
+        "SimplesNacional": "1",
+        "MicroempreendedorIndividual": "1",
+        "LucroPresumido": "2",
+        "LucroReal": "2",
+        "None": "2"
+      },
+      "defaultMapping": "2"
+    },
+    {
+      "type": "Binding",
+      "target": "InfRps.IncentivadorCultural",
+      "sourceType": "constant",
+      "constantValue": "2"
+    },
+    {
+      "type": "EnumMapping",
+      "target": "InfRps.Status",
+      "source": "RpsStatus",
+      "mappings": { "Normal": "1", "Canceled": "2" },
+      "defaultMapping": "1"
+    },
+    {
+      "type": "Binding",
+      "target": "InfRps.Servico.Valores.ValorServicos",
+      "source": "Values.ServicesAmount",
+      "format": "0.00"
+    },
+    {
+      "type": "Default",
+      "target": "InfRps.Servico.Valores.ValorDeducoes",
+      "source": "Values.DeductionsAmount",
+      "fallbackValue": "0.00",
+      "format": "0.00"
+    },
+    {
+      "type": "Default",
+      "target": "InfRps.Servico.Valores.ValorPis",
+      "source": "Values.PisAmountWithheld",
+      "fallbackValue": "0.00",
+      "format": "0.00"
+    },
+    {
+      "type": "Default",
+      "target": "InfRps.Servico.Valores.ValorCofins",
+      "source": "Values.CofinsAmountWithheld",
+      "fallbackValue": "0.00",
+      "format": "0.00"
+    },
+    {
+      "type": "Default",
+      "target": "InfRps.Servico.Valores.ValorInss",
+      "source": "Values.InssAmountWithheld",
+      "fallbackValue": "0.00",
+      "format": "0.00"
+    },
+    {
+      "type": "Default",
+      "target": "InfRps.Servico.Valores.ValorIr",
+      "source": "Values.IrAmountWithheld",
+      "fallbackValue": "0.00",
+      "format": "0.00"
+    },
+    {
+      "type": "Default",
+      "target": "InfRps.Servico.Valores.ValorCsll",
+      "source": "Values.CsllAmountWithheld",
+      "fallbackValue": "0.00",
+      "format": "0.00"
+    },
+    {
+      "type": "ConditionalEmission",
+      "target": "InfRps.Servico.Valores.IssRetido",
+      "sourceType": "constant",
+      "constantValue": "1",
+      "action": "Emit",
+      "condition": { "field": "Values.IssAmountWithheld", "operator": "GreaterThan", "value": "0" },
+      "fallbackValue": "2"
+    },
+    {
+      "type": "ConditionalEmission",
+      "target": "InfRps.Servico.Valores.ValorIss",
+      "source": "Values.IssTaxAmount",
+      "action": "Emit",
+      "condition": {
+        "logicalOperator": "Or",
+        "conditions": [
+          { "field": "Values.IssTaxAmount", "operator": "GreaterThan", "value": "0" },
+          { "field": "Values.IssAmountWithheld", "operator": "GreaterThan", "value": "0" }
+        ]
+      },
+      "format": "0.00"
+    },
+    {
+      "type": "ConditionalEmission",
+      "target": "InfRps.Servico.Valores.ValorIssRetido",
+      "source": "Values.IssAmountWithheld",
+      "action": "Emit",
+      "condition": { "field": "Values.IssAmountWithheld", "operator": "GreaterThan", "value": "0" },
+      "format": "0.00"
+    },
+    {
+      "type": "Default",
+      "target": "InfRps.Servico.Valores.OutrasRetencoes",
+      "source": "Values.OthersAmountWithheld",
+      "fallbackValue": "0.00",
+      "format": "0.00"
+    },
+    {
+      "type": "Binding",
+      "target": "InfRps.Servico.Valores.Aliquota",
+      "source": "Values.IssRate",
+      "format": "0.0000"
+    },
+    {
+      "type": "ConditionalEmission",
+      "target": "InfRps.Servico.Valores.DescontoIncondicionado",
+      "source": "Values.DiscountUnconditionedAmount",
+      "action": "Emit",
+      "condition": {
+        "logicalOperator": "Or",
+        "conditions": [
+          { "field": "Values.DiscountUnconditionedAmount", "operator": "GreaterThan", "value": "0" },
+          { "field": "Values.IssAmountWithheld", "operator": "GreaterThan", "value": "0" }
+        ]
+      },
+      "format": "0.00"
+    },
+    {
+      "type": "ConditionalEmission",
+      "target": "InfRps.Servico.Valores.DescontoCondicionado",
+      "source": "Values.DiscountConditionedAmount",
+      "action": "Emit",
+      "condition": {
+        "logicalOperator": "Or",
+        "conditions": [
+          { "field": "Values.DiscountConditionedAmount", "operator": "GreaterThan", "value": "0" },
+          { "field": "Values.IssAmountWithheld", "operator": "GreaterThan", "value": "0" }
+        ]
+      },
+      "format": "0.00"
+    },
+    {
+      "type": "Binding",
+      "target": "InfRps.Servico.ItemListaServico",
+      "source": "Service.FederalServiceCode",
+      "digitsOnly": true,
+      "padLeft": 4,
+      "padChar": "0"
+    },
+    {
+      "type": "Binding",
+      "target": "InfRps.Servico.Discriminacao",
+      "source": "Service.Description"
+    },
+    {
+      "type": "Binding",
+      "target": "InfRps.Servico.CodigoMunicipio",
+      "source": "Provider.MunicipalityCode"
+    },
+    {
+      "type": "Binding",
+      "target": "InfRps.Prestador.Cnpj",
+      "source": "Provider.Cnpj",
+      "digitsOnly": true,
+      "padLeft": 14,
+      "padChar": "0"
+    },
+    {
+      "type": "ConditionalEmission",
+      "target": "InfRps.Prestador.InscricaoMunicipal",
+      "source": "Provider.MunicipalTaxNumber",
+      "action": "Emit",
+      "condition": { "field": "Provider.MunicipalTaxNumber", "operator": "HasValue" }
+    },
+    {
+      "type": "Choice",
+      "target": "InfRps.Tomador.IdentificacaoTomador.CpfCnpj",
+      "choiceField": "Borrower.PersonType",
+      "options": {
+        "LegalEntity": { "element": "Cnpj", "source": "Borrower.FederalTaxNumber", "padLeft": 14, "padChar": "0" },
+        "NaturalPerson": { "element": "Cpf", "source": "Borrower.FederalTaxNumber", "padLeft": 11, "padChar": "0" }
+      }
+    },
+    {
+      "type": "Binding",
+      "target": "InfRps.Tomador.RazaoSocial",
+      "source": "Borrower.Name"
+    },
+    {
+      "type": "ConditionalEmission",
+      "target": "InfRps.Tomador.Endereco.Endereco",
+      "source": "Borrower.Address.Street",
+      "action": "Emit",
+      "condition": { "field": "Borrower.Address.Street", "operator": "HasValue" }
+    },
+    {
+      "type": "ConditionalEmission",
+      "target": "InfRps.Tomador.Endereco.Numero",
+      "source": "Borrower.Address.Number",
+      "action": "Emit",
+      "condition": { "field": "Borrower.Address.Number", "operator": "HasValue" }
+    },
+    {
+      "type": "ConditionalEmission",
+      "target": "InfRps.Tomador.Endereco.Bairro",
+      "source": "Borrower.Address.District",
+      "action": "Emit",
+      "condition": { "field": "Borrower.Address.District", "operator": "HasValue" }
+    },
+    {
+      "type": "ConditionalEmission",
+      "target": "InfRps.Tomador.Endereco.CodigoMunicipio",
+      "source": "Borrower.Address.City.Code",
+      "action": "Emit",
+      "condition": { "field": "Borrower.Address.City.Code", "operator": "HasValue" }
+    },
+    {
+      "type": "ConditionalEmission",
+      "target": "InfRps.Tomador.Endereco.Uf",
+      "source": "Borrower.Address.State",
+      "action": "Emit",
+      "condition": { "field": "Borrower.Address.State", "operator": "HasValue" }
+    },
+    {
+      "type": "ConditionalEmission",
+      "target": "InfRps.Tomador.Endereco.Cep",
+      "source": "Borrower.Address.PostalCode",
+      "action": "Emit",
+      "condition": { "field": "Borrower.Address.PostalCode", "operator": "HasValue" }
+    },
+    {
+      "type": "ConditionalEmission",
+      "target": "InfRps.Tomador.Contato.Email",
+      "source": "Borrower.Email",
+      "action": "Emit",
+      "condition": { "field": "Borrower.Email", "operator": "HasValue" }
+    }
+  ]
+}

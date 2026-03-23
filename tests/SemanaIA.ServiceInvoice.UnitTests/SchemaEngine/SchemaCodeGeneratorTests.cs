@@ -92,10 +92,11 @@ public class SchemaCodeGeneratorTests
         return new XsdSchemaAnalyzer().Analyze(xsdPath);
     }
 
-    private static ProviderRuleResolver LoadNacionalResolver()
+    private static IProviderRuleResolver LoadNacionalResolver()
     {
-        var jsonPath = FindPath("providers", "nacional", "rules", "base-rules.json");
-        return ProviderRuleResolver.LoadFromFile(jsonPath);
+        var jsonPath = FindPath("providers", "nacional", "rules", "rules.json");
+        var profile = ProviderProfile.LoadFromFile(jsonPath);
+        return new TypedRuleResolver(profile?.Rules ?? []);
     }
 
     private static string FindManualSerializerPath()

@@ -16,17 +16,28 @@ public class ProviderSerializerFactory
         _pipeline = new SchemaSerializationPipeline();
     }
 
+    public SerializationResult GenerateXmlByProviderName(DpsDocument document, string providerName)
+    {
+        var providerResolution = _resolver.ResolveByName(providerName);
+        return GenerateXmlFromResolution(document, providerResolution);
+    }
+
     public SerializationResult GenerateXml(DpsDocument document, string municipalityCode)
     {
         var providerResolution = _resolver.ResolveByMunicipalityCode(municipalityCode);
+        return GenerateXmlFromResolution(document, providerResolution);
+    }
 
+    // --- Private methods ---
+
+    private SerializationResult GenerateXmlFromResolution(DpsDocument document, ProviderResolution providerResolution)
+    {
         if (!providerResolution.IsResolved)
         {
             return SerializationResult.Failure([new SerializationError(
                 SerializationErrorKind.RuleError,
                 providerResolution.ProviderName,
-                $"Provider resolution failed for municipality code '{municipalityCode}'",
-                providerResolution.ErrorMessage)]);
+                $"Provider resolution failed: {providerResolution.ErrorMessage}")]);
         }
 
         var profile = providerResolution.Profile!;

@@ -61,7 +61,111 @@ public class ProviderConfigGenerator
         return profile;
     }
 
+    /// <summary>
+    /// Generates typed rules and profile from XSD files in a temp directory.
+    /// Used by the management API to auto-generate rules on provider creation.
+    /// </summary>
+    public static (List<ProviderRule> Rules, ProviderProfile Profile, List<string> MissingFields) GenerateFromXsdFiles(
+        string xsdDirectory, string providerName, string? primaryXsdFile = null)
+    {
+        var selector = new SendXsdSelector();
+        var profile = primaryXsdFile is not null
+            ? new ProviderProfile { PrimaryXsdFile = primaryXsdFile }
+            : null;
+
+        var selection = selector.Select(xsdDirectory, profile);
+        if (selection.SelectedFile is null)
+            return ([], new ProviderProfile { Provider = providerName }, [$"Nenhum XSD de envio encontrado: {selection.Reason}"]);
+
+        var analyzer = new XsdSchemaAnalyzer();
+        var schemaDocument = analyzer.Analyze(selection.SelectedFile);
+        var typeMap = schemaDocument.ComplexTypes.ToDictionary(ct => ct.Name, ct => ct);
+
+        // Try to find a send-specific root element (EnviarLoteRpsEnvio, etc.)
+        var sendRootElement = FindSendRootElement(schemaDocument, typeMap);
+
+        string rootComplexTypeName;
+        string rootElementName;
+        SchemaComplexType? rootType;
+
+        if (sendRootElement is not null)
+        {
+            rootElementName = sendRootElement.Value.ElementName;
+            rootComplexTypeName = sendRootElement.Value.TypeName;
+            rootType = sendRootElement.Value.ComplexType;
+        }
+        else
+        {
+            rootComplexTypeName = ResolveRootComplexTypeName(schemaDocument, typeMap);
+            rootElementName = ResolveRootElementName(schemaDocument, rootComplexTypeName);
+            rootType = ResolveRootType(rootComplexTypeName, typeMap, schemaDocument);
+        }
+
+        var bindings = new Dictionary<string, string>();
+        var formatting = new Dictionary<string, FormattingRule>();
+        var missingFields = new List<string>();
+
+        var envelopeDetection = DetectEnvelopePattern(schemaDocument, typeMap);
+
+        if (rootType is not null)
+            WalkSchemaTree(rootType, "", typeMap, bindings, formatting, envelopeDetection?.DataPathPrefix);
+
+        // Collect required fields without mapping as missing
+        foreach (var (target, expression) in bindings)
+        {
+            if (expression == TodoManualMappingRequired)
+                missingFields.Add(target);
+        }
+
+        var schemaVersion = schemaDocument.RootVersionAttribute ?? DefaultVersion;
+        var rules = GenerateTypedRules(bindings, formatting);
+
+        var generatedProfile = new ProviderProfile
+        {
+            Provider = providerName,
+            Version = schemaVersion,
+            RootComplexTypeName = rootComplexTypeName,
+            RootElementName = rootElementName,
+            BindingPathPrefix = envelopeDetection?.DataPathPrefix,
+            WrapperBindings = envelopeDetection?.WrapperBindings is { Count: > 0 }
+                ? envelopeDetection.WrapperBindings : null,
+            Rules = rules,
+        };
+
+        return (rules, generatedProfile, missingFields);
+    }
+
     // --- Private methods ---
+
+    private static (string ElementName, string TypeName, SchemaComplexType ComplexType)? FindSendRootElement(
+        SchemaDocument schemaDocument, Dictionary<string, SchemaComplexType> typeMap)
+    {
+        // Send element patterns — prioritized
+        string[] sendPatterns = ["EnviarLoteRpsEnvio", "EnviarLoteRps", "GerarNfseEnvio", "RecepcionarLoteRps"];
+
+        // Look for inline types whose name matches send patterns
+        foreach (var ct in schemaDocument.ComplexTypes)
+        {
+            if (!ct.Name.StartsWith(XsdSchemaAnalyzer.AnonymousTypePrefix))
+                continue;
+
+            var elementName = ct.Name[XsdSchemaAnalyzer.AnonymousTypePrefix.Length..];
+            if (sendPatterns.Any(pattern => elementName.Contains(pattern, StringComparison.OrdinalIgnoreCase)))
+                return (elementName, ct.Name, ct);
+        }
+
+        // Also check named types referenced by send elements
+        foreach (var pattern in sendPatterns)
+        {
+            var matchingType = schemaDocument.ComplexTypes.FirstOrDefault(ct =>
+                ct.Name.Contains(pattern, StringComparison.OrdinalIgnoreCase));
+
+            if (matchingType is not null)
+                return (pattern, matchingType.Name, matchingType);
+        }
+
+        return null;
+    }
 
     private static string ResolveRootElementName(SchemaDocument schemaDocument, string rootComplexTypeName)
     {
@@ -93,7 +197,7 @@ public class ProviderConfigGenerator
         return schemaDocument.RootInlineType;
     }
 
-    private void WalkSchemaTree(
+    private static void WalkSchemaTree(
         SchemaComplexType complexType,
         string pathPrefix,
         Dictionary<string, SchemaComplexType> typeMap,
@@ -133,6 +237,102 @@ public class ProviderConfigGenerator
             {
                 formatting[element.Name] = formattingRule;
             }
+        }
+    }
+
+    private static List<ProviderRule> GenerateTypedRules(
+        Dictionary<string, string> bindings,
+        Dictionary<string, FormattingRule> formatting)
+    {
+        var typedRules = new List<ProviderRule>();
+
+        foreach (var (target, expression) in bindings)
+        {
+            if (expression == TodoManualMappingRequired)
+                continue;
+
+            var rule = ConvertBindingExpressionToRule(target, expression);
+            if (rule is not null)
+                typedRules.Add(rule);
+        }
+
+        foreach (var (fieldName, formattingRule) in formatting)
+        {
+            typedRules.Add(new ProviderRule
+            {
+                Type = RuleType.Formatting,
+                Target = fieldName,
+                DigitsOnly = formattingRule.DigitsOnly,
+                PadLeft = formattingRule.PadLeft,
+                PadChar = formattingRule.PadChar,
+                MaxLength = formattingRule.MaxLength,
+                Trim = formattingRule.Trim,
+            });
+        }
+
+        return typedRules;
+    }
+
+    private static ProviderRule? ConvertBindingExpressionToRule(string target, string expression)
+    {
+        var parts = expression.Split('|').Select(part => part.Trim()).ToArray();
+        var source = parts[0];
+
+        var rule = new ProviderRule
+        {
+            Type = RuleType.Binding,
+            Target = target,
+        };
+
+        if (source.StartsWith("const:"))
+        {
+            rule.SourceType = ProviderRule.ConstantSourceType;
+            rule.ConstantValue = source[6..];
+        }
+        else
+        {
+            rule.Source = source;
+        }
+
+        // Apply pipe modifiers to the rule
+        for (var pipeIndex = 1; pipeIndex < parts.Length; pipeIndex++)
+        {
+            ApplyPipeToRule(rule, parts[pipeIndex]);
+        }
+
+        return rule;
+    }
+
+    private static void ApplyPipeToRule(ProviderRule rule, string pipe)
+    {
+        if (pipe.StartsWith("format:"))
+        {
+            rule.Format = pipe[7..];
+        }
+        else if (pipe.StartsWith("padLeft:"))
+        {
+            var args = pipe[8..].Split(':');
+            rule.PadLeft = int.Parse(args[0]);
+            rule.PadChar = args.Length > 1 ? args[1] : "0";
+        }
+        else if (pipe == "digitsOnly")
+        {
+            rule.DigitsOnly = true;
+        }
+        else if (pipe.StartsWith("decimal:"))
+        {
+            var digits = int.Parse(pipe[8..]);
+            rule.Format = $"F{digits}";
+        }
+        else if (pipe.StartsWith("nullable:"))
+        {
+            rule.Type = RuleType.Default;
+            rule.FallbackValue = pipe[9..];
+        }
+        else if (pipe.StartsWith("enum:"))
+        {
+            // Enum mapping requires the enum definition which is not available here.
+            // Leave as binding for now; the operator can refine via API.
         }
     }
 
@@ -275,14 +475,15 @@ public class ProviderConfigGenerator
         EnvelopeDetectionResult? envelopeDetection,
         string version)
     {
+        var typedRules = GenerateTypedRules(bindings, formatting);
+
         return new ProviderProfile
         {
             Provider = providerName,
             Version = version,
             RootComplexTypeName = rootComplexTypeName,
             RootElementName = rootElementName,
-            Bindings = bindings,
-            Formatting = formatting.Count > 0 ? formatting : null,
+            Rules = typedRules.Count > 0 ? typedRules : null,
             BindingPathPrefix = envelopeDetection?.DataPathPrefix,
             WrapperBindings = envelopeDetection?.WrapperBindings is { Count: > 0 }
                 ? envelopeDetection.WrapperBindings

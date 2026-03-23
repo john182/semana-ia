@@ -25,7 +25,7 @@ public class EngineProviderValidator : IProviderValidator
         try
         {
             tempDir = CreateTempProviderDirectory(provider);
-            var xsdDir = Path.Combine(tempDir, ProviderProfile.XsdDirectoryName);
+            var xsdDir = Path.Combine(tempDir, provider.Name, ProviderProfile.XsdDirectoryName);
 
             var profile = ResolveProfile(provider);
 
@@ -56,7 +56,7 @@ public class EngineProviderValidator : IProviderValidator
                 checks.Add(configGenerationCheck);
 
                 if (configGenerationCheck.Passed)
-                    profile = LoadGeneratedProfile(tempDir);
+                    profile = LoadGeneratedProfile(tempDir, provider.Name);
                 else
                 {
                     blockReason = configGenerationCheck.Detail;
@@ -92,8 +92,10 @@ public class EngineProviderValidator : IProviderValidator
 
     private static string CreateTempProviderDirectory(ManagedProvider provider)
     {
-        var tempDir = Path.Combine(Path.GetTempPath(), $"provider-validation-{provider.Id}-{Guid.NewGuid():N}");
-        var xsdDir = Path.Combine(tempDir, ProviderProfile.XsdDirectoryName);
+        // ProviderConfigGenerator expects: baseDir/{providerName}/xsd/
+        var baseDir = Path.Combine(Path.GetTempPath(), $"provider-validation-{provider.Id}-{Guid.NewGuid():N}");
+        var providerDir = Path.Combine(baseDir, provider.Name);
+        var xsdDir = Path.Combine(providerDir, ProviderProfile.XsdDirectoryName);
         Directory.CreateDirectory(xsdDir);
 
         foreach (var xsdFile in provider.XsdFiles)
@@ -104,13 +106,13 @@ public class EngineProviderValidator : IProviderValidator
 
         if (provider.RulesJson is not null)
         {
-            var rulesDir = Path.Combine(tempDir, ProviderProfile.RulesDirectoryName);
+            var rulesDir = Path.Combine(providerDir, ProviderProfile.RulesDirectoryName);
             Directory.CreateDirectory(rulesDir);
             var rulesPath = Path.Combine(rulesDir, ProviderProfile.RulesFileName);
             File.WriteAllText(rulesPath, provider.RulesJson);
         }
 
-        return tempDir;
+        return baseDir;
     }
 
     private static ProviderProfile? ResolveProfile(ManagedProvider provider)
@@ -176,13 +178,14 @@ public class EngineProviderValidator : IProviderValidator
         }
     }
 
-    private static ProviderProfile? LoadGeneratedProfile(string tempDir)
+    private static ProviderProfile? LoadGeneratedProfile(string tempDir, string providerName)
     {
-        var rulesPath = Path.Combine(tempDir, ProviderProfile.RulesDirectoryName, ProviderProfile.RulesFileName);
+        var providerDir = Path.Combine(tempDir, providerName);
+        var rulesPath = Path.Combine(providerDir, ProviderProfile.RulesDirectoryName, ProviderProfile.RulesFileName);
 
         if (!File.Exists(rulesPath))
         {
-            var generatedPath = Path.Combine(tempDir, "generated", "suggested-rules.json");
+            var generatedPath = Path.Combine(providerDir, "generated", "suggested-rules.json");
             if (File.Exists(generatedPath))
                 rulesPath = generatedPath;
         }
@@ -198,9 +201,9 @@ public class EngineProviderValidator : IProviderValidator
             var binder = new ServiceInvoiceSchemaDataBinder();
             var sampleGenerator = new ProviderSampleDocumentGenerator();
             var sampleDocument = sampleGenerator.Generate(profile);
-            var boundData = binder.Bind(sampleDocument, profile);
+            var boundData = binder.Bind(sampleDocument, profile, schemaDocument);
 
-            var ruleResolver = new ProviderRuleResolver(profile);
+            IProviderRuleResolver ruleResolver = new TypedRuleResolver(profile.Rules ?? []);
             var rootComplexTypeName = profile.RootComplexTypeName ?? DefaultRootComplexTypeName;
             var rootElementName = profile.RootElementName ?? DefaultRootElementName;
 

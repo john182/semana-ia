@@ -9,7 +9,8 @@ public class ProviderProfile
     public const string XsdSearchPattern = "*.xsd";
     public const string XmlDsigFilePattern = "xmldsig";
     public const string RulesDirectoryName = "rules";
-    public const string RulesFileName = "base-rules.json";
+    public const string RulesFileName = "rules.json";
+    public const string LegacyRulesFileName = "base-rules.json";
 
     public static ProviderProfile? LoadFromFile(string path)
     {
@@ -33,18 +34,6 @@ public class ProviderProfile
     [JsonPropertyName("version")]
     public string Version { get; set; } = string.Empty;
 
-    [JsonPropertyName("defaults")]
-    public Dictionary<string, object>? Defaults { get; set; }
-
-    [JsonPropertyName("enums")]
-    public Dictionary<string, Dictionary<string, string>>? Enums { get; set; }
-
-    [JsonPropertyName("formatting")]
-    public Dictionary<string, FormattingRule>? Formatting { get; set; }
-
-    [JsonPropertyName("conditionals")]
-    public Dictionary<string, ConditionalRule>? Conditionals { get; set; }
-
     [JsonPropertyName("rootComplexTypeName")]
     public string? RootComplexTypeName { get; init; }
 
@@ -57,8 +46,8 @@ public class ProviderProfile
     [JsonPropertyName("bindingPathPrefix")]
     public string? BindingPathPrefix { get; init; }
 
-    [JsonPropertyName("bindings")]
-    public Dictionary<string, string>? Bindings { get; set; }
+    [JsonPropertyName("rules")]
+    public List<ProviderRule>? Rules { get; set; }
 
     [JsonPropertyName("municipalityCodes")]
     public List<string>? MunicipalityCodes { get; init; }
@@ -89,10 +78,4 @@ public class FormattingRule
 
     [JsonPropertyName("maxValue")]
     public int? MaxValue { get; set; }
-}
-
-public class ConditionalRule
-{
-    [JsonPropertyName("emitWhen")]
-    public string EmitWhen { get; set; } = string.Empty;
 }
