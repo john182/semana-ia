@@ -328,6 +328,10 @@ public class TypedRuleResolver : IProviderRuleResolver
 
     private static object? ApplyBindingFormatting(object rawValue, ProviderRule rule)
     {
+        // Convert enum values to their underlying integer representation
+        if (rawValue.GetType().IsEnum)
+            rawValue = Convert.ToInt32(rawValue);
+
         var valueText = rawValue.ToString();
         if (valueText is null)
             return null;

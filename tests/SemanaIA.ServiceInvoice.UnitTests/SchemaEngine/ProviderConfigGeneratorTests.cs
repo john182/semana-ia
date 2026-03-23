@@ -218,4 +218,51 @@ public class ProviderConfigGeneratorTests
         pathSegments.Length.ShouldBeGreaterThanOrEqualTo(2,
             "GISSOnline bindingPathPrefix should have at least 2 segments");
     }
+
+    // ==========================================================
+    // D. Auto-gen attribute rule tests
+    // ==========================================================
+
+    [Fact]
+    public void Given_NacionalSchema_AutoGen_Should_GenerateAttributeRules()
+    {
+        // Arrange
+        var xsdDir = TestProviderPaths.FindXsdDir("nacional");
+
+        // Act
+        var (rules, _, _) = ProviderConfigGenerator.GenerateFromXsdFiles(xsdDir, "nacional");
+
+        // Assert -- Nacional schema has required attributes (Id on TCInfDPS, versao on TCDPS).
+        // AddRequiredAttributeRules should produce rules for them.
+        rules.ShouldNotBeEmpty("Nacional auto-gen should produce rules");
+
+        var attributeRules = rules.Where(r => r.Target.Contains("@")).ToList();
+        attributeRules.ShouldNotBeEmpty(
+            $"Auto-gen should generate attribute rules for required attributes. " +
+            $"All rule targets: {string.Join(", ", rules.Select(r => r.Target))}");
+    }
+
+    [Fact]
+    public void Given_NacionalSchema_AutoGen_Should_NotDuplicateAttributeRules()
+    {
+        // Arrange
+        var xsdDir = TestProviderPaths.FindXsdDir("nacional");
+
+        // Act
+        var (rules, _, _) = ProviderConfigGenerator.GenerateFromXsdFiles(xsdDir, "nacional");
+
+        // Assert -- each attribute target should appear at most once
+        var attributeRules = rules
+            .Where(r => r.Target.Contains("@"))
+            .ToList();
+
+        var duplicates = attributeRules
+            .GroupBy(r => r.Target)
+            .Where(g => g.Count() > 1)
+            .Select(g => g.Key)
+            .ToList();
+
+        duplicates.ShouldBeEmpty(
+            $"Attribute rules should not be duplicated. Duplicates: {string.Join(", ", duplicates)}");
+    }
 }

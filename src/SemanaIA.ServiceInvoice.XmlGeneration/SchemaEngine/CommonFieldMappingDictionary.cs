@@ -14,6 +14,7 @@ public static class CommonFieldMappingDictionary
         ["cLocEmi"] = "Provider.MunicipalityCode",
         ["CodigoMunicipio"] = "Provider.MunicipalityCode",
         ["cMunFG"] = "Service.MunicipalityCode",
+        ["cLocPrestacao"] = "Service.MunicipalityCode",
 
         // Service
         ["cTribNac"] = "Service.FederalServiceCode",
@@ -57,6 +58,7 @@ public static class CommonFieldMappingDictionary
         // Tax
         ["tribISSQN"] = "Values.TaxationType",
         ["IssRetido"] = "Values.RetentionType",
+        ["tpRetISSQN"] = "Values.RetentionType",
         ["OptanteSimplesNacional"] = "Provider.TaxRegime",
         ["opSimpNac"] = "Provider.TaxRegime",
         ["regEspTrib"] = "Provider.SpecialTaxRegime",

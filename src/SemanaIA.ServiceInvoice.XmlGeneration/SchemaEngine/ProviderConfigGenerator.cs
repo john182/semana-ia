@@ -12,6 +12,7 @@ public class ProviderConfigGenerator
     private const string DefaultVersion = "1.01";
     private const string DefaultRootComplexTypeName = "TCDPS";
     private const string DefaultRootElementName = "DPS";
+    private const string VersaoAttributeName = "versao";
 
     private static readonly Regex FixedDigitPattern = new(@"^\[0-9\]\{(\d+)\}$", RegexOptions.Compiled);
 
@@ -105,10 +106,28 @@ public class ProviderConfigGenerator
         var formatting = new Dictionary<string, FormattingRule>();
         var missingFields = new List<string>();
 
-        var envelopeDetection = DetectEnvelopePattern(schemaDocument, typeMap);
+        // Only attempt envelope detection when a send-specific root element was found (ABRASF providers).
+        // Non-ABRASF schemas like nacional (DPS > infDPS) use a flat structure that should NOT be
+        // treated as an envelope, even though the root type has a single complex child with many simple fields.
+        var envelopeDetection = sendRootElement is not null
+            ? DetectEnvelopePattern(schemaDocument, typeMap, rootType)
+            : DetectEnvelopePattern(schemaDocument, typeMap);
 
         if (rootType is not null)
-            WalkSchemaTree(rootType, "", typeMap, bindings, formatting, envelopeDetection?.DataPathPrefix);
+        {
+            if (envelopeDetection is not null)
+            {
+                // When an envelope is detected, only walk inside the data container type.
+                // Envelope-level bindings are handled separately via WrapperBindings.
+                var dataContainerType = ResolveTypeAtPath(rootType, envelopeDetection.DataPathPrefix, typeMap);
+                if (dataContainerType is not null)
+                    WalkSchemaTree(dataContainerType, envelopeDetection.DataPathPrefix, typeMap, bindings, formatting, envelopeDetection.DataPathPrefix);
+            }
+            else
+            {
+                WalkSchemaTree(rootType, "", typeMap, bindings, formatting, null);
+            }
+        }
 
         // Collect required fields without mapping as missing
         foreach (var (target, expression) in bindings)
@@ -120,8 +139,9 @@ public class ProviderConfigGenerator
         var schemaVersion = schemaDocument.RootVersionAttribute ?? DefaultVersion;
         var rules = GenerateTypedRules(bindings, formatting);
 
-        // Add @Id rule for infDPS (required attribute in DPS schemas)
-        AddBuildIdRuleIfNeeded(rules, rootType, rootElementName);
+        // Add rules for required attributes on types inside the data container.
+        // Envelope-level attributes (e.g., versao on LoteRps) are handled by WrapperBindings.
+        AddRequiredAttributeRules(rules, schemaDocument.ComplexTypes, schemaVersion, envelopeDetection?.DataPathPrefix);
 
         var generatedProfile = new ProviderProfile
         {
@@ -143,18 +163,31 @@ public class ProviderConfigGenerator
     private static (string ElementName, string TypeName, SchemaComplexType ComplexType)? FindSendRootElement(
         SchemaDocument schemaDocument, Dictionary<string, SchemaComplexType> typeMap)
     {
-        // Send element patterns — prioritized
+        // Send element patterns — prioritized (most specific first).
+        // Iterate patterns first to ensure priority: "EnviarLoteRpsEnvio" matches before "EnviarLoteRps".
         string[] sendPatterns = ["EnviarLoteRpsEnvio", "EnviarLoteRps", "GerarNfseEnvio", "RecepcionarLoteRps"];
 
-        // Look for inline types whose name matches send patterns
-        foreach (var ct in schemaDocument.ComplexTypes)
-        {
-            if (!ct.Name.StartsWith(XsdSchemaAnalyzer.AnonymousTypePrefix))
-                continue;
+        // Response/query element name fragments — never a send root
+        string[] excludeFragments = ["Resposta", "Consultar", "Cancelar", "Substituir"];
 
-            var elementName = ct.Name[XsdSchemaAnalyzer.AnonymousTypePrefix.Length..];
-            if (sendPatterns.Any(pattern => elementName.Contains(pattern, StringComparison.OrdinalIgnoreCase)))
+        // Look for inline types whose name matches send patterns (patterns checked in priority order)
+        foreach (var pattern in sendPatterns)
+        {
+            foreach (var ct in schemaDocument.ComplexTypes)
+            {
+                if (!ct.Name.StartsWith(XsdSchemaAnalyzer.AnonymousTypePrefix))
+                    continue;
+
+                var elementName = ct.Name[XsdSchemaAnalyzer.AnonymousTypePrefix.Length..];
+
+                if (!elementName.Contains(pattern, StringComparison.OrdinalIgnoreCase))
+                    continue;
+
+                if (excludeFragments.Any(exclude => elementName.Contains(exclude, StringComparison.OrdinalIgnoreCase)))
+                    continue;
+
                 return (elementName, ct.Name, ct);
+            }
         }
 
         // Also check named types referenced by send elements
@@ -391,9 +424,12 @@ public class ProviderConfigGenerator
     }
 
     private static EnvelopeDetectionResult? DetectEnvelopePattern(
-        SchemaDocument schemaDocument, Dictionary<string, SchemaComplexType> typeMap)
+        SchemaDocument schemaDocument, Dictionary<string, SchemaComplexType> typeMap,
+        SchemaComplexType? sendRootType = null)
     {
-        var rootInlineType = schemaDocument.RootInlineType;
+        // Use the send root type when available (e.g., from FindSendRootElement).
+        // This avoids false positives from non-send root elements in schemas with many root elements.
+        var rootInlineType = sendRootType ?? schemaDocument.RootInlineType;
         if (rootInlineType is null)
             return null;
 
@@ -416,20 +452,174 @@ public class ProviderConfigGenerator
         if (dataContainerPath is null)
             return null;
 
+        var schemaVersion = schemaDocument.RootVersionAttribute ?? DefaultVersion;
         var wrapperBindings = new Dictionary<string, string>();
-        foreach (var wrapperElement in envelopeChildType.Elements)
-        {
-            if (IsComplexElement(wrapperElement, typeMap))
-                continue;
 
-            var wrapperPath = $"{envelopeChild.Name}.{wrapperElement.Name}";
-            if (CommonFieldMappingDictionary.Mappings.TryGetValue(wrapperElement.Name, out var mapping))
-            {
-                wrapperBindings[wrapperPath] = mapping;
-            }
-        }
+        // Add wrapper bindings for elements of the envelope child type (both simple and shallow complex)
+        WalkEnvelopeChildForWrapperBindings(
+            envelopeChildType, envelopeChild.Name, dataContainerPath, typeMap, wrapperBindings);
+
+        // Add wrapper bindings for required attributes on the envelope child type (e.g., versao on LoteRps)
+        AddEnvelopeAttributeBindings(envelopeChildType, envelopeChild.Name, schemaVersion, wrapperBindings);
+
+        // Also add versao attribute bindings for intermediate types along the data path
+        AddIntermediateAttributeBindings(
+            envelopeChildType, envelopeChild.Name, dataContainerPath, schemaVersion, typeMap, wrapperBindings);
 
         return new EnvelopeDetectionResult(dataContainerPath, wrapperBindings);
+    }
+
+    /// <summary>
+    /// Navigates from a root complex type down a dot-separated path of element names
+    /// and returns the complex type at the end of the path.
+    /// </summary>
+    private static SchemaComplexType? ResolveTypeAtPath(
+        SchemaComplexType rootType, string dotSeparatedPath, Dictionary<string, SchemaComplexType> typeMap)
+    {
+        var segments = dotSeparatedPath.Split('.');
+        var currentType = rootType;
+
+        foreach (var segment in segments)
+        {
+            var childElement = currentType.Elements.FirstOrDefault(element => element.Name == segment);
+            if (childElement is null)
+                return null;
+
+            var childType = childElement.InlineType;
+            if (childType is null)
+                typeMap.TryGetValue(childElement.TypeName, out childType);
+
+            if (childType is null)
+                return null;
+
+            currentType = childType;
+        }
+
+        return currentType;
+    }
+
+    /// <summary>
+    /// Walks the envelope child type's elements and produces wrapper bindings for simple fields
+    /// and shallow complex children (e.g., CpfCnpj/Prestador). Stops recursion at the data
+    /// container path boundary — elements along the data container path are not included as
+    /// wrapper bindings since they will be handled by the normal rule-based data binding.
+    /// </summary>
+    private static void WalkEnvelopeChildForWrapperBindings(
+        SchemaComplexType envelopeChildType, string envelopeChildPath, string dataContainerPath,
+        Dictionary<string, SchemaComplexType> typeMap, Dictionary<string, string> wrapperBindings)
+    {
+        foreach (var element in envelopeChildType.Elements)
+        {
+            var elementPath = $"{envelopeChildPath}.{element.Name}";
+
+            // Skip elements that are part of the data container path (they will be walked normally)
+            if (dataContainerPath.StartsWith(elementPath, StringComparison.Ordinal))
+                continue;
+
+            var childType = element.InlineType;
+            if (childType is null)
+                typeMap.TryGetValue(element.TypeName, out childType);
+
+            if (childType is not null)
+            {
+                // Walk shallow complex children for mapped fields (e.g., CpfCnpj -> Cnpj, Cpf)
+                WalkShallowComplexForWrapperBindings(childType, elementPath, typeMap, wrapperBindings);
+                continue;
+            }
+
+            // Simple element — add wrapper binding if mapped
+            if (CommonFieldMappingDictionary.Mappings.TryGetValue(element.Name, out var mapping))
+                wrapperBindings[elementPath] = mapping;
+        }
+    }
+
+    /// <summary>
+    /// Walks a shallow complex type (like CpfCnpj, IdentificacaoPrestador) to find mapped simple fields.
+    /// Limited to 2 levels deep to avoid walking into data container subtrees.
+    /// </summary>
+    private static void WalkShallowComplexForWrapperBindings(
+        SchemaComplexType complexType, string pathPrefix,
+        Dictionary<string, SchemaComplexType> typeMap, Dictionary<string, string> wrapperBindings)
+    {
+        foreach (var element in complexType.Elements)
+        {
+            var elementPath = $"{pathPrefix}.{element.Name}";
+
+            var childType = element.InlineType;
+            if (childType is null)
+                typeMap.TryGetValue(element.TypeName, out childType);
+
+            if (childType is not null)
+            {
+                // One more level for nested identification types (e.g., CpfCnpj inside IdentificacaoPrestador)
+                foreach (var grandChild in childType.Elements)
+                {
+                    var grandChildPath = $"{elementPath}.{grandChild.Name}";
+                    if (CommonFieldMappingDictionary.Mappings.TryGetValue(grandChild.Name, out var deepMapping))
+                        wrapperBindings[grandChildPath] = deepMapping;
+                }
+                continue;
+            }
+
+            if (CommonFieldMappingDictionary.Mappings.TryGetValue(element.Name, out var mapping))
+                wrapperBindings[elementPath] = mapping;
+        }
+    }
+
+    private static void AddEnvelopeAttributeBindings(
+        SchemaComplexType complexType, string elementPath, string schemaVersion,
+        Dictionary<string, string> wrapperBindings)
+    {
+        if (complexType.Attributes is null)
+            return;
+
+        foreach (var attribute in complexType.Attributes)
+        {
+            if (!attribute.IsRequired)
+                continue;
+
+            var attributePath = $"{elementPath}.@{attribute.Name}";
+
+            if (string.Equals(attribute.Name, VersaoAttributeName, StringComparison.OrdinalIgnoreCase))
+                wrapperBindings[attributePath] = $"const:{schemaVersion}";
+        }
+    }
+
+    /// <summary>
+    /// Walks the intermediate types along the data container path and adds versao attribute bindings
+    /// for any types that require a versao attribute (common in ABRASF envelope structures).
+    /// </summary>
+    private static void AddIntermediateAttributeBindings(
+        SchemaComplexType startType, string startPath, string dataContainerPath,
+        string schemaVersion, Dictionary<string, SchemaComplexType> typeMap,
+        Dictionary<string, string> wrapperBindings)
+    {
+        var remainingPath = dataContainerPath;
+        if (remainingPath.StartsWith(startPath + ".", StringComparison.Ordinal))
+            remainingPath = remainingPath[(startPath.Length + 1)..];
+
+        var segments = remainingPath.Split('.');
+        var currentType = startType;
+        var currentPath = startPath;
+
+        foreach (var segment in segments)
+        {
+            var childElement = currentType.Elements.FirstOrDefault(element => element.Name == segment);
+            if (childElement is null)
+                break;
+
+            currentPath = $"{currentPath}.{segment}";
+
+            var childType = childElement.InlineType;
+            if (childType is null)
+                typeMap.TryGetValue(childElement.TypeName, out childType);
+
+            if (childType is null)
+                break;
+
+            AddEnvelopeAttributeBindings(childType, currentPath, schemaVersion, wrapperBindings);
+            currentType = childType;
+        }
     }
 
     private static string? FindDataContainerPath(
@@ -457,17 +647,21 @@ public class ProviderConfigGenerator
         return null;
     }
 
-    private const double DataNodeSimpleChildThreshold = 0.5;
+    private const int DataNodeMinimumSimpleChildCount = 3;
 
+    /// <summary>
+    /// A data node is a complex type that contains enough simple (leaf) children to represent
+    /// actual business data, not just a structural wrapper. Pure wrappers (like ListaRps or
+    /// tcRps) have zero or very few simple children.
+    /// </summary>
     private static bool IsDataNode(SchemaComplexType complexType, Dictionary<string, SchemaComplexType> typeMap)
     {
         if (complexType.Elements.Count == 0)
             return false;
 
         var simpleChildCount = complexType.Elements.Count(element => !IsComplexElement(element, typeMap));
-        var simpleRatio = (double)simpleChildCount / complexType.Elements.Count;
 
-        return simpleRatio > DataNodeSimpleChildThreshold;
+        return simpleChildCount >= DataNodeMinimumSimpleChildCount;
     }
 
     private static bool IsComplexElement(SchemaElement element, Dictionary<string, SchemaComplexType> typeMap)
@@ -520,30 +714,105 @@ public class ProviderConfigGenerator
         File.WriteAllText(outputPath, json);
     }
 
-    private static void AddBuildIdRuleIfNeeded(List<ProviderRule> rules, SchemaComplexType? rootType, string rootElementName)
+    private static void AddRequiredAttributeRules(
+        List<ProviderRule> rules,
+        List<SchemaComplexType> complexTypes,
+        string schemaVersion,
+        string? dataPathPrefix)
     {
-        // The DPS schema requires an Id attribute on infDPS (the first complex child of the root)
-        if (rootType is null)
-            return;
+        var typeToElementName = BuildTypeToElementNameMap(complexTypes);
 
-        var infElement = rootType.Elements.FirstOrDefault(e =>
-            e.Name.StartsWith("inf", StringComparison.OrdinalIgnoreCase));
-
-        if (infElement is null)
-            return;
-
-        var idTarget = $"{infElement.Name}.@Id";
-
-        // Don't add if already exists
-        if (rules.Any(r => r.Target == idTarget))
-            return;
-
-        rules.Add(new ProviderRule
+        foreach (var complexType in complexTypes)
         {
-            Type = RuleType.Binding,
-            Target = idTarget,
-            Source = ProviderRule.BuildIdSource
-        });
+            if (complexType.Attributes is null or { Count: 0 })
+                continue;
+
+            var elementName = ResolveElementNameForType(complexType, typeToElementName);
+
+            // When an envelope is detected, skip types that are outside the data container.
+            // Their attributes are handled by WrapperBindings in DetectEnvelopePattern.
+            if (dataPathPrefix is not null && IsEnvelopeLevelElement(elementName, dataPathPrefix))
+                continue;
+
+            foreach (var attribute in complexType.Attributes.Where(a => a.IsRequired))
+            {
+                var targetPath = $"{elementName}.@{attribute.Name}";
+
+                if (rules.Any(existingRule => existingRule.Target == targetPath))
+                    continue;
+
+                if (attribute.Name == "Id" &&
+                    elementName.StartsWith("inf", StringComparison.OrdinalIgnoreCase))
+                {
+                    rules.Add(new ProviderRule
+                    {
+                        Type = RuleType.Binding,
+                        Target = targetPath,
+                        Source = ProviderRule.BuildIdSource
+                    });
+                }
+                else if (string.Equals(attribute.Name, VersaoAttributeName, StringComparison.OrdinalIgnoreCase))
+                {
+                    rules.Add(new ProviderRule
+                    {
+                        Type = RuleType.Binding,
+                        Target = targetPath,
+                        SourceType = ProviderRule.ConstantSourceType,
+                        ConstantValue = schemaVersion
+                    });
+                }
+                else
+                {
+                    rules.Add(new ProviderRule
+                    {
+                        Type = RuleType.Binding,
+                        Target = targetPath,
+                        Source = "const:",
+                        SourceType = ProviderRule.ConstantSourceType,
+                        ConstantValue = ""
+                    });
+                }
+            }
+        }
+    }
+
+    /// <summary>
+    /// Checks if an element name is at the envelope level (outside the data container path).
+    /// Envelope-level elements are those whose names appear as path segments in the data path prefix
+    /// but are not the final segment (the data container itself).
+    /// </summary>
+    private static bool IsEnvelopeLevelElement(string elementName, string dataPathPrefix)
+    {
+        var segments = dataPathPrefix.Split('.');
+        // Elements in the envelope path but not the final data container segment are envelope-level
+        for (var segmentIndex = 0; segmentIndex < segments.Length - 1; segmentIndex++)
+        {
+            if (string.Equals(segments[segmentIndex], elementName, StringComparison.OrdinalIgnoreCase))
+                return true;
+        }
+
+        return false;
+    }
+
+    private static Dictionary<string, string> BuildTypeToElementNameMap(List<SchemaComplexType> complexTypes)
+    {
+        var map = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var ct in complexTypes)
+            foreach (var element in ct.Elements)
+                if (!string.IsNullOrEmpty(element.TypeName) && !map.ContainsKey(element.TypeName))
+                    map[element.TypeName] = element.Name;
+        return map;
+    }
+
+    private static string ResolveElementNameForType(
+        SchemaComplexType complexType, Dictionary<string, string> typeToElementName)
+    {
+        if (complexType.Name.StartsWith(XsdSchemaAnalyzer.AnonymousTypePrefix))
+            return complexType.Name[XsdSchemaAnalyzer.AnonymousTypePrefix.Length..];
+
+        return typeToElementName.TryGetValue(complexType.Name, out var elementName)
+            ? elementName
+            : complexType.Name;
     }
 
     private record EnvelopeDetectionResult(string DataPathPrefix, Dictionary<string, string> WrapperBindings);
