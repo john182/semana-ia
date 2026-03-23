@@ -321,6 +321,25 @@ Ao final da execução, apresente um resumo estruturado contendo:
 - ajustes recomendados
 - veredito final
 
+## Etapa opcional — Documentação funcional
+
+Se a change:
+- introduzir funcionalidade nova
+- alterar regra de negócio
+- modificar fluxo operacional
+- alterar contrato funcional
+- impactar suporte, QA ou onboarding
+
+então usar o `product-doc-agent` para gerar ou atualizar a documentação funcional da feature.
+
+Após isso, usar o `product-doc-review-agent` para revisar a documentação gerada.
+
+A documentação deve:
+- refletir o comportamento real da change
+- explicitar fluxo principal, regras, validações, exceções e integrações
+- listar lacunas quando houver incerteza
+- incluir diagramas Mermaid quando agregarem clareza
+
 # Critério de conclusão
 
 Só considerar a execução concluída quando:
