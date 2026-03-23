@@ -38,4 +38,4 @@ jobs:
         run: dotnet test tests/SemanaIA.ServiceInvoice.UnitTests --no-build -v normal
 
       - name: Integration Tests
-        run: dotnet test tests/SemanaIA.ServiceInvoice.IntegrationsTests --no-build -v normal
+        run: dotnet test tests/SemanaIA.ServiceInvoice.IntegrationsTests --no-build -v normal --logger "console;verbosity=detailed"
