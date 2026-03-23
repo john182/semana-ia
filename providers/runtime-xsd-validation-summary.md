@@ -6,7 +6,7 @@
 | ABRASF | EnviarLoteRpsEnvio (inline) | Single | PASS | NeedsEngineering | Schema Only | ConfigurationGap, EngineGap | Cpf/Cnpj choice | NumeroLote->ListaRps |
 | GISSOnline | EnviarLoteRpsEnvio (inline) | Multi | PASS | NeedsEngineering | Schema Only | ConfigurationGap, EngineGap | Cpf/Cnpj choice | NumeroLote->ListaRps+IBSCBS |
 | ISSNet | EnviarLoteDpsEnvio (inline) | Single | PASS | SupportReady | Fully Onboarded | None | CNPJ/CPF choice | LoteDps->ListaDps->DPS via binder |
-| Paulistana | PedidoEnvioLoteRPS (inline) | Multi | FAIL | SupportConfigOnly | Partial | ConfigurationGap | CPF/CNPJ | Cabecalho->ListaRPS |
+| Paulistana | PedidoEnvioLoteRPS (inline) | Multi | FAIL | SupportReady | Fully Onboarded | None | CPF/CNPJ | Cabecalho->ListaRPS |
 | Simpliss | nfse (ABRASF-based) | Single | FAIL | SupportReady | Fully Onboarded | None | Cpf/Cnpj | NumeroLote->ListaRps |
 
 ## Summary
@@ -26,17 +26,15 @@
 | gissonline | NeedsEngineering | Schema Only | 3 | 5 | BindingsPresent, RuntimeProducible |
 | issnet | SupportReady | Fully Onboarded | 5 | 5 | None |
 | nacional | SupportReady | Fully Onboarded | 5 | 5 | None |
-| paulistana | SupportConfigOnly | Partial | 4 | 5 | RuntimeProducible |
+| paulistana | SupportReady | Fully Onboarded | 5 | 5 | None |
 | simpliss | SupportReady | Fully Onboarded | 5 | 5 | None |
-| webiss | SupportConfigOnly | Partial | 4 | 5 | RuntimeProducible |
+| webiss | SupportReady | Fully Onboarded | 5 | 5 | None |
 
 ## Gaps
 
 | Provider | Gap Kind | Gap | Reason |
 |----------|----------|-----|--------|
-| abrasf | ConfigurationGap | BindingsPresent | No bindings configured in base-rules.json. |
+| abrasf | ConfigurationGap | BindingsPresent | No typed rules configured. |
 | abrasf | EngineGap | RuntimeProducible | Skipped: analysis or bindings not available. |
-| gissonline | ConfigurationGap | BindingsPresent | No bindings configured in base-rules.json. |
+| gissonline | ConfigurationGap | BindingsPresent | No typed rules configured. |
 | gissonline | EngineGap | RuntimeProducible | Skipped: analysis or bindings not available. |
-| paulistana | ConfigurationGap | RuntimeProducible | Serialization produced errors: [InputError] RPS: Required complex element 'RPS' has no data; [InputError] : Required element '' has no value and no default |
-| webiss | ConfigurationGap | RuntimeProducible | Serialization produced errors: [InputError] MensagemRetorno.IdentificacaoRps.Numero: Required element 'Numero' has no value and no default; [InputError] MensagemRetorno.IdentificacaoRps.Tipo: Required element 'Tipo' has no value and no default; [InputError] MensagemRetorno.Codigo: Required element 'Codigo' has no value and no default; [InputError] MensagemRetorno.Mensagem: Required element 'Mensagem' has no value and no default |

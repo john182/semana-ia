@@ -69,6 +69,7 @@ public class ProviderOnboardingValidator
 
     private readonly XsdSchemaAnalyzer _analyzer = new();
     private readonly ProviderSampleDocumentGenerator _sampleDocumentGenerator = new();
+    private readonly ValidationDiagnosticEnricher _diagnosticEnricher = new();
 
     public OnboardingReport Validate(string providerName, string providersBaseDir)
     {
@@ -208,13 +209,31 @@ public class ProviderOnboardingValidator
                 schemaDocument, boundData, ruleResolver,
                 rootComplexTypeName, rootElementName, profile.Version);
 
-            return serializationResult.Xml is not null
-                ? new OnboardingCheck(CheckRuntimeProducible, true,
-                    Details: "XML produced successfully from sample data.")
-                : new OnboardingCheck(CheckRuntimeProducible, false,
-                    OnboardingGapKind.ConfigurationGap,
-                    $"Serialization produced errors: {FormatSerializationErrors(serializationResult.Errors)}",
-                    RecommendReviewTodoBindings);
+            if (serializationResult.Xml is not null && serializationResult.Errors.Count == 0)
+                return new OnboardingCheck(CheckRuntimeProducible, true,
+                    Details: "XML produced successfully from sample data.");
+
+            if (serializationResult.Xml is not null && serializationResult.Errors.Count > 0)
+            {
+                var diagnostics = _diagnosticEnricher.Enrich(serializationResult.Errors);
+                var details = $"XML produced with {serializationResult.Errors.Count} missing field(s)";
+                if (diagnostics.Count > 0)
+                    details += $" | {FormatDiagnostics(diagnostics)}";
+
+                return new OnboardingCheck(CheckRuntimeProducible, true,
+                    Details: details,
+                    ActionableRecommendation: RecommendReviewTodoBindings);
+            }
+
+            var enrichedDiagnostics = _diagnosticEnricher.Enrich(serializationResult.Errors);
+            var errorDetails = $"Serialization failed: {FormatSerializationErrors(serializationResult.Errors)}";
+            if (enrichedDiagnostics.Count > 0)
+                errorDetails += $" | {FormatDiagnostics(enrichedDiagnostics)}";
+
+            return new OnboardingCheck(CheckRuntimeProducible, false,
+                OnboardingGapKind.ConfigurationGap,
+                errorDetails,
+                RecommendReviewTodoBindings);
         }
         catch (Exception runtimeException)
         {
@@ -231,32 +250,49 @@ public class ProviderOnboardingValidator
                 OnboardingGapKind.SchemaIncompatibility,
                 "Skipped: schema is not loadable.");
 
-        try
+        var selector = new SendXsdSelector();
+        var selection = selector.Select(xsdDir);
+
+        if (selection.SelectedFile is not null && !selection.IsAmbiguous)
+            return CompileSingleXsdWithFallback(xsdDir, selection.SelectedFile);
+
+        // SendXsdSelector could not determine a single send XSD; fall back to compiling all XSDs
+        var fallbackDetails = $"Send XSD selection: {selection.Reason}; using full schema set";
+        return CompileAllXsdFromDirectory(xsdDir, fallbackDetails);
+    }
+
+    private static OnboardingCheck CompileSingleXsdWithFallback(string xsdDir, string sendXsdPath)
+    {
+        // Try scoped compilation via centralized validator
+        var testErrors = XsdValidator.Validate("<test/>", sendXsdPath);
+        var compiledOk = !testErrors.Any(e => e.Contains("Schema compilation failed"));
+
+        if (compiledOk)
         {
-            var schemaSet = new System.Xml.Schema.XmlSchemaSet();
-            var readerSettings = new System.Xml.XmlReaderSettings
-            {
-                DtdProcessing = System.Xml.DtdProcessing.Parse
-            };
-
-            foreach (var xsdFile in Directory.GetFiles(xsdDir, ProviderProfile.XsdSearchPattern))
-            {
-                using var reader = System.Xml.XmlReader.Create(xsdFile, readerSettings);
-                var schema = System.Xml.Schema.XmlSchema.Read(reader, null);
-                if (schema is not null)
-                    schemaSet.Add(schema);
-            }
-
-            schemaSet.Compile();
             return new OnboardingCheck(CheckXsdValid, true,
-                Details: "XSD schema set compiled successfully.");
+                Details: $"Send XSD '{Path.GetFileName(sendXsdPath)}' compiled successfully (scoped validation).");
         }
-        catch (Exception xsdCompilationException)
+
+        return CompileAllXsdFromDirectory(xsdDir,
+            $"Send XSD '{Path.GetFileName(sendXsdPath)}' failed to compile alone; fell back to full schema set");
+    }
+
+    private static OnboardingCheck CompileAllXsdFromDirectory(string xsdDir, string? additionalDetails = null)
+    {
+        var schemaSet = XsdValidator.CompileSchemas(xsdDir);
+
+        if (schemaSet is not null)
         {
-            return new OnboardingCheck(CheckXsdValid, false,
-                OnboardingGapKind.SchemaIncompatibility,
-                $"XSD compilation failed: {xsdCompilationException.Message}");
+            var details = additionalDetails is not null
+                ? $"XSD schema set compiled successfully. {additionalDetails}"
+                : "XSD schema set compiled successfully.";
+
+            return new OnboardingCheck(CheckXsdValid, true, Details: details);
         }
+
+        return new OnboardingCheck(CheckXsdValid, false,
+            OnboardingGapKind.SchemaIncompatibility,
+            "XSD compilation failed.");
     }
 
     private static string FormatSerializationErrors(List<SerializationError> errors)
@@ -284,4 +320,7 @@ public class ProviderOnboardingValidator
 
         return null;
     }
+
+    private static string FormatDiagnostics(List<PendingFieldDiagnostic> diagnostics)
+        => $"Pending fields: {ValidationDiagnosticEnricher.FormatSummary(diagnostics)}";
 }

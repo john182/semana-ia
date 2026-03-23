@@ -26,6 +26,12 @@ public class ValidationResponse
     /// Data e hora em que a validacao foi realizada.
     /// </summary>
     public DateTimeOffset Timestamp { get; set; }
+
+    /// <summary>
+    /// Campos pendentes identificados pelo diagnostico de validacao enriquecido.
+    /// Presente apenas quando existem erros de serializacao com campos ausentes.
+    /// </summary>
+    public List<PendingFieldResponse>? PendingFields { get; set; }
 }
 
 /// <summary>
@@ -47,4 +53,35 @@ public class ValidationCheckResponse
     /// Informacao detalhada ou mensagem de erro desta verificacao.
     /// </summary>
     public string? Detail { get; set; }
+}
+
+/// <summary>
+/// Informacao de um campo pendente com sugestao de mapeamento.
+/// </summary>
+public class PendingFieldResponse
+{
+    /// <summary>
+    /// Caminho completo do campo no schema (ex: "InfRps.Numero").
+    /// </summary>
+    public string FieldPath { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Indica se o campo e obrigatorio no schema.
+    /// </summary>
+    public bool IsRequired { get; set; }
+
+    /// <summary>
+    /// Fonte sugerida para mapeamento (ex: "Number", "Service.Description"). Null quando nao ha sugestao.
+    /// </summary>
+    public string? SuggestedSource { get; set; }
+
+    /// <summary>
+    /// Nivel de confianca da sugestao: "Exact", "Partial" ou "None".
+    /// </summary>
+    public string Confidence { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Motivo ou descricao da sugestao.
+    /// </summary>
+    public string Reason { get; set; } = string.Empty;
 }

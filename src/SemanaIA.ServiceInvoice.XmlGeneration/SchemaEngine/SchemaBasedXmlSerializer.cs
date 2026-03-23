@@ -46,13 +46,12 @@ public class SchemaBasedXmlSerializer
 
             BuildComplexTypeContent(rootElement, rootType, "", data, resolver, typeMap, ns, errors);
 
-            if (errors.Count > 0)
-                return SerializationResult.Failure(errors);
-
             var doc = new XDocument(new XDeclaration("1.0", "utf-8", null), rootElement);
             var xml = doc.Declaration + Environment.NewLine + doc.Root;
 
-            return SerializationResult.Success(xml);
+            return errors.Count > 0
+                ? new SerializationResult(xml, false, errors, [])
+                : SerializationResult.Success(xml);
         }
         catch (Exception ex)
         {
@@ -69,18 +68,22 @@ public class SchemaBasedXmlSerializer
         string rootComplexTypeName,
         string rootElementName,
         string providerXsdDir,
-        string? version = null)
+        string? version = null,
+        string? sendXsdPath = null)
     {
         var result = Serialize(schema, data, resolver, rootComplexTypeName, rootElementName, version);
 
         if (result.Xml is null)
             return result;
 
-        var validationErrors = ValidateXmlAgainstXsd(result.Xml, providerXsdDir);
+        var resolvedSendXsdPath = sendXsdPath ?? ResolveSendXsdPath(providerXsdDir);
 
-        return validationErrors.Count > 0
-            ? SerializationResult.SuccessWithValidationErrors(result.Xml, validationErrors)
-            : result;
+        var validationErrors = ValidateXmlAgainstXsd(result.Xml, resolvedSendXsdPath, providerXsdDir);
+
+        if (validationErrors.Count > 0 || result.Errors.Count > 0)
+            return new SerializationResult(result.Xml, false, result.Errors, validationErrors);
+
+        return SerializationResult.Success(result.Xml);
     }
 
     // --- Private methods ---
@@ -263,46 +266,13 @@ public class SchemaBasedXmlSerializer
         }
     }
 
-    private static List<string> ValidateXmlAgainstXsd(string xml, string xsdDir)
+    private static string? ResolveSendXsdPath(string providerXsdDir)
     {
-        var errors = new List<string>();
-        var schemaSet = new XmlSchemaSet();
-
-        foreach (var file in Directory.GetFiles(xsdDir, "*.xsd"))
-        {
-            try
-            {
-                var settings = new XmlReaderSettings { DtdProcessing = DtdProcessing.Parse };
-                using var reader = XmlReader.Create(file, settings);
-                var schema = XmlSchema.Read(reader, null);
-                if (schema is not null)
-                    schemaSet.Add(schema);
-            }
-            catch (Exception ex)
-            {
-                errors.Add($"Failed to load XSD {Path.GetFileName(file)}: {ex.Message}");
-            }
-        }
-
-        try { schemaSet.Compile(); }
-        catch (Exception ex)
-        {
-            errors.Add($"Schema compilation failed: {ex.Message}");
-            return errors;
-        }
-
-        var validationSettings = new XmlReaderSettings
-        {
-            Schemas = schemaSet,
-            ValidationType = ValidationType.Schema
-        };
-        validationSettings.ValidationEventHandler += (_, e) =>
-            errors.Add($"[{e.Severity}] {e.Message}");
-
-        using var xmlReader = XmlReader.Create(new StringReader(xml), validationSettings);
-        try { while (xmlReader.Read()) { } }
-        catch (XmlException ex) { errors.Add($"XML parse error: {ex.Message}"); }
-
-        return errors;
+        var selector = new SendXsdSelector();
+        var selection = selector.Select(providerXsdDir);
+        return selection.SelectedFile;
     }
+
+    private static List<string> ValidateXmlAgainstXsd(string xml, string? sendXsdPath, string? fallbackXsdDir = null)
+        => XsdValidator.Validate(xml, sendXsdPath, fallbackXsdDir);
 }

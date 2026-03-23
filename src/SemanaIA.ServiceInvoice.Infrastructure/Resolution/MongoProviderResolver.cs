@@ -43,9 +43,12 @@ public class MongoProviderResolver : ProviderResolver
     {
         try
         {
-            var tempDir = Path.Combine(Path.GetTempPath(), $"provider-runtime-{managedProvider.Id}");
-            var xsdDir = Path.Combine(tempDir, ProviderProfile.XsdDirectoryName);
-            var rulesDir = Path.Combine(tempDir, ProviderProfile.RulesDirectoryName);
+            // The pipeline expects: {baseDir}/{providerName}/xsd/ and {baseDir}/{providerName}/rules/
+            // So we create: tempBaseDir/{providerName}/xsd/ and tempBaseDir/{providerName}/rules/
+            var tempBaseDir = Path.Combine(Path.GetTempPath(), $"provider-runtime-{managedProvider.Id}");
+            var providerDir = Path.Combine(tempBaseDir, managedProvider.Name);
+            var xsdDir = Path.Combine(providerDir, ProviderProfile.XsdDirectoryName);
+            var rulesDir = Path.Combine(providerDir, ProviderProfile.RulesDirectoryName);
 
             Directory.CreateDirectory(xsdDir);
             Directory.CreateDirectory(rulesDir);
@@ -58,14 +61,12 @@ public class MongoProviderResolver : ProviderResolver
             }
 
             var profile = DeserializeProfile(managedProvider);
-            if (profile is null)
-                return null;
 
             var rulesPath = Path.Combine(rulesDir, ProviderProfile.RulesFileName);
             if (!File.Exists(rulesPath) && managedProvider.RulesJson is not null)
                 File.WriteAllText(rulesPath, managedProvider.RulesJson);
 
-            return new ProviderResolution(managedProvider.Name, tempDir, profile);
+            return new ProviderResolution(managedProvider.Name, providerDir, profile);
         }
         catch
         {
@@ -73,19 +74,19 @@ public class MongoProviderResolver : ProviderResolver
         }
     }
 
-    private static ProviderProfile? DeserializeProfile(ManagedProvider managedProvider)
+    private static ProviderProfile DeserializeProfile(ManagedProvider managedProvider)
     {
         if (managedProvider.RulesJson is null)
-            return null;
+            return new ProviderProfile { Provider = managedProvider.Name };
 
         try
         {
-            var profile = JsonSerializer.Deserialize<ProviderProfile>(managedProvider.RulesJson);
-            return profile;
+            return JsonSerializer.Deserialize<ProviderProfile>(managedProvider.RulesJson)
+                   ?? new ProviderProfile { Provider = managedProvider.Name };
         }
         catch
         {
-            return null;
+            return new ProviderProfile { Provider = managedProvider.Name };
         }
     }
 }

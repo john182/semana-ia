@@ -2,6 +2,12 @@ namespace SemanaIA.ServiceInvoice.Api.Requests;
 
 public class NfseGenerateXmlRequest
 {
+    /// <summary>
+    /// Dados do prestador de serviço (obrigatório para geração do XML).
+    /// Inclui CNPJ/CPF, inscrição municipal, regime tributário e endereço.
+    /// </summary>
+    public ProviderRequest Provider { get; set; } = new();
+
     public string ExternalId { get; set; } = string.Empty;
     public string FederalServiceCode { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;

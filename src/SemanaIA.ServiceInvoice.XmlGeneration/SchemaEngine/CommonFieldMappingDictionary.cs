@@ -30,12 +30,16 @@ public static class CommonFieldMappingDictionary
         ["ValorServicos"] = "Values.ServicesAmount",
         ["Aliquota"] = "Values.IssRate",
 
+        // Application metadata (constants)
+        ["verAplic"] = "const:V_1.00.02",
+        ["tpEmit"] = "const:1",
+
         // Document metadata
         ["tpAmb"] = "Environment",
         ["dhEmi"] = "IssuedOn | format:yyyy-MM-ddTHH:mm:sszzz",
         ["DataEmissao"] = "IssuedOn | format:yyyy-MM-ddTHH:mm:sszzz",
-        ["dCompet"] = "CompetenceDate",
-        ["Competencia"] = "CompetenceDate",
+        ["dCompet"] = "CompetenceDate | format:yyyy-MM-dd",
+        ["Competencia"] = "CompetenceDate | format:yyyy-MM-dd",
         ["serie"] = "Series",
         ["nDPS"] = "Number",
         ["NumeroLote"] = "const:1",

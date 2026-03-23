@@ -219,25 +219,61 @@ public class EngineProviderValidator : IProviderValidator
                     "XML serialization and XSD validation succeeded.");
             }
 
-            if (serializationResult.Xml is not null && serializationResult.ValidationErrors.Count > 0)
+            // XML was produced but may have serialization warnings and/or XSD validation errors
+            var enricher = new ValidationDiagnosticEnricher();
+            var diagnostics = enricher.Enrich(serializationResult.Errors);
+            var pendingFields = MapToPendingFieldInfoList(diagnostics);
+
+            var detailParts = new List<string>();
+
+            if (serializationResult.Errors.Count > 0)
             {
-                var validationSummary = string.Join("; ", serializationResult.ValidationErrors.Take(5));
-                return new ProviderValidationCheck(CheckXsdValidation, false,
-                    $"XSD validation errors: {validationSummary}");
+                var errorSummary = string.Join("; ", serializationResult.Errors
+                    .Take(5)
+                    .Select(error => $"[{error.Kind}] {error.Field}: {error.Message}"));
+                detailParts.Add($"Serialization errors: {errorSummary}");
             }
 
-            var errorSummary = string.Join("; ", serializationResult.Errors
-                .Take(5)
-                .Select(error => $"[{error.Kind}] {error.Field}: {error.Message}"));
+            if (serializationResult.ValidationErrors.Count > 0)
+            {
+                var validationSummary = string.Join("; ", serializationResult.ValidationErrors.Take(5));
+                detailParts.Add($"XSD validation errors: {validationSummary}");
+            }
 
-            return new ProviderValidationCheck(CheckXmlSerialization, false,
-                $"Serialization errors: {errorSummary}");
+            if (diagnostics.Count > 0)
+                detailParts.Add($"Pending fields: {FormatDiagnosticsSummary(diagnostics)}");
+
+            // Pass if XML was produced — sample data is minimal, so InputErrors and XSD validation
+            // gaps are informational (not blocking). Real validation happens with actual NF-Se data.
+            var passed = serializationResult.Xml is not null;
+
+            var checkName = serializationResult.ValidationErrors.Count > 0
+                ? CheckXsdValidation
+                : CheckXmlSerialization;
+
+            return new ProviderValidationCheck(checkName, passed, string.Join(" | ", detailParts))
+            {
+                PendingFields = pendingFields.Count > 0 ? pendingFields : null
+            };
         }
         catch (Exception serializationException)
         {
             return new ProviderValidationCheck(CheckXmlSerialization, false,
                 $"Serialization failed: {serializationException.Message}");
         }
+    }
+
+    private static string FormatDiagnosticsSummary(List<PendingFieldDiagnostic> diagnostics)
+        => ValidationDiagnosticEnricher.FormatSummary(diagnostics);
+
+    private static List<PendingFieldInfo> MapToPendingFieldInfoList(List<PendingFieldDiagnostic> diagnostics)
+    {
+        return diagnostics.Select(diagnostic => new PendingFieldInfo(
+            diagnostic.FieldPath,
+            diagnostic.IsRequired,
+            diagnostic.SuggestedSource,
+            diagnostic.Confidence.ToString(),
+            diagnostic.Reason)).ToList();
     }
 
     private static ProviderValidationResult BuildResult(

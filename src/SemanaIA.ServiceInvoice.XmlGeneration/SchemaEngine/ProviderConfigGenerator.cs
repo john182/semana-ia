@@ -120,6 +120,9 @@ public class ProviderConfigGenerator
         var schemaVersion = schemaDocument.RootVersionAttribute ?? DefaultVersion;
         var rules = GenerateTypedRules(bindings, formatting);
 
+        // Add @Id rule for infDPS (required attribute in DPS schemas)
+        AddBuildIdRuleIfNeeded(rules, rootType, rootElementName);
+
         var generatedProfile = new ProviderProfile
         {
             Provider = providerName,
@@ -409,8 +412,8 @@ public class ProviderConfigGenerator
         if (envelopeChildType is null)
             return null;
 
-        var dataContainerElement = FindDataContainerElement(envelopeChildType, typeMap);
-        if (dataContainerElement is null)
+        var dataContainerPath = FindDataContainerPath(envelopeChildType, envelopeChild.Name, typeMap);
+        if (dataContainerPath is null)
             return null;
 
         var wrapperBindings = new Dictionary<string, string>();
@@ -426,15 +429,13 @@ public class ProviderConfigGenerator
             }
         }
 
-        var dataPathPrefix = $"{envelopeChild.Name}.{dataContainerElement.Name}";
-
-        return new EnvelopeDetectionResult(dataPathPrefix, wrapperBindings);
+        return new EnvelopeDetectionResult(dataContainerPath, wrapperBindings);
     }
 
-    private static SchemaElement? FindDataContainerElement(
-        SchemaComplexType envelopeType, Dictionary<string, SchemaComplexType> typeMap)
+    private static string? FindDataContainerPath(
+        SchemaComplexType parentType, string accumulatedPath, Dictionary<string, SchemaComplexType> typeMap)
     {
-        foreach (var element in envelopeType.Elements)
+        foreach (var element in parentType.Elements)
         {
             var childType = element.InlineType;
             if (childType is null)
@@ -443,19 +444,30 @@ public class ProviderConfigGenerator
             if (childType is null)
                 continue;
 
-            var hasDataElements = childType.Elements.Any(innerElement =>
-            {
-                var innerChildType = innerElement.InlineType;
-                if (innerChildType is null)
-                    typeMap.TryGetValue(innerElement.TypeName, out innerChildType);
-                return innerChildType is not null;
-            });
+            var currentPath = $"{accumulatedPath}.{element.Name}";
 
-            if (hasDataElements)
-                return element;
+            if (IsDataNode(childType, typeMap))
+                return currentPath;
+
+            var deeperPath = FindDataContainerPath(childType, currentPath, typeMap);
+            if (deeperPath is not null)
+                return deeperPath;
         }
 
         return null;
+    }
+
+    private const double DataNodeSimpleChildThreshold = 0.5;
+
+    private static bool IsDataNode(SchemaComplexType complexType, Dictionary<string, SchemaComplexType> typeMap)
+    {
+        if (complexType.Elements.Count == 0)
+            return false;
+
+        var simpleChildCount = complexType.Elements.Count(element => !IsComplexElement(element, typeMap));
+        var simpleRatio = (double)simpleChildCount / complexType.Elements.Count;
+
+        return simpleRatio > DataNodeSimpleChildThreshold;
     }
 
     private static bool IsComplexElement(SchemaElement element, Dictionary<string, SchemaComplexType> typeMap)
@@ -506,6 +518,32 @@ public class ProviderConfigGenerator
 
         var json = JsonSerializer.Serialize(profile, jsonOptions);
         File.WriteAllText(outputPath, json);
+    }
+
+    private static void AddBuildIdRuleIfNeeded(List<ProviderRule> rules, SchemaComplexType? rootType, string rootElementName)
+    {
+        // The DPS schema requires an Id attribute on infDPS (the first complex child of the root)
+        if (rootType is null)
+            return;
+
+        var infElement = rootType.Elements.FirstOrDefault(e =>
+            e.Name.StartsWith("inf", StringComparison.OrdinalIgnoreCase));
+
+        if (infElement is null)
+            return;
+
+        var idTarget = $"{infElement.Name}.@Id";
+
+        // Don't add if already exists
+        if (rules.Any(r => r.Target == idTarget))
+            return;
+
+        rules.Add(new ProviderRule
+        {
+            Type = RuleType.Binding,
+            Target = idTarget,
+            Source = ProviderRule.BuildIdSource
+        });
     }
 
     private record EnvelopeDetectionResult(string DataPathPrefix, Dictionary<string, string> WrapperBindings);
