@@ -332,7 +332,10 @@ public class TypedRuleResolver : IProviderRuleResolver
         if (rawValue.GetType().IsEnum)
             rawValue = Convert.ToInt32(rawValue);
 
-        var valueText = rawValue.ToString();
+        // Use InvariantCulture for decimals to ensure dot separator (not comma)
+        var valueText = rawValue is decimal decimalRaw
+            ? decimalRaw.ToString("0.00", CultureInfo.InvariantCulture)
+            : rawValue.ToString();
         if (valueText is null)
             return null;
 
