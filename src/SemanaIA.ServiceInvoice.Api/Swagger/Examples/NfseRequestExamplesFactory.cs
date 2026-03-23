@@ -4,6 +4,22 @@ public static class NfseRequestExamplesFactory
 {
     public static object MinimumExample() => new
     {
+        provider = new
+        {
+            federalTaxNumber = 12345678000199L,
+            municipalTaxNumber = "12345678",
+            taxRegime = "SimplesNacional",
+            address = new
+            {
+                country = "BRA",
+                postalCode = "01000-000",
+                street = "RUA DO PRESTADOR",
+                number = "500",
+                district = "CENTRO",
+                city = new { code = "3550308" },
+                state = "SP"
+            }
+        },
         borrower = new
         {
             name = "CONSUMIDOR MINIMO LTDA",
@@ -47,6 +63,23 @@ public static class NfseRequestExamplesFactory
 
     public static object IntermediateExample() => new
     {
+        provider = new
+        {
+            federalTaxNumber = 12345678000199L,
+            municipalTaxNumber = "12345678",
+            taxRegime = "LucroPresumido",
+            specialTaxRegime = "Automatico",
+            address = new
+            {
+                country = "BRA",
+                postalCode = "01001-001",
+                street = "AV DO PRESTADOR",
+                number = "1000",
+                district = "BROOKLIN",
+                city = new { code = "3550308" },
+                state = "SP"
+            }
+        },
         borrower = new
         {
             name = "CONSUMIDOR INTERMEDIARIO S.A.",
@@ -114,6 +147,24 @@ public static class NfseRequestExamplesFactory
 
     public static object CompleteExample() => new
     {
+        provider = new
+        {
+            federalTaxNumber = 98765432000188L,
+            municipalTaxNumber = "999999999999",
+            taxRegime = "LucroReal",
+            specialTaxRegime = "Automatico",
+            caepf = "12345678901234",
+            address = new
+            {
+                country = "BRA",
+                postalCode = "04538-132",
+                street = "AV BRIGADEIRO FARIA LIMA",
+                number = "3477",
+                district = "ITAIM BIBI",
+                city = new { code = "3550308" },
+                state = "SP"
+            }
+        },
         borrower = new
         {
             type = "LegalEntity",
@@ -371,6 +422,23 @@ public static class NfseRequestExamplesFactory
 
     public static object IssWithholdingExample() => new
     {
+        provider = new
+        {
+            federalTaxNumber = 11222333000144L,
+            municipalTaxNumber = "87654321",
+            taxRegime = "LucroPresumido",
+            specialTaxRegime = "Automatico",
+            address = new
+            {
+                country = "BRA",
+                postalCode = "04538-132",
+                street = "AV BRIGADEIRO FARIA LIMA",
+                number = "3477",
+                district = "ITAIM BIBI",
+                city = new { code = "3550308" },
+                state = "SP"
+            }
+        },
         borrower = new
         {
             type = "LegalEntity",
@@ -420,6 +488,21 @@ public static class NfseRequestExamplesFactory
 
     public static object IndividualBorrowerExample() => new
     {
+        provider = new
+        {
+            federalTaxNumber = 44556677000122L,
+            taxRegime = "SimplesNacional",
+            address = new
+            {
+                country = "BRA",
+                postalCode = "01310-100",
+                street = "AV PAULISTA",
+                number = "1000",
+                district = "BELA VISTA",
+                city = new { code = "3550308" },
+                state = "SP"
+            }
+        },
         borrower = new
         {
             type = "Individual",
@@ -470,6 +553,22 @@ public static class NfseRequestExamplesFactory
 
     public static object DeductionSubcontractingExample() => new
     {
+        provider = new
+        {
+            federalTaxNumber = 22334455000166L,
+            municipalTaxNumber = "11223344",
+            taxRegime = "LucroPresumido",
+            address = new
+            {
+                country = "BRA",
+                postalCode = "01310-000",
+                street = "RUA CONSOLACAO",
+                number = "2500",
+                district = "CONSOLACAO",
+                city = new { code = "3550308" },
+                state = "SP"
+            }
+        },
         borrower = new
         {
             type = "LegalEntity",
@@ -572,6 +671,22 @@ public static class NfseRequestExamplesFactory
 
     public static object ConstructionServiceExample() => new
     {
+        provider = new
+        {
+            federalTaxNumber = 66778899000133L,
+            municipalTaxNumber = "55667788",
+            taxRegime = "LucroReal",
+            address = new
+            {
+                country = "BRA",
+                postalCode = "04543-011",
+                street = "AV ENGENHEIRO LUIS CARLOS BERRINI",
+                number = "1681",
+                district = "CIDADE MONCOES",
+                city = new { code = "3550308" },
+                state = "SP"
+            }
+        },
         borrower = new
         {
             type = "LegalEntity",
@@ -636,6 +751,22 @@ public static class NfseRequestExamplesFactory
 
     public static object ExportServiceExample() => new
     {
+        provider = new
+        {
+            federalTaxNumber = 88990011000177L,
+            municipalTaxNumber = "99001122",
+            taxRegime = "LucroReal",
+            address = new
+            {
+                country = "BRA",
+                postalCode = "04538-132",
+                street = "AV BRIGADEIRO FARIA LIMA",
+                number = "3477",
+                district = "ITAIM BIBI",
+                city = new { code = "3550308" },
+                state = "SP"
+            }
+        },
         borrower = new
         {
             type = "LegalEntity",

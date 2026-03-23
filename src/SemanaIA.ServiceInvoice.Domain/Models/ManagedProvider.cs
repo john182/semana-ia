@@ -4,7 +4,21 @@ public enum ProviderStatus { Draft, Ready, Blocked, Inactive }
 
 public record XsdFileEntry(string FileName, byte[] Content);
 
-public record ProviderValidationCheck(string Name, bool Passed, string? Detail = null);
+public record ProviderValidationCheck(string Name, bool Passed, string? Detail = null)
+{
+    /// <summary>
+    /// Campos pendentes identificados pelo diagnostico de validacao.
+    /// Cada entrada contem o campo, a sugestao de mapeamento e a confianca da sugestao.
+    /// </summary>
+    public List<PendingFieldInfo>? PendingFields { get; init; }
+}
+
+public record PendingFieldInfo(
+    string FieldPath,
+    bool IsRequired,
+    string? SuggestedSource,
+    string Confidence,
+    string Reason);
 
 public record ProviderValidationResult(
     bool Passed,

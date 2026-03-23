@@ -54,6 +54,11 @@ public class ProviderResponse
     public bool HasRulesConfig { get; set; }
 
     /// <summary>
+    /// Quantidade de typed rules configuradas no provider. Valor 0 indica formato legado ou sem regras.
+    /// </summary>
+    public int TypedRuleCount { get; set; }
+
+    /// <summary>
     /// Nome do arquivo XSD principal, quando configurado explicitamente.
     /// </summary>
     public string? PrimaryXsdFile { get; set; }

@@ -16,12 +16,7 @@ public class NfseRequestToDpsDocumentModelMapper
             CompetenceDate = request.AccrualOn ?? DateOnly.FromDateTime(request.IssuedOn.Date),
             CityServiceCode = request.CityServiceCode,
             AdditionalInformation = request.AdditionalInformation,
-            Provider = new Provider
-            {
-                Cnpj = "00000000000000",
-                MunicipalTaxNumber = null,
-                MunicipalityCode = request.Location.City.Code ?? string.Empty
-            },
+            Provider = MapProvider(request.Provider, request.Location),
             Borrower = MapBorrower(request.Borrower),
             Intermediary = MapPerson(request.Intermediary),
             Location = MapLocation(request.Location),
@@ -380,5 +375,50 @@ public class NfseRequestToDpsDocumentModelMapper
             CibCode = src.CibCode,
             SiteAddress = src.SiteAddress is not null ? MapLocation(src.SiteAddress) : null
         };
+    }
+
+    private static Provider MapProvider(ProviderRequest src, LocationRequest? fallbackLocation)
+    {
+        var cnpj = src.FederalTaxNumber > 0
+            ? src.FederalTaxNumber.ToString().PadLeft(14, '0')
+            : "00000000000000";
+
+        var municipalityCode = src.Address?.City?.Code
+                               ?? fallbackLocation?.City?.Code
+                               ?? string.Empty;
+
+        var provider = new Provider
+        {
+            Cnpj = cnpj,
+            FederalTaxNumber = src.FederalTaxNumber,
+            MunicipalTaxNumber = src.MunicipalTaxNumber,
+            MunicipalityCode = municipalityCode,
+            Caepf = src.Caepf,
+        };
+
+        if (src.Address is not null)
+        {
+            provider.Address = new Address
+            {
+                Street = src.Address.Street,
+                Number = src.Address.Number,
+                District = src.Address.District,
+                PostalCode = src.Address.PostalCode,
+                AdditionalInformation = src.Address.AdditionalInformation,
+                Country = src.Address.Country,
+                State = src.Address.State,
+                City = src.Address.City is not null
+                    ? new City { Code = src.Address.City.Code, Name = src.Address.City.Name }
+                    : new City { Code = municipalityCode }
+            };
+        }
+
+        if (Enum.TryParse<TaxRegime>(src.TaxRegime, true, out var taxRegime))
+            provider.TaxRegime = taxRegime;
+
+        if (Enum.TryParse<SpecialTaxRegime>(src.SpecialTaxRegime, true, out var specialTaxRegime))
+            provider.SpecialTaxRegime = specialTaxRegime;
+
+        return provider;
     }
 }

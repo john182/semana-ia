@@ -335,6 +335,22 @@ public class ProviderFullLoadTests : IClassFixture<WebApplicationFactory<Program
 
     private static object BuildNfsePayload(string municipalityCode, string providerName) => new
     {
+        provider = new
+        {
+            federalTaxNumber = 12345678000199L,
+            municipalTaxNumber = "12345678",
+            taxRegime = "SimplesNacional",
+            address = new
+            {
+                country = "BRA",
+                postalCode = "01000-000",
+                street = "RUA DO PRESTADOR",
+                number = "500",
+                district = "CENTRO",
+                city = new { code = municipalityCode },
+                state = "SP"
+            }
+        },
         externalId = $"FULL-LOAD-{providerName}",
         federalServiceCode = "01.01",
         description = $"Full load test for {providerName}",

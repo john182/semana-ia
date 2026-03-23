@@ -1,6 +1,6 @@
 # Provider Onboarding Report
 
-Generated: 2026-03-23 00:55:30 UTC
+Generated: 2026-03-23 11:19:42 UTC
 
 ## Provider Status Overview
 
@@ -10,33 +10,31 @@ Generated: 2026-03-23 00:55:30 UTC
 | gissonline | NeedsEngineering | Schema Only | PASS | PASS | FAIL | FAIL | PASS |
 | issnet | SupportReady | Fully Onboarded | PASS | PASS | PASS | PASS | PASS |
 | nacional | SupportReady | Fully Onboarded | PASS | PASS | PASS | PASS | PASS |
-| paulistana | SupportConfigOnly | Partial | PASS | PASS | PASS | FAIL | PASS |
+| paulistana | SupportReady | Fully Onboarded | PASS | PASS | PASS | PASS | PASS |
 | simpliss | SupportReady | Fully Onboarded | PASS | PASS | PASS | PASS | PASS |
-| webiss | SupportConfigOnly | Partial | PASS | PASS | PASS | FAIL | PASS |
+| webiss | SupportReady | Fully Onboarded | PASS | PASS | PASS | PASS | PASS |
 
 ## Summary
 
 - **Total providers:** 7
-- **Fully Onboarded:** 3
-- **Partial:** 4
+- **Fully Onboarded:** 5
+- **Partial:** 2
 - **Schema Only (no bindings):** 2
 
 ## Gaps by Classification
 
 | Provider | Check | Gap Kind | Details | Actionable Recommendation |
 |----------|-------|----------|---------|---------------------------|
-| abrasf | BindingsPresent | ConfigurationGap | No bindings configured in base-rules.json. | Configure bindings in providers/abrasf/rules/base-rules.json or use ProviderConfigGenerator to auto-generate |
+| abrasf | BindingsPresent | ConfigurationGap | No typed rules configured. | Configure rules in providers/abrasf/rules/rules.json or use ProviderConfigGenerator to auto-generate |
 | abrasf | RuntimeProducible | EngineGap | Skipped: analysis or bindings not available. | No recommendation |
-| gissonline | BindingsPresent | ConfigurationGap | No bindings configured in base-rules.json. | Configure bindings in providers/gissonline/rules/base-rules.json or use ProviderConfigGenerator to auto-generate |
+| gissonline | BindingsPresent | ConfigurationGap | No typed rules configured. | Configure rules in providers/gissonline/rules/rules.json or use ProviderConfigGenerator to auto-generate |
 | gissonline | RuntimeProducible | EngineGap | Skipped: analysis or bindings not available. | No recommendation |
-| paulistana | RuntimeProducible | ConfigurationGap | Serialization produced errors: [InputError] RPS: Required complex element 'RPS' has no data; [InputError] : Required element '' has no value and no default | Review and complete the TODO bindings in base-rules.json |
-| webiss | RuntimeProducible | ConfigurationGap | Serialization produced errors: [InputError] MensagemRetorno.IdentificacaoRps.Numero: Required element 'Numero' has no value and no default; [InputError] MensagemRetorno.IdentificacaoRps.Tipo: Required element 'Tipo' has no value and no default; [InputError] MensagemRetorno.Codigo: Required element 'Codigo' has no value and no default; [InputError] MensagemRetorno.Mensagem: Required element 'Mensagem' has no value and no default | Review and complete the TODO bindings in base-rules.json |
 
 ## Backlog Classification
 
 | Category | Description | Providers Affected |
 |----------|-------------|-------------------|
-| Configuration | Bindings, rules or profile configuration needed | abrasf, gissonline, paulistana, webiss |
+| Configuration | Bindings, rules or profile configuration needed | abrasf, gissonline |
 | Development | Engine or serializer changes needed | abrasf, gissonline |
 
 ## Onboarding Workflow

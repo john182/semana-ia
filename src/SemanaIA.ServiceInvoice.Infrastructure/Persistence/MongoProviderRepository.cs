@@ -150,6 +150,14 @@ public class MongoProviderRepository : IProviderRepository
                 Name = check.Name,
                 Passed = check.Passed,
                 Detail = check.Detail,
+                PendingFields = check.PendingFields?.Select(pendingField => new PendingFieldDocument
+                {
+                    FieldPath = pendingField.FieldPath,
+                    IsRequired = pendingField.IsRequired,
+                    SuggestedSource = pendingField.SuggestedSource,
+                    Confidence = pendingField.Confidence,
+                    Reason = pendingField.Reason,
+                }).ToList(),
             }).ToList(),
             BlockReason = validationResult.BlockReason,
             Timestamp = validationResult.Timestamp,
@@ -186,7 +194,15 @@ public class MongoProviderRepository : IProviderRepository
     private static ProviderValidationResult ToDomainValidation(ValidationResultDocument validationDocument)
     {
         var checks = validationDocument.Checks
-            .Select(check => new ProviderValidationCheck(check.Name, check.Passed, check.Detail))
+            .Select(check => new ProviderValidationCheck(check.Name, check.Passed, check.Detail)
+            {
+                PendingFields = check.PendingFields?.Select(pendingField => new PendingFieldInfo(
+                    pendingField.FieldPath,
+                    pendingField.IsRequired,
+                    pendingField.SuggestedSource,
+                    pendingField.Confidence,
+                    pendingField.Reason)).ToList(),
+            })
             .ToList();
 
         return new ProviderValidationResult(

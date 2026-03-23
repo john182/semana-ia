@@ -63,48 +63,7 @@ public static class XsdValidationHelper
 
     public static void ShouldBeValidAgainstProviderSchema(this string xml, string xsdDirectory)
     {
-        var providerSchemaSet = LoadProviderSchemas(xsdDirectory);
-        var errors = new List<string>();
-
-        var settings = new XmlReaderSettings
-        {
-            Schemas = providerSchemaSet,
-            ValidationType = ValidationType.Schema
-        };
-        settings.ValidationEventHandler += (_, e) => errors.Add($"[{e.Severity}] {e.Message}");
-
-        using var reader = XmlReader.Create(new StringReader(xml), settings);
-        try { while (reader.Read()) { } }
-        catch (XmlException ex) { errors.Add($"XML parse error: {ex.Message}"); }
-
+        var errors = XmlGeneration.SchemaEngine.XsdValidator.ValidateAgainstDirectory(xml, xsdDirectory);
         errors.ShouldBeEmpty($"XML is not valid against provider XSD ({xsdDirectory}):\n{string.Join("\n", errors)}");
-    }
-
-    private static XmlSchemaSet LoadProviderSchemas(string xsdDirectory)
-    {
-        var providerSchemaSet = new XmlSchemaSet();
-
-        foreach (var xsdFile in Directory.GetFiles(xsdDirectory, "*.xsd"))
-        {
-            try
-            {
-                var isXmlDsig = Path.GetFileName(xsdFile)
-                    .Contains("xmldsig", StringComparison.OrdinalIgnoreCase);
-
-                var readerSettings = new XmlReaderSettings
-                {
-                    DtdProcessing = isXmlDsig ? DtdProcessing.Parse : DtdProcessing.Prohibit
-                };
-
-                using var xsdReader = XmlReader.Create(xsdFile, readerSettings);
-                var schema = XmlSchema.Read(xsdReader, null);
-                if (schema is not null)
-                    providerSchemaSet.Add(schema);
-            }
-            catch { /* Skip files that can't be loaded */ }
-        }
-
-        providerSchemaSet.Compile();
-        return providerSchemaSet;
     }
 }

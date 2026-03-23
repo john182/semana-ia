@@ -56,4 +56,19 @@ internal class ValidationCheckDocument
     public bool Passed { get; set; }
 
     public string? Detail { get; set; }
+
+    public List<PendingFieldDocument>? PendingFields { get; set; }
+}
+
+internal class PendingFieldDocument
+{
+    public string FieldPath { get; set; } = string.Empty;
+
+    public bool IsRequired { get; set; }
+
+    public string? SuggestedSource { get; set; }
+
+    public string Confidence { get; set; } = string.Empty;
+
+    public string Reason { get; set; } = string.Empty;
 }

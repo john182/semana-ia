@@ -133,4 +133,89 @@ public class ProviderConfigGeneratorTests
         var generatedFilePath = Path.Combine(_providersBaseDir, "paulistana", "generated", "suggested-rules.json");
         File.Exists(generatedFilePath).ShouldBeTrue("suggested-rules.json should be written");
     }
+
+    // ==========================================================
+    // Deep Envelope Detection tests
+    // ==========================================================
+
+    [Fact]
+    public void Given_AbrasfSchemaWithDeepNesting_Should_GenerateBindingPathPrefix()
+    {
+        // Arrange
+        var xsdDir = TestProviderPaths.FindXsdDir("abrasf");
+
+        // Act
+        var (_, profile, _) = ProviderConfigGenerator.GenerateFromXsdFiles(xsdDir, "abrasf");
+
+        // Assert -- the deep walk should detect an envelope and produce a non-null prefix
+        profile.BindingPathPrefix.ShouldNotBeNullOrWhiteSpace(
+            "ABRASF should have a bindingPathPrefix detected via deep envelope walk");
+
+        var pathSegments = profile.BindingPathPrefix!.Split('.');
+        pathSegments.Length.ShouldBeGreaterThanOrEqualTo(2,
+            "ABRASF bindingPathPrefix should contain at least 2 segments from the recursive descent");
+    }
+
+    [Fact]
+    public void Given_AbrasfSchemaWithDeepNesting_Should_GenerateBindingsInsideDataNode()
+    {
+        // Arrange
+        var xsdDir = TestProviderPaths.FindXsdDir("abrasf");
+
+        // Act
+        var (rules, _, _) = ProviderConfigGenerator.GenerateFromXsdFiles(xsdDir, "abrasf");
+
+        // Assert
+        rules.ShouldNotBeEmpty("ABRASF should generate typed rules from the data node");
+
+        var bindingRules = rules.Where(rule => rule.Type == RuleType.Binding).ToList();
+        bindingRules.ShouldNotBeEmpty("ABRASF should have binding rules for fields inside the data node");
+
+        var hasDeepFieldBindings = bindingRules.Any(rule =>
+            rule.Source == "Provider.Cnpj" ||
+            rule.Source == "Service.Description" ||
+            rule.Source == "Values.ServicesAmount");
+        hasDeepFieldBindings.ShouldBeTrue(
+            "Binding rules should include fields from inside the deep data node (CNPJ, Discriminacao, ValorServicos)");
+    }
+
+    [Fact]
+    public void Given_IssnetManualConfig_Should_PreserveBindingPathPrefix()
+    {
+        // Arrange -- ISSNet uses a manually curated rules.json with deep prefix
+        // The generator does not always detect envelope for all schemas,
+        // so the regression guard validates the manual config remains intact
+
+        // Act
+        var manualProfile = ProviderProfile.LoadFromFile(
+            Path.Combine(_providersBaseDir, "issnet", "rules", "rules.json"));
+
+        // Assert
+        manualProfile.ShouldNotBeNull();
+        manualProfile!.BindingPathPrefix.ShouldNotBeNullOrWhiteSpace(
+            "ISSNet manual config should have bindingPathPrefix for its deep envelope pattern");
+        manualProfile.BindingPathPrefix.ShouldBe("LoteDps.ListaDps.DPS",
+            "ISSNet bindingPathPrefix should match the expected deep path");
+        manualProfile.WrapperBindings.ShouldNotBeNull();
+        manualProfile.WrapperBindings!.Count.ShouldBeGreaterThan(0,
+            "ISSNet manual config should have wrapper bindings for the envelope");
+    }
+
+    [Fact]
+    public void Given_GissonlineSchema_Should_DetectEnvelopePattern()
+    {
+        // Arrange
+        var xsdDir = TestProviderPaths.FindXsdDir("gissonline");
+
+        // Act
+        var (_, profile, _) = ProviderConfigGenerator.GenerateFromXsdFiles(xsdDir, "gissonline");
+
+        // Assert -- GISSOnline has an envelope with deep nesting
+        profile.BindingPathPrefix.ShouldNotBeNullOrWhiteSpace(
+            "GISSOnline should have a bindingPathPrefix from the deep envelope detection");
+
+        var pathSegments = profile.BindingPathPrefix!.Split('.');
+        pathSegments.Length.ShouldBeGreaterThanOrEqualTo(2,
+            "GISSOnline bindingPathPrefix should have at least 2 segments");
+    }
 }

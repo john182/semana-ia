@@ -13,7 +13,7 @@ public class ProviderSampleDocumentGenerator
     private const string DummyServiceDescription = "Sample service for onboarding validation";
     private const string DummyBorrowerName = "Sample Borrower";
     private const string DummyCityServiceCode = "0101";
-    private const string DummySeries = "WEB";
+    private const string DummySeries = "00001";
     private const string DefaultVersion = "V_1.00.02";
     private const int DefaultEnvironment = 2;
     private const int DefaultNumber = 1;

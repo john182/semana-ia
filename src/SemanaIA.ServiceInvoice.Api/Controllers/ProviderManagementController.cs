@@ -385,15 +385,35 @@ public class ProviderManagementController : ControllerBase
         };
     }
 
-    private static ValidationResponse MapToValidationResponse(ProviderValidationResult validation) => new()
+    private static ValidationResponse MapToValidationResponse(ProviderValidationResult validation)
     {
-        Passed = validation.Passed,
-        Checks = validation.Checks.Select(check => new ValidationCheckResponse
+        var allPendingFields = validation.Checks
+            .Where(check => check.PendingFields is { Count: > 0 })
+            .SelectMany(check => check.PendingFields!)
+            .ToList();
+
+        return new ValidationResponse
         {
-            Name = check.Name, Passed = check.Passed, Detail = check.Detail,
-        }).ToList(),
-        BlockReason = validation.BlockReason,
-        Timestamp = validation.Timestamp,
+            Passed = validation.Passed,
+            Checks = validation.Checks.Select(check => new ValidationCheckResponse
+            {
+                Name = check.Name, Passed = check.Passed, Detail = check.Detail,
+            }).ToList(),
+            BlockReason = validation.BlockReason,
+            Timestamp = validation.Timestamp,
+            PendingFields = allPendingFields.Count > 0
+                ? allPendingFields.Select(MapToPendingFieldResponse).ToList()
+                : null,
+        };
+    }
+
+    private static PendingFieldResponse MapToPendingFieldResponse(PendingFieldInfo pendingField) => new()
+    {
+        FieldPath = pendingField.FieldPath,
+        IsRequired = pendingField.IsRequired,
+        SuggestedSource = pendingField.SuggestedSource,
+        Confidence = pendingField.Confidence,
+        Reason = pendingField.Reason,
     };
 
     private IActionResult MapErrorResponse(ProviderManagementResult result) => result.ErrorKind switch
