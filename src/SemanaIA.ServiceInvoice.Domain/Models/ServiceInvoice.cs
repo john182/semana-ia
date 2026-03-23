@@ -114,6 +114,7 @@ public class Service
     public string Description { get; set; } = string.Empty;
     public string? NbsCode { get; set; }
     public string MunicipalityCode { get; set; } = string.Empty;
+    public string? CnaeCode { get; set; }
 }
 
 public class Values

@@ -8,9 +8,12 @@ public class SendXsdSelector
 
     private static readonly (string Pattern, int Priority)[] SendPatterns =
     [
-        ("enviar", PriorityExactSend),
         ("servico_enviar", PriorityExactSend),
+        ("enviar", PriorityExactSend),
         ("envio_lote", PriorityExactSend),
+        ("RecepcionarLoteRps", PriorityStrongCandidate),
+        ("GerarNfse", PriorityStrongCandidate),
+        ("EnviarLoteRps", PriorityStrongCandidate),
         ("DPS_", PriorityStrongCandidate),
         ("Pedido", PriorityStrongCandidate),
         ("schema_nfse", PriorityFallbackCandidate),
@@ -28,6 +31,9 @@ public class SendXsdSelector
         "CNC_v",
         "consulta_", "servico_cancelar", "servico_consultar",
         "_core",
+        "CompNfse", "compNfse",
+        "ConsultarNfse", "SubstituirNfse", "consultarNfse", "substituirNfse",
+        "NfeAbrasf", "NFeAbrasf",
     ];
 
     public XsdSelectionResult Select(string xsdDirectory, ProviderProfile? profile = null)

@@ -63,5 +63,47 @@ public static class CommonFieldMappingDictionary
         ["vTotTribFed"] = "const:0.00",
         ["vTotTribEst"] = "const:0.00",
         ["vTotTribMun"] = "const:0.00",
+
+        // RPS metadata (ABRASF)
+        ["tpRps"] = "const:1",
+        ["TipoRps"] = "const:1",
+        ["StatusRps"] = "const:1",
+        ["NumeroRps"] = "Number",
+        ["SerieRps"] = "Series",
+        ["DataEmissaoRps"] = "IssuedOn | format:yyyy-MM-ddTHH:mm:sszzz",
+        ["NaturezaOperacao"] = "const:1",
+        ["RegimeEspecialTributacao"] = "Provider.SpecialTaxRegime",
+        ["MunicipioIncidencia"] = "Service.MunicipalityCode",
+        ["CodigoCnae"] = "Service.CnaeCode",
+
+        // Tax amounts (ABRASF)
+        ["ValorIss"] = "const:0.00",
+        ["BaseCalculo"] = "Values.ServicesAmount",
+        ["ValorDeducoes"] = "const:0.00",
+        ["OutrasInformacoes"] = "const: ",
+        ["ValorPis"] = "const:0.00",
+        ["ValorCofins"] = "const:0.00",
+        ["ValorInss"] = "const:0.00",
+        ["ValorIr"] = "const:0.00",
+        ["ValorCsll"] = "const:0.00",
+        ["DescontoIncondicionado"] = "const:0.00",
+        ["DescontoCondicionado"] = "const:0.00",
+        ["OutrasRetencoes"] = "const:0.00",
+        ["ValorLiquidoNfse"] = "Values.ServicesAmount",
+
+        // Identification (ABRASF)
+        ["InscricaoEstadual"] = "const: ",
+        ["NumeroLoteRps"] = "const:1",
+        ["Numero"] = "Number",
+        ["CodigoVerificacao"] = "const:000",
+        ["CodigoMunicipioIBGE"] = "Provider.MunicipalityCode",
+
+        // Borrower address (ABRASF)
+        ["Endereco"] = "Borrower.Address.Street",
+        ["NumeroEndereco"] = "Borrower.Address.Number",
+        ["Bairro"] = "Borrower.Address.District",
+        ["Cep"] = "Borrower.Address.PostalCode",
+        ["Uf"] = "Borrower.Address.State",
+        ["CodigoMunicipioTomador"] = "Borrower.Address.City.Code",
     };
 }

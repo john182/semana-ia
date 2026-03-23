@@ -1,8 +1,8 @@
 # External Provider Schema Analysis Report
 
 **Total providers:** 48
-**Successfully analyzed:** 46
-**Failed:** 2
+**Successfully analyzed:** 47
+**Failed:** 1
 
 | # | Provider | Analyzed | ComplexTypes | Elements | Choice | Sequence | Selected XSD | Error |
 |---|----------|----------|-------------|----------|--------|----------|-------------|-------|
@@ -26,7 +26,7 @@
 | 18 | geisweb | YES | 2 | 3 | - | YES | envio_lote_rps.xsd |  |
 | 19 | ginfes | YES | 63 | 252 | YES | YES | servico_enviar_lote_rps_envio_v03.xsd |  |
 | 20 | gissonline | YES | 75 | 280 | YES | YES | enviar-lote-rps-envio-v2_04.xsd |  |
-| 21 | goiania | NO | 0 | 0 | - | - | - | The 'http://www.w3.org/2000/09/xmldsig#:Signature' element is not declared. |
+| 21 | goiania | YES | 58 | 186 | YES | YES | nfse_gyn_v02.xsd |  |
 | 22 | iibrasil | YES | 65 | 210 | YES | YES | schema_nfse_v1_IIBR.xsd |  |
 | 23 | issdigital | YES | 58 | 186 | YES | YES | nfse_v2_01.xsd |  |
 | 24 | isse | YES | 58 | 186 | YES | YES | nfse_v2_01.xsd |  |

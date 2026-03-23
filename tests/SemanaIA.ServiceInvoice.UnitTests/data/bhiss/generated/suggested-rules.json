@@ -24,7 +24,7 @@
   "rootElementName": "RetCancelamento",
   "bindingPathPrefix": "NfseCancelamento.Confirmacao",
   "bindings": {
-    "Pedido.InfPedidoCancelamento.IdentificacaoNfse.Numero": "TODO: manual mapping required",
+    "Pedido.InfPedidoCancelamento.IdentificacaoNfse.Numero": "Number",
     "Pedido.InfPedidoCancelamento.IdentificacaoNfse.Cnpj": "Provider.Cnpj",
     "Pedido.InfPedidoCancelamento.IdentificacaoNfse.InscricaoMunicipal": "Provider.MunicipalTaxNumber",
     "Pedido.InfPedidoCancelamento.IdentificacaoNfse.CodigoMunicipio": "Provider.MunicipalityCode",

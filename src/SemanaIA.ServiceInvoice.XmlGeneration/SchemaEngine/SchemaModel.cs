@@ -7,7 +7,8 @@ public record SchemaDocument(
     string RootElementName,
     List<SchemaComplexType> ComplexTypes,
     SchemaComplexType? RootInlineType = null,
-    Dictionary<string, string>? NamespaceMap = null)
+    Dictionary<string, string>? NamespaceMap = null,
+    string? RootVersionAttribute = null)
 {
     public string ToMarkdownReport()
     {
