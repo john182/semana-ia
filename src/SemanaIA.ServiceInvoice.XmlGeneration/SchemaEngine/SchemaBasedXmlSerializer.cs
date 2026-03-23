@@ -8,6 +8,20 @@ public class SchemaBasedXmlSerializer
 {
     private const string VersaoAttributeName = "versao";
 
+    /// <summary>
+    /// Fields that appear broadly across multiple optional containers (person, address)
+    /// but do not represent specific business data for any given container.
+    /// Used to avoid emitting optional sub-structures when only generic mapped fields are present.
+    /// </summary>
+    private static readonly HashSet<string> GenericReusableFields = new(StringComparer.OrdinalIgnoreCase)
+    {
+        // Address fields
+        "cMun", "CEP", "xLgr", "nro", "xBairro", "xCpl", "UF", "cPais", "xCidade", "xEstProvReg", "cEndPost",
+
+        // Person identification fields
+        "CNPJ", "CPF", "NIF", "CAEPF", "IM", "xNome", "fone", "Fone", "Telefone", "email", "xEmail"
+    };
+
     public SerializationResult Serialize(
         SchemaDocument schema,
         Dictionary<string, object?> data,
@@ -41,7 +55,7 @@ public class SchemaBasedXmlSerializer
 
             AddNamespaceDeclarations(rootElement, schema.NamespaceMap, schema.TargetNamespace);
 
-            if (version is not null)
+            if (version is not null && RootTypeHasVersaoAttribute(rootType))
                 rootElement.SetAttributeValue(VersaoAttributeName, version);
 
             BuildComplexTypeContent(rootElement, rootType, "", data, resolver, typeMap, ns, errors);
@@ -175,19 +189,42 @@ public class SchemaBasedXmlSerializer
                 dataKey.StartsWith(path + ".", StringComparison.Ordinal) ||
                 dataKey == path);
 
+            if (hasChildData && !element.IsRequired)
+            {
+                var childKeys = data.Keys
+                    .Where(key => key.StartsWith(path + ".", StringComparison.Ordinal))
+                    .ToList();
+
+                var hasSpecificData = childKeys.Any(key =>
+                {
+                    var lastSegment = key[(key.LastIndexOf('.') + 1)..];
+                    return !GenericReusableFields.Contains(lastSegment);
+                });
+
+                if (!hasSpecificData)
+                    return;
+            }
+
             if (hasChildData)
             {
                 // Element itself stays in parent's namespace (where it's declared in XSD)
                 var childElement = new XElement(ns + element.Name);
 
-                var idPath = $"{path}.@Id";
-                if (data.TryGetValue(idPath, out var idValue) && idValue is not null)
-                    childElement.SetAttributeValue("Id", idValue.ToString());
+                if (childType.Attributes is { Count: > 0 })
+                {
+                    EmitAttributes(childElement, childType, path, data, errors);
+                }
+                else
+                {
+                    // Backward compatibility: legacy @Id/@versao handling when schema has no attribute metadata
+                    var idPath = $"{path}.@Id";
+                    if (data.TryGetValue(idPath, out var idValue) && idValue is not null)
+                        childElement.SetAttributeValue("Id", idValue.ToString());
 
-                // Check for versao attribute
-                var versaoPath = $"{path}.@versao";
-                if (data.TryGetValue(versaoPath, out var versaoValue) && versaoValue is not null)
-                    childElement.SetAttributeValue(VersaoAttributeName, versaoValue.ToString());
+                    var versaoPath = $"{path}.@versao";
+                    if (data.TryGetValue(versaoPath, out var versaoValue) && versaoValue is not null)
+                        childElement.SetAttributeValue(VersaoAttributeName, versaoValue.ToString());
+                }
 
                 // Children use the type's namespace (where the type is defined in XSD)
                 XNamespace childContentNamespace = childType.Namespace ?? ns.NamespaceName;
@@ -275,4 +312,44 @@ public class SchemaBasedXmlSerializer
 
     private static List<string> ValidateXmlAgainstXsd(string xml, string? sendXsdPath, string? fallbackXsdDir = null)
         => XsdValidator.Validate(xml, sendXsdPath, fallbackXsdDir);
+
+    private static void EmitAttributes(
+        XElement element,
+        SchemaComplexType complexType,
+        string path,
+        Dictionary<string, object?> data,
+        List<SerializationError> errors)
+    {
+        if (complexType.Attributes is null or { Count: 0 })
+            return;
+
+        foreach (var attribute in complexType.Attributes)
+        {
+            var attributePath = $"{path}.@{attribute.Name}";
+
+            if (data.TryGetValue(attributePath, out var attributeValue) && attributeValue is not null)
+            {
+                element.SetAttributeValue(attribute.Name, attributeValue.ToString());
+            }
+            else if (attribute.IsRequired)
+            {
+                errors.Add(new SerializationError(SerializationErrorKind.InputError,
+                    attributePath, $"Required attribute '{attribute.Name}' has no value"));
+            }
+        }
+    }
+
+    /// <summary>
+    /// Checks whether the root complex type declares a 'versao' attribute.
+    /// When Attributes is null (backward compatibility with schemas parsed before attribute support),
+    /// defaults to emitting versao to preserve existing behavior.
+    /// </summary>
+    private static bool RootTypeHasVersaoAttribute(SchemaComplexType rootType)
+    {
+        if (rootType.Attributes is null)
+            return true;
+
+        return rootType.Attributes.Any(attribute =>
+            string.Equals(attribute.Name, VersaoAttributeName, StringComparison.OrdinalIgnoreCase));
+    }
 }

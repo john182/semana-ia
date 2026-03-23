@@ -87,7 +87,9 @@ public class XsdSchemaAnalyzer
         else if (ct.ContentTypeParticle is XmlSchemaChoice topChoice)
             ExtractElements(topChoice, elements, "choice_top", typeNamespace);
 
-        return new SchemaComplexType(nameOverride ?? ct.Name ?? "anonymous", elements, annotation, typeNamespace);
+        var schemaAttributes = ExtractSchemaAttributes(ct);
+
+        return new SchemaComplexType(nameOverride ?? ct.Name ?? "anonymous", elements, annotation, typeNamespace, schemaAttributes);
     }
 
     private static void ExtractElements(
@@ -286,6 +288,40 @@ public class XsdSchemaAnalyzer
         }
 
         return null;
+    }
+
+    private static List<SchemaAttribute>? ExtractSchemaAttributes(XmlSchemaComplexType complexType)
+    {
+        var attributes = new List<SchemaAttribute>();
+
+        foreach (DictionaryEntry entry in complexType.AttributeUses)
+        {
+            if (entry.Value is not XmlSchemaAttribute schemaAttribute)
+                continue;
+
+            var attributeName = schemaAttribute.Name ?? string.Empty;
+            var qualifiedName = schemaAttribute.QualifiedName?.ToString() ?? string.Empty;
+
+            if (IsInfrastructureAttribute(attributeName, qualifiedName))
+                continue;
+
+            var typeName = schemaAttribute.SchemaTypeName?.Name
+                           ?? schemaAttribute.AttributeSchemaType?.Name
+                           ?? "string";
+
+            var isRequired = schemaAttribute.Use == XmlSchemaUse.Required;
+
+            attributes.Add(new SchemaAttribute(attributeName, typeName, isRequired));
+        }
+
+        return attributes.Count > 0 ? attributes : null;
+    }
+
+    private static bool IsInfrastructureAttribute(string attributeName, string qualifiedName)
+    {
+        return attributeName.StartsWith("xmlns", StringComparison.Ordinal)
+               || qualifiedName.Contains("xsi:")
+               || qualifiedName.Contains("xml:");
     }
 
 }

@@ -40,7 +40,13 @@ public record SchemaComplexType(
     string Name,
     List<SchemaElement> Elements,
     string? Annotation = null,
-    string? Namespace = null);
+    string? Namespace = null,
+    List<SchemaAttribute>? Attributes = null);
+
+public record SchemaAttribute(
+    string Name,
+    string TypeName,
+    bool IsRequired);
 
 public record SchemaElement(
     string Name,

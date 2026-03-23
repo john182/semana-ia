@@ -14,9 +14,17 @@ public class ProviderSampleDocumentGenerator
     private const string DummyBorrowerName = "Sample Borrower";
     private const string DummyCityServiceCode = "0101";
     private const string DummySeries = "00001";
+    private const string DummyProviderStreet = "RUA SAMPLE PROVIDER";
+    private const string DummyProviderNumber = "100";
+    private const string DummyProviderDistrict = "CENTRO";
+    private const string DummyProviderPostalCode = "01000000";
+    private const string DummyProviderCountry = "BRA";
+    private const string DummyProviderState = "SP";
+    private const string DummyProviderCityName = "SAO PAULO";
     private const string DefaultVersion = "V_1.00.02";
     private const int DefaultEnvironment = 2;
     private const int DefaultNumber = 1;
+    private const int DefaultRetentionType = 1; // NotWithheld
     private const decimal DefaultServicesAmount = 100.00m;
     private const long DummyBorrowerFederalTaxNumber = 98765432100;
 
@@ -43,7 +51,8 @@ public class ProviderSampleDocumentGenerator
             Values = new Values
             {
                 ServicesAmount = DefaultServicesAmount,
-                TaxationType = TaxationType.WithinCity
+                TaxationType = TaxationType.WithinCity,
+                RetentionType = DefaultRetentionType
             }
         };
 
@@ -94,12 +103,27 @@ public class ProviderSampleDocumentGenerator
             Cnpj = DummyCnpj,
             MunicipalityCode = municipalityCode,
             FederalTaxNumber = long.Parse(DummyCnpj),
-            TaxRegime = TaxRegime.SimplesNacional
+            TaxRegime = TaxRegime.SimplesNacional,
+            SpecialTaxRegime = SpecialTaxRegime.Automatico
         };
 
         if (BindingsReferenceField(allBindingExpressions, "Provider.MunicipalTaxNumber"))
         {
             provider.MunicipalTaxNumber = DummyMunicipalTaxNumber;
+        }
+
+        if (BindingsReferenceField(allBindingExpressions, "Provider.Address"))
+        {
+            provider.Address = new Address
+            {
+                Street = DummyProviderStreet,
+                Number = DummyProviderNumber,
+                District = DummyProviderDistrict,
+                PostalCode = DummyProviderPostalCode,
+                Country = DummyProviderCountry,
+                State = DummyProviderState,
+                City = new City { Code = municipalityCode, Name = DummyProviderCityName }
+            };
         }
 
         return provider;
