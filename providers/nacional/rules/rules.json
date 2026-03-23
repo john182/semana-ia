@@ -15,6 +15,42 @@
     { "type": "Binding", "target": "infDPS.tpEmit", "sourceType": "constant", "constantValue": "1" },
     { "type": "Binding", "target": "infDPS.cLocEmi", "source": "Provider.MunicipalityCode" },
     { "type": "Binding", "target": "infDPS.prest.CNPJ", "source": "Provider.Cnpj", "digitsOnly": true, "padLeft": 14, "padChar": "0" },
+    { "type": "Binding", "target": "infDPS.prest.IM", "source": "Provider.MunicipalTaxNumber" },
+    { "type": "Binding", "target": "infDPS.prest.end.endNac.cMun", "source": "Provider.Address.City.Code" },
+    { "type": "Binding", "target": "infDPS.prest.end.endNac.CEP", "source": "Provider.Address.PostalCode" },
+    { "type": "Binding", "target": "infDPS.prest.end.xLgr", "source": "Provider.Address.Street" },
+    { "type": "Binding", "target": "infDPS.prest.end.nro", "source": "Provider.Address.Number" },
+    { "type": "Binding", "target": "infDPS.prest.end.xBairro", "source": "Provider.Address.District" },
+
+    {
+      "type": "ConditionalEmission",
+      "target": "infDPS.toma.CNPJ",
+      "source": "Borrower.FederalTaxNumber",
+      "action": "emit",
+      "condition": { "field": "Borrower.FederalTaxNumber", "operator": "GreaterThan", "value": "99999999999" },
+      "padLeft": 14, "padChar": "0"
+    },
+    {
+      "type": "ConditionalEmission",
+      "target": "infDPS.toma.CPF",
+      "source": "Borrower.FederalTaxNumber",
+      "action": "emit",
+      "condition": {
+        "logicalOperator": "and",
+        "conditions": [
+          { "field": "Borrower.FederalTaxNumber", "operator": "GreaterThan", "value": "0" },
+          { "field": "Borrower.FederalTaxNumber", "operator": "LessThanOrEqual", "value": "99999999999" }
+        ]
+      },
+      "padLeft": 11, "padChar": "0"
+    },
+    { "type": "Binding", "target": "infDPS.toma.xNome", "source": "Borrower.Name" },
+    { "type": "Binding", "target": "infDPS.toma.end.endNac.cMun", "source": "Borrower.Address.City.Code" },
+    { "type": "Binding", "target": "infDPS.toma.end.endNac.CEP", "source": "Borrower.Address.PostalCode" },
+    { "type": "Binding", "target": "infDPS.toma.end.xLgr", "source": "Borrower.Address.Street" },
+    { "type": "Binding", "target": "infDPS.toma.end.nro", "source": "Borrower.Address.Number" },
+    { "type": "Binding", "target": "infDPS.toma.end.xBairro", "source": "Borrower.Address.District" },
+
     { "type": "Binding", "target": "infDPS.serv.locPrest.cLocPrestacao", "source": "Provider.MunicipalityCode" },
     { "type": "Binding", "target": "infDPS.serv.cServ.cTribNac", "source": "Service.FederalServiceCode", "digitsOnly": true, "padLeft": 6, "padChar": "0" },
     { "type": "Binding", "target": "infDPS.serv.cServ.xDescServ", "source": "Service.Description" },
@@ -64,6 +100,8 @@
     { "type": "Formatting", "target": "cTribMun", "padLeft": 3, "padChar": "0", "digitsOnly": true, "maxLength": 3 },
     { "type": "Formatting", "target": "CNPJ", "padLeft": 14, "padChar": "0" },
     { "type": "Formatting", "target": "CPF", "padLeft": 11, "padChar": "0" },
+    { "type": "Formatting", "target": "CEP", "digitsOnly": true, "padLeft": 8, "padChar": "0" },
+    { "type": "Formatting", "target": "cMun", "digitsOnly": true, "padLeft": 7, "padChar": "0" },
     { "type": "Formatting", "target": "nProcesso", "digitsOnly": true }
   ]
 }

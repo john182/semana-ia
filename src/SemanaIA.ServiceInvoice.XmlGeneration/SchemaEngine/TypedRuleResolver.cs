@@ -199,7 +199,7 @@ public class TypedRuleResolver : IProviderRuleResolver
         }
 
         var rawValue = fieldResolver.Resolve(rule.Source);
-        if (rawValue is null)
+        if (rawValue is null || IsEmptyOrDefaultValue(rawValue))
             return;
 
         var formattedValue = ApplyBindingFormatting(rawValue, rule);
@@ -426,5 +426,26 @@ public class TypedRuleResolver : IProviderRuleResolver
     {
         var lastDotIndex = target.LastIndexOf('.');
         return lastDotIndex >= 0 ? target[(lastDotIndex + 1)..] : target;
+    }
+
+    /// <summary>
+    /// Checks whether a resolved value is empty or represents an unset default that should not
+    /// populate the data dictionary. This prevents optional structures (like toma, interm)
+    /// from being emitted when their source data is unset (empty strings, zero identifiers).
+    /// Numeric zero for long/int is treated as unset because identifier fields (FederalTaxNumber)
+    /// use 0 as default, and legitimate zero values are typically bound via constants.
+    /// </summary>
+    private static bool IsEmptyOrDefaultValue(object rawValue)
+    {
+        if (rawValue is string stringValue)
+            return string.IsNullOrWhiteSpace(stringValue);
+
+        if (rawValue is long longValue)
+            return longValue == 0;
+
+        if (rawValue is int intValue)
+            return intValue == 0;
+
+        return false;
     }
 }

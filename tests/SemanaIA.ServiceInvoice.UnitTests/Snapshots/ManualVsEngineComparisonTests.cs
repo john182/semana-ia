@@ -68,11 +68,11 @@ public class ManualVsEngineComparisonTests
         CompareElement(manualInfDps, engineInfDps, ns, "tpEmit");
         CompareElement(manualInfDps, engineInfDps, ns, "cLocEmi");
 
-        // Report differences
-        _output.WriteLine("=== Manual XML (first 500 chars) ===");
-        _output.WriteLine(manualResult.Xml[..Math.Min(500, manualResult.Xml.Length)]);
-        _output.WriteLine("\n=== Engine XML (first 500 chars) ===");
-        _output.WriteLine(engineXml[..Math.Min(500, engineXml.Length)]);
+        // Report full XMLs for comparison
+        _output.WriteLine("=== Manual XML ===");
+        _output.WriteLine(XDocument.Parse(manualResult.Xml).ToString());
+        _output.WriteLine("\n=== Engine XML ===");
+        _output.WriteLine(XDocument.Parse(engineXml).ToString());
 
         // Count elements in each
         var manualElements = manualInfDps.Descendants().Count();
