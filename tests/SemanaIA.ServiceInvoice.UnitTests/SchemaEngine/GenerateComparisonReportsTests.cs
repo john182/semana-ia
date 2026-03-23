@@ -11,7 +11,9 @@ public class GenerateComparisonReportsTests
         // Arrange
         var schema = new XsdSchemaAnalyzer().Analyze(FindPath("providers", "nacional", "xsd", "DPS_v1.01.xsd"));
         var manualSource = File.ReadAllText(FindPath("src", "SemanaIA.ServiceInvoice.XmlGeneration", "Manual", "NationalDpsManualSerializer.cs"));
-        var outputDir = FindPath("providers", "nacional", "generated");
+        var providersDir = FindPath("providers", "nacional");
+        var outputDir = Path.Combine(providersDir, "generated");
+        Directory.CreateDirectory(outputDir);
 
         var analyzer = new BaselineComparisonAnalyzer();
 
