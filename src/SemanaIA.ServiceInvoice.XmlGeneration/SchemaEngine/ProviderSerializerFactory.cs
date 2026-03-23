@@ -33,12 +33,14 @@ public class ProviderSerializerFactory
         var rootComplexTypeName = profile.RootComplexTypeName ?? DefaultRootComplexTypeName;
         var rootElementName = profile.RootElementName ?? DefaultRootElementName;
 
-        return _pipeline.Execute(
+        var pipelineResult = _pipeline.Execute(
             document,
             providerResolution.ProviderName,
             Path.GetDirectoryName(providerResolution.ProviderDirectory)!,
             rootComplexTypeName,
             rootElementName,
             profile.Version);
+
+        return pipelineResult with { ProviderName = providerResolution.ProviderName };
     }
 }

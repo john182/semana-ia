@@ -5,6 +5,7 @@ using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.VisualStudio.TestPlatform.TestHost;
 using Shouldly;
 using Xunit.Abstractions;
 
@@ -19,8 +20,8 @@ public class ProviderFullLoadTests : IClassFixture<WebApplicationFactory<Program
     private const string TestDataDirectoryName = "data";
     private const string XsdSubdirectoryName = "xsd";
     private const string TestProviderPrefix = "data-";
-    private const string OnboardEndpoint = "/api/v1/providers/onboard";
-    private const string StatusEndpointTemplate = "/api/v1/providers/{0}/status";
+    private const string OnboardEndpoint = "/api/v1/providers/onboarding/onboard";
+    private const string StatusEndpointTemplate = "/api/v1/providers/onboarding/{0}/status";
     private const string NfseXmlEndpoint = "/api/v1/nfse/xml";
     private const string ReportFileName = "load-test-full-provider-report.md";
     private const int MunicipalityCodeBase = 7000000;

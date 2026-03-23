@@ -30,20 +30,45 @@ public class NfseExamplesOperationFilter : IOperationFilter
 
         mediaType.Examples = new Dictionary<string, IOpenApiExample>
         {
-            ["MinimumExample"] = new OpenApiExample
+            ["ServicoLocalMinimo"] = new OpenApiExample
             {
-                Summary = "Exemplo Mínimo",
+                Summary = "Prestacao de servico no municipio - campos minimos obrigatorios",
                 Value = ToJsonNode(NfseRequestExamplesFactory.MinimumExample())
             },
-            ["IntermediateExample"] = new OpenApiExample
+            ["ServicoForaMunicipioComDestinatario"] = new OpenApiExample
             {
-                Summary = "Exemplo Intermediário",
+                Summary = "Prestacao de servico fora do municipio com destinatario e calculo IBS/CBS",
                 Value = ToJsonNode(NfseRequestExamplesFactory.IntermediateExample())
             },
-            ["CompleteExample"] = new OpenApiExample
+            ["ServicoCompletoExaustivo"] = new OpenApiExample
             {
-                Summary = "Exemplo Completo",
+                Summary = "Servico completo com todos os grupos opcionais: construcao, comercio exterior, deducoes, beneficios e eventos",
                 Value = ToJsonNode(NfseRequestExamplesFactory.CompleteExample())
+            },
+            ["ServicoComRetencaoIss"] = new OpenApiExample
+            {
+                Summary = "Prestacao de servico com retencao de ISS na fonte pelo tomador",
+                Value = ToJsonNode(NfseRequestExamplesFactory.IssWithholdingExample())
+            },
+            ["ServicoParaPessoaFisica"] = new OpenApiExample
+            {
+                Summary = "Prestacao de servico para pessoa fisica (CPF)",
+                Value = ToJsonNode(NfseRequestExamplesFactory.IndividualBorrowerExample())
+            },
+            ["ServicoComDeducaoSubcontratacao"] = new OpenApiExample
+            {
+                Summary = "Servico com deducao de materiais e subcontratacao",
+                Value = ToJsonNode(NfseRequestExamplesFactory.DeductionSubcontractingExample())
+            },
+            ["ServicoConstrucaoCivil"] = new OpenApiExample
+            {
+                Summary = "Servico de construcao civil com dados da obra",
+                Value = ToJsonNode(NfseRequestExamplesFactory.ConstructionServiceExample())
+            },
+            ["ServicoExportacao"] = new OpenApiExample
+            {
+                Summary = "Servico de exportacao com comercio exterior e isencao de ISS",
+                Value = ToJsonNode(NfseRequestExamplesFactory.ExportServiceExample())
             }
         };
     }

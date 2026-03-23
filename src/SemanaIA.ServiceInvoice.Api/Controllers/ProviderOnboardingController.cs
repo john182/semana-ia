@@ -4,7 +4,8 @@ using SemanaIA.ServiceInvoice.Domain.Services;
 namespace SemanaIA.ServiceInvoice.Api.Controllers;
 
 [ApiController]
-[Route("api/v1/providers")]
+[Route("api/v1/providers/onboarding")]
+[Tags("Provider Onboarding (Legacy)")]
 public class ProviderOnboardingController : ControllerBase
 {
     [HttpPost("onboard")]

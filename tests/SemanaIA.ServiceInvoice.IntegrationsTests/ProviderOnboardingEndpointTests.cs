@@ -12,9 +12,9 @@ public class ProviderOnboardingEndpointTests : IClassFixture<WebApplicationFacto
 {
     private const int ExpectedMinimumProviderCount = 6;
     private const string NacionalProviderName = "nacional";
-    private const string ProvidersEndpoint = "/api/v1/providers";
-    private const string OnboardEndpoint = "/api/v1/providers/onboard";
-    private const string StatusEndpointTemplate = "/api/v1/providers/{0}/status";
+    private const string ProvidersEndpoint = "/api/v1/providers/onboarding";
+    private const string OnboardEndpoint = "/api/v1/providers/onboarding/onboard";
+    private const string StatusEndpointTemplate = "/api/v1/providers/onboarding/{0}/status";
     private const string NfseXmlEndpoint = "/api/v1/nfse/xml";
     private const string ProvidersDirectoryName = "providers";
 

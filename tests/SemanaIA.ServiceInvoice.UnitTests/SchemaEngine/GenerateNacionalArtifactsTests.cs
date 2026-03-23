@@ -13,8 +13,11 @@ public class GenerateNacionalArtifactsTests
         var rulesPath = FindPath("providers", "nacional", "rules", "base-rules.json");
         var manualPath = FindPath("src", "SemanaIA.ServiceInvoice.XmlGeneration", "Manual", "NationalDpsManualSerializer.cs");
 
-        var recordsDir = FindPath("providers", "nacional", "generated", "Records");
-        var buildersDir = FindPath("providers", "nacional", "generated", "Builders");
+        var generatedDir = Path.Combine(FindPath("providers", "nacional"), "generated");
+        var recordsDir = Path.Combine(generatedDir, "Records");
+        var buildersDir = Path.Combine(generatedDir, "Builders");
+        Directory.CreateDirectory(recordsDir);
+        Directory.CreateDirectory(buildersDir);
 
         var schema = new XsdSchemaAnalyzer().Analyze(xsdPath);
         var resolver = ProviderRuleResolver.LoadFromFile(rulesPath);
@@ -25,7 +28,7 @@ public class GenerateNacionalArtifactsTests
         generator.GenerateBuilderSkeleton(schema, resolver, buildersDir);
         var report = generator.GenerateComparisonReport(schema, manualPath);
 
-        var reportPath = Path.Combine(FindPath("providers", "nacional", "generated"), "comparison-report.md");
+        var reportPath = Path.Combine(generatedDir, "comparison-report.md");
         File.WriteAllText(reportPath, report);
 
         // Assert

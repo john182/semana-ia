@@ -20,6 +20,11 @@ public record SerializationResult(
     List<SerializationError> Errors,
     List<string> ValidationErrors)
 {
+    /// <summary>
+    /// Nome do provider que gerou o resultado. Preenchido pelo ProviderSerializerFactory apos a resolucao.
+    /// </summary>
+    public string ProviderName { get; init; } = string.Empty;
+
     public static SerializationResult Success(string xml) =>
         new(xml, true, [], []);
 
