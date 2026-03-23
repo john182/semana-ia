@@ -1,0 +1,14 @@
+{
+  "provider": "webiss",
+  "version": "1.01",
+  "rootComplexTypeName": "_anon_ListaMensagemRetornoLote",
+  "rootElementName": "ListaMensagemRetornoLote",
+  "municipalityCodes": ["3126109"],
+  "rules": [
+    { "type": "Formatting", "target": "Numero", "maxLength": 15 },
+    { "type": "Formatting", "target": "Serie", "maxLength": 5 },
+    { "type": "Formatting", "target": "Codigo", "maxLength": 4 },
+    { "type": "Formatting", "target": "Mensagem", "maxLength": 200 },
+    { "type": "Binding", "target": "MensagemRetorno.IdentificacaoRps.Serie", "source": "Series" }
+  ]
+}

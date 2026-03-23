@@ -14,6 +14,7 @@ builder.Services.AddSwaggerGen(o =>
     o.IncludeXmlComments(xmlPath);
     o.OperationFilter<NfseExamplesOperationFilter>();
     o.OperationFilter<ProviderManagementExamplesFilter>();
+    o.OperationFilter<RuleExamplesFilter>();
 });
 
 builder.Services.AddNfseInfrastructure(builder.Configuration);

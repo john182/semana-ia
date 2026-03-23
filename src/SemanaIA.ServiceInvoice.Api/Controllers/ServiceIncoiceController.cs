@@ -16,8 +16,10 @@ public class ServiceIncoiceController : ControllerBase
 {
     /// <summary>
     /// Gerar XML de NFS-e (DPS) a partir dos dados do documento.
-    /// O provider e resolvido automaticamente pelo codigo IBGE do municipio (campo borrower.address.city.code ou location.city.code).
-    /// Se nenhum provider especifico atender o municipio, o provider nacional e usado como fallback.
+    /// O provedor de NFS-e e resolvido automaticamente pelo codigo IBGE do municipio do prestador (campo location.city.code).
+    /// Para que um provedor especifico seja utilizado, o codigo IBGE do municipio informado no request
+    /// deve estar atribuido a esse provedor (via POST /api/v1/providers/{id}/municipalities).
+    /// Se nenhum provedor atender o municipio, o provedor nacional e usado como fallback.
     /// </summary>
     /// <param name="request">Dados completos do documento de prestacao de servicos (DPS) para geracao do XML.</param>
     /// <param name="useCase">Caso de uso injetado automaticamente pelo container de DI.</param>

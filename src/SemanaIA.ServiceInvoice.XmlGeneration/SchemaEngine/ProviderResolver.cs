@@ -45,6 +45,23 @@ public class ProviderResolver
         return availableProviders;
     }
 
+    public ProviderResolution ResolveByName(string providerName)
+    {
+        var providerDir = Path.Combine(_providersBaseDir, providerName);
+
+        if (!Directory.Exists(providerDir))
+            return ProviderResolution.Failed(providerName, providerDir, $"Provider directory not found: {providerDir}");
+
+        if (!IsProviderAvailable(providerDir))
+            return ProviderResolution.Failed(providerName, providerDir, $"Provider '{providerName}' is not available (missing xsd or rules).");
+
+        var profile = LoadProfileSafe(providerDir);
+
+        return profile is not null
+            ? new ProviderResolution(providerName, providerDir, profile)
+            : ProviderResolution.Failed(providerName, providerDir, $"Failed to load profile for provider '{providerName}'.");
+    }
+
     public virtual ProviderResolution ResolveByMunicipalityCode(string municipalityCode)
     {
         var providerDirectories = Directory.GetDirectories(_providersBaseDir);
@@ -105,12 +122,20 @@ public class ProviderResolver
     private static bool HasRulesFile(string providerDir)
     {
         var rulesPath = Path.Combine(providerDir, ProviderProfile.RulesDirectoryName, ProviderProfile.RulesFileName);
-        return File.Exists(rulesPath);
+        if (File.Exists(rulesPath))
+            return true;
+
+        var legacyRulesPath = Path.Combine(providerDir, ProviderProfile.RulesDirectoryName, ProviderProfile.LegacyRulesFileName);
+        return File.Exists(legacyRulesPath);
     }
 
     private static ProviderProfile? LoadProfileSafe(string providerDir)
     {
         var rulesPath = Path.Combine(providerDir, ProviderProfile.RulesDirectoryName, ProviderProfile.RulesFileName);
-        return ProviderProfile.LoadFromFile(rulesPath);
+        if (File.Exists(rulesPath))
+            return ProviderProfile.LoadFromFile(rulesPath);
+
+        var legacyRulesPath = Path.Combine(providerDir, ProviderProfile.RulesDirectoryName, ProviderProfile.LegacyRulesFileName);
+        return ProviderProfile.LoadFromFile(legacyRulesPath);
     }
 }

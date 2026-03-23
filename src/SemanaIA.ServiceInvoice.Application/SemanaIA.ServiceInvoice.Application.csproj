@@ -12,6 +12,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\SemanaIA.ServiceInvoice.Domain\SemanaIA.ServiceInvoice.Domain.csproj" />
+      <ProjectReference Include="..\SemanaIA.ServiceInvoice.XmlGeneration\SemanaIA.ServiceInvoice.XmlGeneration.csproj" />
     </ItemGroup>
 
 </Project>

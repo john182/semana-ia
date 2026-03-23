@@ -43,8 +43,12 @@ internal static class TestProviderPaths
         var dir = AppContext.BaseDirectory;
         while (dir is not null)
         {
-            var candidate = Path.Combine(dir, "providers", provider, "rules", "base-rules.json");
-            if (File.Exists(candidate)) return candidate;
+            var typedCandidate = Path.Combine(dir, "providers", provider, "rules", "rules.json");
+            if (File.Exists(typedCandidate)) return typedCandidate;
+
+            var legacyCandidate = Path.Combine(dir, "providers", provider, "rules", "base-rules.json");
+            if (File.Exists(legacyCandidate)) return legacyCandidate;
+
             dir = Directory.GetParent(dir)?.FullName;
         }
         throw new FileNotFoundException($"Rules not found: {provider}");

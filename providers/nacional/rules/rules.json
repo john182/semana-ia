@@ -1,0 +1,69 @@
+{
+  "provider": "nacional",
+  "version": "1.01",
+  "municipalityCodes": [],
+  "rootComplexTypeName": "TCDPS",
+  "rootElementName": "DPS",
+  "rules": [
+    { "type": "Binding", "target": "infDPS.@Id", "source": "BuildId" },
+    { "type": "Binding", "target": "infDPS.tpAmb", "source": "Environment" },
+    { "type": "Binding", "target": "infDPS.dhEmi", "source": "IssuedOn", "format": "yyyy-MM-ddTHH:mm:sszzz" },
+    { "type": "Binding", "target": "infDPS.verAplic", "source": "Version" },
+    { "type": "Binding", "target": "infDPS.serie", "source": "Series" },
+    { "type": "Binding", "target": "infDPS.nDPS", "source": "Number" },
+    { "type": "Binding", "target": "infDPS.dCompet", "source": "CompetenceDate", "format": "yyyy-MM-dd" },
+    { "type": "Binding", "target": "infDPS.tpEmit", "sourceType": "constant", "constantValue": "1" },
+    { "type": "Binding", "target": "infDPS.cLocEmi", "source": "Provider.MunicipalityCode" },
+    { "type": "Binding", "target": "infDPS.prest.CNPJ", "source": "Provider.Cnpj", "digitsOnly": true, "padLeft": 14, "padChar": "0" },
+    { "type": "Binding", "target": "infDPS.serv.locPrest.cLocPrestacao", "source": "Provider.MunicipalityCode" },
+    { "type": "Binding", "target": "infDPS.serv.cServ.cTribNac", "source": "Service.FederalServiceCode", "digitsOnly": true, "padLeft": 6, "padChar": "0" },
+    { "type": "Binding", "target": "infDPS.serv.cServ.xDescServ", "source": "Service.Description" },
+    { "type": "Binding", "target": "infDPS.serv.cServ.cNBS", "source": "Service.NbsCode", "digitsOnly": true },
+    { "type": "Binding", "target": "infDPS.valores.vServPrest.vServ", "source": "Values.ServicesAmount", "format": "F2" },
+    { "type": "Binding", "target": "infDPS.valores.trib.totTrib.vTotTrib.vTotTribFed", "sourceType": "constant", "constantValue": "0.00" },
+    { "type": "Binding", "target": "infDPS.valores.trib.totTrib.vTotTrib.vTotTribEst", "sourceType": "constant", "constantValue": "0.00" },
+    { "type": "Binding", "target": "infDPS.valores.trib.totTrib.vTotTrib.vTotTribMun", "sourceType": "constant", "constantValue": "0.00" },
+
+    {
+      "type": "EnumMapping",
+      "target": "infDPS.prest.regTrib.opSimpNac",
+      "source": "Provider.TaxRegime",
+      "mappings": {
+        "MicroempreendedorIndividual": "2",
+        "SimplesNacional": "3"
+      },
+      "defaultMapping": "1"
+    },
+    {
+      "type": "Default",
+      "target": "infDPS.prest.regTrib.regEspTrib",
+      "source": "Provider.SpecialTaxRegime",
+      "fallbackValue": "0"
+    },
+    {
+      "type": "EnumMapping",
+      "target": "infDPS.valores.trib.tribMun.tribISSQN",
+      "source": "Values.TaxationType",
+      "mappings": {
+        "WithinCity": "1",
+        "OutsideCity": "1",
+        "Immune": "2",
+        "Export": "3",
+        "Free": "4"
+      },
+      "defaultMapping": "1"
+    },
+    {
+      "type": "Default",
+      "target": "infDPS.valores.trib.tribMun.tpRetISSQN",
+      "source": "Values.RetentionType",
+      "fallbackValue": "1"
+    },
+
+    { "type": "Formatting", "target": "cTribNac", "padLeft": 6, "padChar": "0", "digitsOnly": true, "maxLength": 6 },
+    { "type": "Formatting", "target": "cTribMun", "padLeft": 3, "padChar": "0", "digitsOnly": true, "maxLength": 3 },
+    { "type": "Formatting", "target": "CNPJ", "padLeft": 14, "padChar": "0" },
+    { "type": "Formatting", "target": "CPF", "padLeft": 11, "padChar": "0" },
+    { "type": "Formatting", "target": "nProcesso", "digitsOnly": true }
+  ]
+}

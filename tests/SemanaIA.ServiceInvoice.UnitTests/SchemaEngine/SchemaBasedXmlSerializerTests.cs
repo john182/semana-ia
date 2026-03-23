@@ -144,9 +144,16 @@ public class SchemaBasedXmlSerializerTests
     {
         // Arrange
         var schema = AnalyzeNacional();
-        var resolver = LoadNacionalResolver();
+        var rulesWithDefault = new List<ProviderRule>
+        {
+            new() { Type = RuleType.Default, Target = "infDPS.tpEmit", FallbackValue = "1" },
+            new() { Type = RuleType.Formatting, Target = "cTribNac", DigitsOnly = true, PadLeft = 6, PadChar = "0", MaxLength = 6 },
+            new() { Type = RuleType.Formatting, Target = "CNPJ", PadLeft = 14, PadChar = "0" },
+            new() { Type = RuleType.Formatting, Target = "CPF", PadLeft = 11, PadChar = "0" }
+        };
+        var resolver = new TypedRuleResolver(rulesWithDefault);
         var data = NacionalMinimalData();
-        data.Remove("infDPS.tpEmit"); // resolver has default tpEmit=1
+        data.Remove("infDPS.tpEmit");
 
         // Act
         var result = _sut.Serialize(schema, data, resolver, "TCDPS", "DPS", "1.01");
@@ -163,8 +170,11 @@ public class SchemaBasedXmlSerializerTests
     private static SchemaDocument AnalyzeNacional() =>
         new XsdSchemaAnalyzer().Analyze(TestProviderPaths.FindXsdPath("nacional", "DPS_v1.01.xsd"));
 
-    private static ProviderRuleResolver LoadNacionalResolver() =>
-        ProviderRuleResolver.LoadFromFile(TestProviderPaths.FindRulesPath("nacional"));
+    private static IProviderRuleResolver LoadNacionalResolver()
+    {
+        var profile = ProviderProfile.LoadFromFile(TestProviderPaths.FindRulesPath("nacional"));
+        return new TypedRuleResolver(profile?.Rules ?? []);
+    }
 
     private static Dictionary<string, object?> NacionalMinimalData() => new()
     {

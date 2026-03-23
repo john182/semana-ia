@@ -304,7 +304,7 @@ public class AllProvidersXsdValidationSummaryTests
         // Arrange
         var schema = AnalyzeProvider("issnet", "schema_v101.xsd");
         var profile = LoadIssnetProfile();
-        var resolver = new ProviderRuleResolver(profile);
+        var resolver = new TypedRuleResolver(profile.Rules ?? []);
         var document = CreateIssnetMinimalDocument();
         var data = Binder.Bind(document, profile);
 
@@ -326,7 +326,7 @@ public class AllProvidersXsdValidationSummaryTests
         // Arrange
         var schema = AnalyzeProvider("issnet", "schema_v101.xsd");
         var profile = LoadIssnetProfile();
-        var resolver = new ProviderRuleResolver(profile);
+        var resolver = new TypedRuleResolver(profile.Rules ?? []);
         var document = CreateIssnetMinimalDocument();
         var data = Binder.Bind(document, profile);
 
@@ -451,7 +451,7 @@ public class AllProvidersXsdValidationSummaryTests
         // ISSNet
         var issnetSchema = AnalyzeProvider("issnet", "schema_v101.xsd");
         var issnetProfile = LoadIssnetProfile();
-        var issnetResolver = new ProviderRuleResolver(issnetProfile);
+        var issnetResolver = new TypedRuleResolver(issnetProfile.Rules ?? []);
         var issnetDocument = CreateIssnetMinimalDocument();
         var issnetData = Binder.Bind(issnetDocument, issnetProfile);
         var issnetResult = Serializer.SerializeAndValidate(
@@ -831,8 +831,11 @@ public class AllProvidersXsdValidationSummaryTests
     private static SchemaDocument AnalyzeProvider(string provider, string xsdFile) =>
         Analyzer.Analyze(TestProviderPaths.FindXsdPath(provider, xsdFile));
 
-    private static ProviderRuleResolver LoadResolver(string provider) =>
-        ProviderRuleResolver.LoadFromFile(TestProviderPaths.FindRulesPath(provider));
+    private static IProviderRuleResolver LoadResolver(string provider)
+    {
+        var profile = ProviderProfile.LoadFromFile(TestProviderPaths.FindRulesPath(provider));
+        return new TypedRuleResolver(profile?.Rules ?? []);
+    }
 
     private static string FormatValidationStatus(SerializationResult result) =>
         result.IsValid ? "PASS" : "FAIL";
@@ -922,11 +925,11 @@ public class AllProvidersXsdValidationSummaryTests
             var json = File.ReadAllText(rulesPath);
             var profile = JsonSerializer.Deserialize<ProviderProfile>(json);
 
-            if (profile?.Bindings is null || profile.Bindings.Count == 0)
+            if (profile?.Rules is null || profile.Rules.Count == 0)
                 return null;
 
             var schema = AnalyzeProvider(provider, xsdFile);
-            var resolver = new ProviderRuleResolver(profile);
+            IProviderRuleResolver resolver = new TypedRuleResolver(profile.Rules);
             var document = CreateMinimalSampleDocument();
             var data = Binder.Bind(document, profile);
             var rootType = profile.RootComplexTypeName ?? "TCDPS";

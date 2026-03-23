@@ -56,7 +56,7 @@ public class ProviderOnboardingService : IProviderOnboardingService
                 Path.Combine(providerInfo.Directory, ProviderProfile.RulesDirectoryName, ProviderProfile.RulesFileName));
 
             var municipalityCount = profile?.MunicipalityCodes?.Count ?? 0;
-            var hasBindings = profile?.Bindings is not null && profile.Bindings.Count > 0;
+            var hasBindings = profile?.Rules is not null && profile.Rules.Count > 0;
 
             summaries.Add(new ProviderSummary(
                 providerInfo.Name,
@@ -129,15 +129,11 @@ public class ProviderOnboardingService : IProviderOnboardingService
         {
             Provider = profile.Provider,
             Version = profile.Version,
-            Defaults = profile.Defaults,
-            Enums = profile.Enums,
-            Formatting = profile.Formatting,
-            Conditionals = profile.Conditionals,
             RootComplexTypeName = profile.RootComplexTypeName,
             RootElementName = profile.RootElementName,
             WrapperBindings = profile.WrapperBindings,
             BindingPathPrefix = profile.BindingPathPrefix,
-            Bindings = profile.Bindings,
+            Rules = profile.Rules,
             MunicipalityCodes = municipalityCodes,
         };
 

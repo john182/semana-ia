@@ -68,7 +68,7 @@ public class ServiceInvoiceSchemaDataBinderTests
         var data = _sut.Bind(doc, profile);
 
         // Assert
-        // NbsCode has digitsOnly pipe — null source should produce null → omitted
+        // NbsCode has digitsOnly pipe -- null source should produce null -> omitted
         data.ShouldNotContainKey("infDPS.serv.cServ.cNBS");
     }
 
@@ -103,7 +103,8 @@ public class ServiceInvoiceSchemaDataBinderTests
             WrapperBindings = new Dictionary<string, string>
             {
                 { "LoteDps.NumeroLote", "const:1" }
-            }
+            },
+            Rules = []
         };
 
         // Act
@@ -125,7 +126,8 @@ public class ServiceInvoiceSchemaDataBinderTests
             WrapperBindings = new Dictionary<string, string>
             {
                 { "LoteDps.Prestador.CNPJ", "Provider.Cnpj | padLeft:14:0" }
-            }
+            },
+            Rules = []
         };
 
         // Act
@@ -148,9 +150,9 @@ public class ServiceInvoiceSchemaDataBinderTests
         var profile = new ProviderProfile
         {
             BindingPathPrefix = "LoteDps.ListaDps.DPS",
-            Bindings = new Dictionary<string, string>
+            Rules = new List<ProviderRule>
             {
-                { "infDPS.tpAmb", "Environment" }
+                new() { Type = RuleType.Binding, Target = "infDPS.tpAmb", Source = "Environment" }
             }
         };
 
@@ -169,9 +171,9 @@ public class ServiceInvoiceSchemaDataBinderTests
         var doc = CreateMinimalDocument();
         var profile = new ProviderProfile
         {
-            Bindings = new Dictionary<string, string>
+            Rules = new List<ProviderRule>
             {
-                { "infDPS.tpAmb", "Environment" }
+                new() { Type = RuleType.Binding, Target = "infDPS.tpAmb", Source = "Environment" }
             }
         };
 
@@ -201,23 +203,23 @@ public class ServiceInvoiceSchemaDataBinderTests
                 { "LoteDps.Prestador.CNPJ", "Provider.Cnpj | padLeft:14:0" }
             },
             BindingPathPrefix = "LoteDps.ListaDps.DPS",
-            Bindings = new Dictionary<string, string>
+            Rules = new List<ProviderRule>
             {
-                { "infDPS.tpAmb", "Environment" },
-                { "infDPS.serie", "Series" }
+                new() { Type = RuleType.Binding, Target = "infDPS.tpAmb", Source = "Environment" },
+                new() { Type = RuleType.Binding, Target = "infDPS.serie", Source = "Series" }
             }
         };
 
         // Act
         var data = _sut.Bind(doc, profile);
 
-        // Assert — wrapper paths exist without prefix
+        // Assert -- wrapper paths exist without prefix
         data.ShouldContainKey("LoteDps.NumeroLote");
         data["LoteDps.NumeroLote"].ShouldBe("1");
         data.ShouldContainKey("LoteDps.Prestador.CNPJ");
         data["LoteDps.Prestador.CNPJ"].ShouldBe("11222333000181");
 
-        // Assert — regular bindings have prefix applied
+        // Assert -- regular bindings have prefix applied
         data.ShouldContainKey("LoteDps.ListaDps.DPS.infDPS.tpAmb");
         data.ShouldContainKey("LoteDps.ListaDps.DPS.infDPS.serie");
         data.ShouldNotContainKey("infDPS.tpAmb");
@@ -257,7 +259,7 @@ public class ServiceInvoiceSchemaDataBinderTests
 
     private static ProviderProfile LoadNacionalProfile()
     {
-        var path = FindPath("providers", "nacional", "rules", "base-rules.json");
+        var path = FindPath("providers", "nacional", "rules", "rules.json");
         var json = File.ReadAllText(path);
         return System.Text.Json.JsonSerializer.Deserialize<ProviderProfile>(json)!;
     }

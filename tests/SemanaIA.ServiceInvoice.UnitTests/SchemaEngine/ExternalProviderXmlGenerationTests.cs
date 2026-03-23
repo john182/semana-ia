@@ -273,7 +273,7 @@ public class ExternalProviderXmlGenerationTests
     private static string? GenerateXml(ProviderContext context, DpsDocument document)
     {
         var data = BuildDataFromSchema(context.Schema, document, context.Profile);
-        var resolver = new ProviderRuleResolver(context.Profile);
+        IProviderRuleResolver resolver = new TypedRuleResolver(context.Profile.Rules ?? []);
 
         // Only emit versao attribute when the schema declares it on the root element
         var versionForSerialization = context.Schema.RootVersionAttribute is not null
