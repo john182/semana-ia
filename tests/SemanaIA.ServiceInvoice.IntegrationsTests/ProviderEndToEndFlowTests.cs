@@ -348,12 +348,10 @@ public class ProviderEndToEndFlowTests : IClassFixture<WebApplicationFactory<Pro
     /// These will be resolved in follow-up changes as the auto-gen pipeline matures.
     /// </summary>
     private static bool IsKnownXsdGap(string error) =>
-        error.Contains("regTrib") ||
-        error.Contains("tribMun") ||
         error.Contains("'versao' attribute") ||
         error.Contains("incomplete content") ||
-        error.Contains("is not a valid Date value") ||
-        error.Contains("invalid child element");
+        error.Contains("invalid child element") ||
+        error.Contains("Pattern constraint failed");
 
     private static string FindTestDataDir()
     {

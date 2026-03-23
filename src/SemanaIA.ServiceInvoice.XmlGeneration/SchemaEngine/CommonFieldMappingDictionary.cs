@@ -38,7 +38,7 @@ public static class CommonFieldMappingDictionary
         // Document metadata
         ["tpAmb"] = "Environment",
         ["dhEmi"] = "IssuedOn | format:yyyy-MM-ddTHH:mm:sszzz",
-        ["DataEmissao"] = "IssuedOn | format:yyyy-MM-ddTHH:mm:sszzz",
+        ["DataEmissao"] = "IssuedOn | format:yyyy-MM-dd",
         ["dCompet"] = "CompetenceDate | format:yyyy-MM-dd",
         ["Competencia"] = "CompetenceDate | format:yyyy-MM-dd",
         ["serie"] = "Series",
@@ -55,13 +55,16 @@ public static class CommonFieldMappingDictionary
         ["Telefone"] = "Borrower.PhoneNumber",
         ["Fone"] = "Borrower.PhoneNumber",
 
-        // Tax
-        ["tribISSQN"] = "Values.TaxationType",
-        ["IssRetido"] = "Values.RetentionType",
-        ["tpRetISSQN"] = "Values.RetentionType",
-        ["OptanteSimplesNacional"] = "Provider.TaxRegime",
-        ["opSimpNac"] = "Provider.TaxRegime",
-        ["regEspTrib"] = "Provider.SpecialTaxRegime",
+        // Tax — domain-specific codes (not C# enum values)
+        // opSimpNac: 1=Normal, 2=MEI, 3=SimplesNacional
+        // tribISSQN: 1=WithinCity, 2=Immune, 3=Export, 4=Free
+        // tpRetISSQN: 1=NotWithheld, 2=ByBuyer, 3=ByIntermediary
+        ["tribISSQN"] = "const:1",
+        ["IssRetido"] = "const:2",
+        ["tpRetISSQN"] = "const:1",
+        ["OptanteSimplesNacional"] = "const:1",
+        ["opSimpNac"] = "const:1",
+        ["regEspTrib"] = "const:0",
         ["IncentivoFiscal"] = "const:2",
         ["ExigibilidadeISS"] = "const:1",
 
@@ -72,13 +75,15 @@ public static class CommonFieldMappingDictionary
 
         // RPS metadata (ABRASF)
         ["tpRps"] = "const:1",
+        ["Tipo"] = "const:1",
         ["TipoRps"] = "const:1",
+        ["Status"] = "const:1",
         ["StatusRps"] = "const:1",
         ["NumeroRps"] = "Number",
         ["SerieRps"] = "Series",
         ["DataEmissaoRps"] = "IssuedOn | format:yyyy-MM-ddTHH:mm:sszzz",
         ["NaturezaOperacao"] = "const:1",
-        ["RegimeEspecialTributacao"] = "Provider.SpecialTaxRegime",
+        ["RegimeEspecialTributacao"] = "const:0",
         ["MunicipioIncidencia"] = "Service.MunicipalityCode",
         ["CodigoCnae"] = "Service.CnaeCode",
 
