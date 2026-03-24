@@ -235,10 +235,14 @@ public class ProviderConfigGenerator
 
     // Elements that are conditional in the manual serializer and should NOT be auto-generated.
     // These require explicit rule configuration because their emission depends on business logic.
+    // Elements that are conditional in the manual serializer and should NOT be auto-generated.
+    // When the request has data for these, they are emitted via explicit rules.
+    // IBSCBS is NOT in this list because it should be auto-generated when IbsCbs data is present.
     private static readonly HashSet<string> ConditionalElements = new(StringComparer.OrdinalIgnoreCase)
     {
-        "interm", "obra", "atvEvento", "comExt", "lsadppu", "IBSCBS",
-        "vDedRed", "vDescCondIncond", "exigSusp", "BM", "subst"
+        "interm", "obra", "atvEvento", "comExt", "lsadppu",
+        "vDedRed", "vDescCondIncond", "exigSusp", "BM", "subst",
+        "dest", "imovel", "tribFed", "piscofins", "gReeRepRes"
     };
 
     // Context-aware field mappings: fields whose meaning changes depending on their parent context.

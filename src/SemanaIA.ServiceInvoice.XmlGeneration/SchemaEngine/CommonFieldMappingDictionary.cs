@@ -102,6 +102,13 @@ public static class CommonFieldMappingDictionary
         ["CodigoVerificacao"] = "const:000",
         ["CodigoMunicipioIBGE"] = "Provider.MunicipalityCode",
 
+        // IBSCBS (Nacional)
+        ["finNFSe"] = "IbsCbs.Purpose",
+        ["indFinal"] = "IbsCbs.PersonalUse",
+        ["cIndOp"] = "IbsCbs.OperationIndicator | digitsOnly | padLeft:6:0",
+        ["indDest"] = "IbsCbs.DestinationIndicator",
+        ["cClassTrib"] = "IbsCbs.ClassCode",
+
         // Borrower address (ABRASF)
         ["Endereco"] = "Borrower.Address.Street",
         ["NumeroEndereco"] = "Borrower.Address.Number",
