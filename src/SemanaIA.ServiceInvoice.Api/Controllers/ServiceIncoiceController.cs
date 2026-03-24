@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Hosting;
 using SemanaIA.ServiceInvoice.Api.Mappers;
 using SemanaIA.ServiceInvoice.Api.Requests;
 using SemanaIA.ServiceInvoice.Application;
@@ -60,8 +61,12 @@ public class ServiceIncoiceController : ControllerBase
     public IActionResult CompareXml(
         [FromBody] NfseGenerateXmlRequest request,
         [FromServices] NationalDpsManualSerializer manualSerializer,
-        [FromServices] ProviderSerializerFactory providerFactory)
+        [FromServices] ProviderSerializerFactory providerFactory,
+        [FromServices] IHostEnvironment hostEnvironment)
     {
+        if (!hostEnvironment.IsDevelopment())
+            return NotFound();
+
         var document = NfseRequestToDpsDocumentModelMapper.Map(request);
         var municipalityCode = document.Provider.MunicipalityCode;
 

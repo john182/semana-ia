@@ -284,7 +284,7 @@ public class NfseRequestToDpsDocumentModelMapper
             ClassCode = src.ClassCode,
             Purpose = Enum.TryParse<IbsCbsPurpose>(src.Purpose, true, out var p) ? p : IbsCbsPurpose.Regular,
             IsDonation = src.IsDonation,
-            PersonalUse = src.PersonalUse,
+            PersonalUse = src.PersonalUse ?? false,
             OperationIndicator = src.OperationIndicator,
             OperationType = Enum.TryParse<IbsCbsOperationType>(src.OperationType, true, out var ot) ? ot : null,
             DestinationIndicator = Enum.TryParse<IbsCbsDestinationIndicator>(src.DestinationIndicator, true, out var di)

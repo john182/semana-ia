@@ -51,7 +51,7 @@ public static class CommonFieldMappingDictionary
         ["Telefone"] = "Borrower.PhoneNumber",
         ["Fone"] = "Borrower.PhoneNumber",
 
-        // Tax — mapped to domain with custom conversion in DpsDocumentFieldResolver
+        // Tax — opSimpNac/regEspTrib use computed properties (Provider.OpSimpNacCode/RegEspTribCode)
         ["tribISSQN"] = "const:1",
         ["IssRetido"] = "const:2",
         ["tpRetISSQN"] = "const:1",

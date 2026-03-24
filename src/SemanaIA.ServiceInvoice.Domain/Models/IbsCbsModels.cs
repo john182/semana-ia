@@ -35,7 +35,7 @@ public class IbsCbs
     public int FinNFSeCode => (int)Purpose - 1;
 
     public bool? IsDonation { get; set; }
-    public bool? PersonalUse { get; set; } = false;
+    public bool PersonalUse { get; set; } = false;
     public string? OperationIndicator { get; set; }
     public IbsCbsOperationType? OperationType { get; set; }
     public IbsCbsDestinationIndicator DestinationIndicator { get; set; } = IbsCbsDestinationIndicator.SameAsBuyer;

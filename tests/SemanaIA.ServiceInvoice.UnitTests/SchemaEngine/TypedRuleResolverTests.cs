@@ -490,6 +490,50 @@ public class TypedRuleResolverTests
     }
 
     // ==========================================================
+    // IsEmptyOrDefaultValue — skip empty/default bindings
+    // ==========================================================
+
+    [Fact]
+    public void Given_EmptyStringBinding_Should_NotPopulateDictionary()
+    {
+        // Arrange
+        var rules = new List<ProviderRule>
+        {
+            new() { Type = RuleType.Binding, Target = "infDPS.toma.email", Source = "Borrower.Email" }
+        };
+        var resolver = new TypedRuleResolver(rules);
+        var document = CreateMinimalDocument();
+        document.Borrower = new Borrower { Email = "" };
+        var profile = CreateMinimalProfile(rules);
+
+        // Act
+        var data = resolver.BuildDataDictionary(document, CreateEmptySchema(), profile);
+
+        // Assert
+        data.ShouldNotContainKey("infDPS.toma.email");
+    }
+
+    [Fact]
+    public void Given_ZeroLongBinding_Should_NotPopulateDictionary()
+    {
+        // Arrange
+        var rules = new List<ProviderRule>
+        {
+            new() { Type = RuleType.Binding, Target = "infDPS.toma.CNPJ", Source = "Borrower.FederalTaxNumber" }
+        };
+        var resolver = new TypedRuleResolver(rules);
+        var document = CreateMinimalDocument();
+        document.Borrower = new Borrower { FederalTaxNumber = 0 };
+        var profile = CreateMinimalProfile(rules);
+
+        // Act
+        var data = resolver.BuildDataDictionary(document, CreateEmptySchema(), profile);
+
+        // Assert
+        data.ShouldNotContainKey("infDPS.toma.CNPJ");
+    }
+
+    // ==========================================================
     // BindingPathPrefix
     // ==========================================================
 
