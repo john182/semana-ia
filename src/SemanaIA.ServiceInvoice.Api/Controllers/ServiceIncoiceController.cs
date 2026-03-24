@@ -2,6 +2,8 @@ using Microsoft.AspNetCore.Mvc;
 using SemanaIA.ServiceInvoice.Api.Mappers;
 using SemanaIA.ServiceInvoice.Api.Requests;
 using SemanaIA.ServiceInvoice.Application;
+using SemanaIA.ServiceInvoice.XmlGeneration.Manual;
+using SemanaIA.ServiceInvoice.XmlGeneration.SchemaEngine;
 
 namespace SemanaIA.ServiceInvoice.Api.Controllers;
 
@@ -44,5 +46,66 @@ public class ServiceIncoiceController : ControllerBase
             result.IsFallback,
             result.FallbackReason,
         });
+    }
+
+    /// <summary>
+    /// Comparar XML gerado pelo serializer manual (produção/XBuilder) vs schema engine,
+    /// lado a lado, para o mesmo payload de entrada. Endpoint de demonstração.
+    /// </summary>
+    [HttpPost("xml/compare")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [Tags("Demonstração")]
+    public IActionResult CompareXml(
+        [FromBody] NfseGenerateXmlRequest request,
+        [FromServices] NationalDpsManualSerializer manualSerializer,
+        [FromServices] ProviderSerializerFactory providerFactory)
+    {
+        var document = NfseRequestToDpsDocumentModelMapper.Map(request);
+        var municipalityCode = document.Provider.MunicipalityCode;
+
+        // Manual serializer (XBuilder — production baseline)
+        var manualResult = manualSerializer.Serialize(document);
+
+        // Schema engine (runtime, resolves provider by municipality)
+        var engineResult = providerFactory.GenerateXml(document, municipalityCode);
+
+        return Ok(new
+        {
+            request.ExternalId,
+            municipalityCode,
+            manual = new
+            {
+                generatedBy = "XBuilder (Manual)",
+                xml = manualResult.Xml,
+                rootElement = manualResult.RootElement,
+            },
+            engine = new
+            {
+                generatedBy = "SchemaEngine",
+                providerName = engineResult.ProviderName,
+                xml = engineResult.Xml,
+                isValid = engineResult.IsValid,
+                serializationErrors = engineResult.Errors.Select(e => $"[{e.Kind}] {e.Field}: {e.Message}").ToList(),
+                validationErrors = engineResult.ValidationErrors,
+            },
+            comparison = new
+            {
+                manualElementCount = CountXmlElements(manualResult.Xml),
+                engineElementCount = CountXmlElements(engineResult.Xml),
+                areIdentical = manualResult.Xml == engineResult.Xml,
+            }
+        });
+    }
+
+    // --- Private methods ---
+
+    private static int CountXmlElements(string? xml)
+    {
+        if (string.IsNullOrEmpty(xml)) return 0;
+        try
+        {
+            return System.Xml.Linq.XDocument.Parse(xml).Root?.Descendants().Count() ?? 0;
+        }
+        catch { return -1; }
     }
 }
