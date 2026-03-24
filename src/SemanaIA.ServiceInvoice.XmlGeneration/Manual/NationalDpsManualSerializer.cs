@@ -312,7 +312,7 @@ public class NationalDpsManualSerializer
         {
             if (doc.Location is null)
             {
-                if (doc.TaxationType == TaxationType.OutsideCity)
+                if (doc.TaxationType.HasFlag(TaxationType.OutsideCity))
                 {
                     var borrowerCountry = doc.Borrower.Address?.Country;
                     if (string.IsNullOrWhiteSpace(borrowerCountry) || borrowerCountry.Equals(BRA, StringComparison.OrdinalIgnoreCase))
@@ -520,15 +520,9 @@ public class NationalDpsManualSerializer
     {
         return XBuilder.Fragment(xml =>
         {
-            xml.tribISSQN(doc.TaxationType switch
-            {
-                TaxationType.Export => "3",
-                TaxationType.Immune => "2",
-                TaxationType.Free => "4",
-                _ => "1"
-            });
+            xml.tribISSQN(GetTribISSQNCode(doc.TaxationType));
 
-            if (doc.TaxationType == TaxationType.Export)
+            if (doc.TaxationType.HasFlag(TaxationType.Export))
             {
                 var country = doc.Borrower.Address?.Country;
                 if (!string.IsNullOrWhiteSpace(country))
@@ -538,7 +532,7 @@ public class NationalDpsManualSerializer
             if (doc.ImmunityType is not null)
                 xml.tpImunidade((int)doc.ImmunityType);
 
-            if (doc.TaxationType is TaxationType.SuspendedCourtDecision or TaxationType.SuspendedAdministrativeProcedure)
+            if (doc.TaxationType.HasFlag(TaxationType.SuspendedCourtDecision) || doc.TaxationType.HasFlag(TaxationType.SuspendedAdministrativeProcedure))
             {
                 var processNumber = doc.Suspension?.ProcessNumber is not null
                     ? new string(doc.Suspension.ProcessNumber.Where(char.IsDigit).ToArray())
@@ -548,7 +542,7 @@ public class NationalDpsManualSerializer
                 {
                     xml.exigSusp(XBuilder.Fragment(es =>
                     {
-                        es.tpSusp(doc.TaxationType == TaxationType.SuspendedCourtDecision ? "1" : "2");
+                        es.tpSusp(doc.TaxationType.HasFlag(TaxationType.SuspendedCourtDecision) ? "1" : "2");
                         es.nProcesso(processNumber);
                     }));
                 }
@@ -570,7 +564,7 @@ public class NationalDpsManualSerializer
             xml.tpRetISSQN(retentionTypeXmlValue);
 
             if (doc.IssRate is not null && doc.IssRate > 0 &&
-                doc.TaxationType is not (TaxationType.Export or TaxationType.Immune))
+                !doc.TaxationType.HasFlag(TaxationType.Export) && !doc.TaxationType.HasFlag(TaxationType.Immune))
             {
                 xml.pAliq(Fix(doc.IssRate * 100));
             }
@@ -813,5 +807,13 @@ public class NationalDpsManualSerializer
     private static string Fix(decimal? value)
     {
         return (value ?? 0).ToString("0.00", CultureInfo.InvariantCulture);
+    }
+
+    private static string GetTribISSQNCode(TaxationType taxationType)
+    {
+        if (taxationType.HasFlag(TaxationType.Export)) return "3";
+        if (taxationType.HasFlag(TaxationType.Immune)) return "2";
+        if (taxationType.HasFlag(TaxationType.Free)) return "4";
+        return "1";
     }
 }

@@ -100,15 +100,17 @@ public class NationalDpsXBuilderXmlBuilder
             {
                 trib.tribMun(XBuilder.Fragment(tribMun =>
                 {
-                    tribMun.tribISSQN(model.TaxationType switch
-                    {
-                        TaxationType.Export => "3",
-                        TaxationType.Immune => "2",
-                        TaxationType.Free => "4",
-                        _ => "1"
-                    });
+                    tribMun.tribISSQN(GetTribISSQNCode(model.TaxationType));
                     tribMun.tpRetISSQN(1);
                 }));
             }));
         });
+
+    private static string GetTribISSQNCode(TaxationType taxationType)
+    {
+        if (taxationType.HasFlag(TaxationType.Export)) return "3";
+        if (taxationType.HasFlag(TaxationType.Immune)) return "2";
+        if (taxationType.HasFlag(TaxationType.Free)) return "4";
+        return "1";
+    }
 }

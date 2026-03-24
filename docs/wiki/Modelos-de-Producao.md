@@ -310,7 +310,7 @@ public class Lease
 public class ForeignTrade
 {
     ServiceModeEnum ServiceMode;
-    RetaionShipEnum RelationShip;
+    RelationShipEnum RelationShip;
     string Currency;
     decimal? ServiceAmountInCurrency;
     SupportMechanismProviderEnum SupportMechanismProvider;
@@ -612,10 +612,12 @@ public enum ServiceModeEnum
 }
 ```
 
-### RetaionShipEnum
+### RelationShipEnum
+
+> **Nota:** Na produção o enum chama-se `RetaionShipEnum` (typo herdado). No SemanaIA foi corrigido para `RelationShipEnum`.
 
 ```csharp
-public enum RetaionShipEnum
+public enum RelationShipEnum
 {
     NoLink = 0, Controlled = 1, Controller = 2, Affiliate = 3,
     HeadOffice = 4, Branch = 5, OtherLink = 6
