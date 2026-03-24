@@ -35,11 +35,19 @@ public class IbsCbs
     public int FinNFSeCode => (int)Purpose - 1;
 
     public bool? IsDonation { get; set; }
-    public bool? PersonalUse { get; set; }
+    public bool? PersonalUse { get; set; } = false;
     public string? OperationIndicator { get; set; }
     public IbsCbsOperationType? OperationType { get; set; }
     public IbsCbsDestinationIndicator DestinationIndicator { get; set; } = IbsCbsDestinationIndicator.SameAsBuyer;
     public string? SituationCode { get; set; }
+
+    /// <summary>
+    /// CST code: uses SituationCode if provided, otherwise first 3 digits of ClassCode.
+    /// </summary>
+    public string? CstCode => !string.IsNullOrEmpty(SituationCode)
+        ? SituationCode
+        : ClassCode?.Length >= 3 ? ClassCode[..3] : ClassCode;
+
     public decimal? Basis { get; set; }
     public decimal? ReimbursedResuppliedAmount { get; set; }
     public decimal? DeductionReductionAmount { get; set; }
