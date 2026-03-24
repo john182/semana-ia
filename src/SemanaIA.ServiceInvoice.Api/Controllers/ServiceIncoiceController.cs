@@ -50,11 +50,13 @@ public class ServiceIncoiceController : ControllerBase
 
     /// <summary>
     /// Comparar XML gerado pelo serializer manual (produção/XBuilder) vs schema engine,
-    /// lado a lado, para o mesmo payload de entrada. Endpoint de demonstração.
+    /// lado a lado, para o mesmo payload de entrada.
+    /// NOTA: Endpoint de demonstração/desenvolvimento. Não expor em produção sem autenticação.
     /// </summary>
     [HttpPost("xml/compare")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [Tags("Demonstração")]
+    [ApiExplorerSettings(GroupName = "demo")]
     public IActionResult CompareXml(
         [FromBody] NfseGenerateXmlRequest request,
         [FromServices] NationalDpsManualSerializer manualSerializer,

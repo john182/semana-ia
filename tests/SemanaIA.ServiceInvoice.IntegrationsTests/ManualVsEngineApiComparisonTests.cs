@@ -53,7 +53,7 @@ public class ManualVsEngineApiComparisonTests : IClassFixture<WebApplicationFact
         // Arrange — create provider
         var uniqueId = Guid.NewGuid().ToString("N")[..6];
         var providerName = $"e2e-cmp-{uniqueId}";
-        var municipalityCode = $"{3000000 + Math.Abs(uniqueId.GetHashCode()) % 999}";
+        var municipalityCode = $"{3000000 + (uniqueId.GetHashCode() & int.MaxValue) % 999}";
         var xsdDir = Path.Combine(_testDataDir, "national", "xsd");
 
         var createResponse = await CreateProvider(providerName, xsdDir, municipalityCode);

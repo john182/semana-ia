@@ -432,8 +432,8 @@ public class TypedRuleResolver : IProviderRuleResolver
     /// Checks whether a resolved value is empty or represents an unset default that should not
     /// populate the data dictionary. This prevents optional structures (like toma, interm)
     /// from being emitted when their source data is unset (empty strings, zero identifiers).
-    /// Numeric zero for long/int is treated as unset because identifier fields (FederalTaxNumber)
-    /// use 0 as default, and legitimate zero values are typically bound via constants.
+    /// Only long zero is treated as unset (identifier fields like FederalTaxNumber use 0 as default).
+    /// Int zero is NOT filtered — it is a valid domain value (e.g., regEspTrib=0 means "Nenhum").
     /// </summary>
     private static bool IsEmptyOrDefaultValue(object rawValue)
     {

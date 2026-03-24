@@ -253,7 +253,7 @@ public class ProviderConfigGenerator
         ["prest"] = new(StringComparer.OrdinalIgnoreCase)
         {
             ["CNPJ"] = "Provider.Cnpj",
-            ["CPF"] = "Provider.Cnpj",
+            ["CPF"] = "Provider.FederalTaxNumber | padLeft:11:0",
             ["IM"] = "Provider.MunicipalTaxNumber",
             ["cMun"] = "Provider.MunicipalityCode",
             ["CEP"] = "Provider.Address.PostalCode | digitsOnly | padLeft:8:0",
