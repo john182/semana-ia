@@ -28,12 +28,29 @@ public class IbsCbs
 {
     public string? ClassCode { get; set; }
     public IbsCbsPurpose Purpose { get; set; } = IbsCbsPurpose.Regular;
+
+    /// <summary>
+    /// NFSe finNFSe code: 0-based (Purpose enum is 1-based: Regular=1 → finNFSe=0).
+    /// </summary>
+    public int FinNFSeCode => (int)Purpose - 1;
+
     public bool? IsDonation { get; set; }
-    public bool? PersonalUse { get; set; }
+    public bool PersonalUse { get; set; } = false;
     public string? OperationIndicator { get; set; }
     public IbsCbsOperationType? OperationType { get; set; }
     public IbsCbsDestinationIndicator DestinationIndicator { get; set; } = IbsCbsDestinationIndicator.SameAsBuyer;
     public string? SituationCode { get; set; }
+
+    /// <summary>
+    /// CST code: uses SituationCode if provided; otherwise computed from ClassCode by
+    /// left-padding to 6 characters with '0' and taking the first 3 digits.
+    /// </summary>
+    public string? CstCode => !string.IsNullOrEmpty(SituationCode)
+        ? SituationCode
+        : string.IsNullOrEmpty(ClassCode)
+            ? ClassCode
+            : ClassCode.PadLeft(6, '0')[..3];
+
     public decimal? Basis { get; set; }
     public decimal? ReimbursedResuppliedAmount { get; set; }
     public decimal? DeductionReductionAmount { get; set; }

@@ -9,9 +9,19 @@ public class SchemaBasedXmlSerializer
     private const string VersaoAttributeName = "versao";
 
     /// <summary>
+    /// Minimum path depth (number of dot-separated segments) at which the generic field skip
+    /// heuristic is applied. Elements at shallower depths are core business containers
+    /// (e.g., prest, toma, prest.end, toma.end, prest.end.endNac) whose data is always intentional.
+    /// Only deeper optional sub-structures (e.g., obra.end.endNac, valores.vDedRed.documentos.docDedRed.fornec)
+    /// may be skipped when populated exclusively by spillover from the mapping dictionary.
+    /// </summary>
+    private const int MinimumDepthForGenericFieldSkip = 5;
+
+    /// <summary>
     /// Fields that appear broadly across multiple optional containers (person, address)
     /// but do not represent specific business data for any given container.
-    /// Used to avoid emitting optional sub-structures when only generic mapped fields are present.
+    /// Used to avoid emitting deep optional sub-structures when only generic mapped fields are present.
+    /// This heuristic is only applied at depth >= <see cref="MinimumDepthForGenericFieldSkip"/>.
     /// </summary>
     private static readonly HashSet<string> GenericReusableFields = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -55,13 +65,13 @@ public class SchemaBasedXmlSerializer
 
             AddNamespaceDeclarations(rootElement, schema.NamespaceMap, schema.TargetNamespace);
 
-            if (version is not null && RootTypeHasVersaoAttribute(rootType))
+            if (!string.IsNullOrEmpty(version) && RootTypeHasVersaoAttribute(rootType))
                 rootElement.SetAttributeValue(VersaoAttributeName, version);
 
             BuildComplexTypeContent(rootElement, rootType, "", data, resolver, typeMap, ns, errors);
 
             var doc = new XDocument(new XDeclaration("1.0", "utf-8", null), rootElement);
-            var xml = doc.Declaration + Environment.NewLine + doc.Root;
+            var xml = doc.Declaration + doc.Root.ToString(SaveOptions.DisableFormatting);
 
             return errors.Count > 0
                 ? new SerializationResult(xml, false, errors, [])
@@ -189,7 +199,7 @@ public class SchemaBasedXmlSerializer
                 dataKey.StartsWith(path + ".", StringComparison.Ordinal) ||
                 dataKey == path);
 
-            if (hasChildData && !element.IsRequired)
+            if (hasChildData && !element.IsRequired && IsDeepEnoughForGenericSkip(path))
             {
                 var childKeys = data.Keys
                     .Where(key => key.StartsWith(path + ".", StringComparison.Ordinal))
@@ -351,5 +361,23 @@ public class SchemaBasedXmlSerializer
 
         return rootType.Attributes.Any(attribute =>
             string.Equals(attribute.Name, VersaoAttributeName, StringComparison.OrdinalIgnoreCase));
+    }
+
+    /// <summary>
+    /// Determines whether the given path is deep enough in the schema tree for the
+    /// generic reusable field skip heuristic to apply. Core business containers like
+    /// prest, toma, and their direct children (e.g., prest.end, toma.end) are at
+    /// shallow depths and should never be skipped based on field name alone.
+    /// </summary>
+    private static bool IsDeepEnoughForGenericSkip(string path)
+    {
+        var segmentCount = 1;
+        foreach (var character in path)
+        {
+            if (character == '.')
+                segmentCount++;
+        }
+
+        return segmentCount >= MinimumDepthForGenericFieldSkip;
     }
 }

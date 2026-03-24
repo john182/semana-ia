@@ -43,6 +43,10 @@ public class DpsDocumentFieldResolver
             // Convert enums to their underlying int value (consistent with legacy binder)
             if (current is not null && current.GetType().IsEnum)
                 current = Convert.ToInt32(current);
+
+            // Convert booleans to 0/1 (NFSe XML convention: "0"=false, "1"=true)
+            if (current is bool boolValue)
+                current = boolValue ? 1 : 0;
         }
 
         return current;

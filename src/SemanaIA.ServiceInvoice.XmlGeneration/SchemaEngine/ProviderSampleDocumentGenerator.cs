@@ -12,7 +12,7 @@ public class ProviderSampleDocumentGenerator
     private const string DummyFederalServiceCode = "010101";
     private const string DummyServiceDescription = "Sample service for onboarding validation";
     private const string DummyBorrowerName = "Sample Borrower";
-    private const string DummyCityServiceCode = "0101";
+    private const string DummyCityServiceCode = "010";
     private const string DummySeries = "00001";
     private const string DummyProviderStreet = "RUA SAMPLE PROVIDER";
     private const string DummyProviderNumber = "100";

@@ -4,10 +4,7 @@ public static class CommonFieldMappingDictionary
 {
     public static readonly Dictionary<string, string> Mappings = new(StringComparer.OrdinalIgnoreCase)
     {
-        // Provider identification
-        ["CNPJ"] = "Provider.Cnpj",
-        ["CPF"] = "Borrower.FederalTaxNumber",
-        ["IM"] = "Provider.MunicipalTaxNumber",
+        // Provider identification (CNPJ, CPF, IM resolved by ContextualMappings in ProviderConfigGenerator)
         ["InscricaoMunicipal"] = "Provider.MunicipalTaxNumber",
 
         // Location
@@ -47,31 +44,27 @@ public static class CommonFieldMappingDictionary
         ["QuantidadeDps"] = "const:1",
         ["QuantidadeRps"] = "const:1",
 
-        // Borrower
-        ["xNome"] = "Borrower.Name",
+        // Borrower (xNome resolved by ContextualMappings in ProviderConfigGenerator)
         ["RazaoSocial"] = "Borrower.Name",
         ["xEmail"] = "Borrower.Email",
         ["Email"] = "Borrower.Email",
         ["Telefone"] = "Borrower.PhoneNumber",
         ["Fone"] = "Borrower.PhoneNumber",
 
-        // Tax — domain-specific codes (not C# enum values)
-        // opSimpNac: 1=Normal, 2=MEI, 3=SimplesNacional
-        // tribISSQN: 1=WithinCity, 2=Immune, 3=Export, 4=Free
-        // tpRetISSQN: 1=NotWithheld, 2=ByBuyer, 3=ByIntermediary
+        // Tax — opSimpNac/regEspTrib use computed properties (Provider.OpSimpNacCode/RegEspTribCode)
         ["tribISSQN"] = "const:1",
         ["IssRetido"] = "const:2",
         ["tpRetISSQN"] = "const:1",
-        ["OptanteSimplesNacional"] = "const:1",
-        ["opSimpNac"] = "const:1",
-        ["regEspTrib"] = "const:0",
+        ["OptanteSimplesNacional"] = "Provider.OpSimpNacCode",
+        ["opSimpNac"] = "Provider.OpSimpNacCode",
+        ["regEspTrib"] = "Provider.RegEspTribCode",
         ["IncentivoFiscal"] = "const:2",
         ["ExigibilidadeISS"] = "const:1",
 
-        // Totals
-        ["vTotTribFed"] = "const:0.00",
-        ["vTotTribEst"] = "const:0.00",
-        ["vTotTribMun"] = "const:0.00",
+        // Totals — pTotTribSN for SimplesNacional (default auto-gen scenario)
+        // vTotTrib/vTotTribFed/Est/Mun are mutually exclusive with pTotTribSN
+        // and require explicit rules when needed (not auto-generated)
+        ["pTotTribSN"] = "const:0.00",
 
         // RPS metadata (ABRASF)
         ["tpRps"] = "const:1",
@@ -108,6 +101,13 @@ public static class CommonFieldMappingDictionary
         ["Numero"] = "Number",
         ["CodigoVerificacao"] = "const:000",
         ["CodigoMunicipioIBGE"] = "Provider.MunicipalityCode",
+
+        // IBSCBS (Nacional)
+        ["finNFSe"] = "IbsCbs.FinNFSeCode",
+        ["indFinal"] = "IbsCbs.PersonalUse",
+        ["cIndOp"] = "IbsCbs.OperationIndicator | digitsOnly | maxLength:6",
+        ["indDest"] = "IbsCbs.DestinationIndicator",
+        ["cClassTrib"] = "IbsCbs.ClassCode",
 
         // Borrower address (ABRASF)
         ["Endereco"] = "Borrower.Address.Street",

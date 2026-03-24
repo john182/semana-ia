@@ -96,6 +96,22 @@ public class Provider
     public string? RegApTribSN { get; set; }
     public long? RegionalTaxNumber { get; set; }
 
+    /// <summary>
+    /// NFSe Nacional code for opSimpNac: 1=Normal, 2=MEI, 3=SimplesNacional.
+    /// Matches the manual serializer BuildRegTribProvider logic.
+    /// </summary>
+    public int OpSimpNacCode => TaxRegime switch
+    {
+        TaxRegime.MicroempreendedorIndividual => 2,
+        TaxRegime.SimplesNacional => 3,
+        _ => 1
+    };
+
+    /// <summary>
+    /// NFSe code for regEspTrib. Matches the manual serializer GetRegimeEspTribBySpecialTaxRegime logic.
+    /// </summary>
+    public int RegEspTribCode => (int)(SpecialTaxRegime ?? Domain.Models.SpecialTaxRegime.Automatico);
+
     public PersonType GetPersonType()
     {
         // Prefer Cnpj string if set (backward compat)

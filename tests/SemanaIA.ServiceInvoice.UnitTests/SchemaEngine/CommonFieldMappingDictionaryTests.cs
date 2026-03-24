@@ -98,11 +98,11 @@ public class CommonFieldMappingDictionaryTests
     public void Given_CaseInsensitiveLookup_Should_FindMapping()
     {
         // Arrange & Act
-        var exists = CommonFieldMappingDictionary.Mappings.TryGetValue("cnpj", out var mapping);
+        var exists = CommonFieldMappingDictionary.Mappings.TryGetValue("clocemi", out var mapping);
 
-        // Assert
+        // Assert — cLocEmi with lowercase should match
         exists.ShouldBeTrue();
-        mapping.ShouldBe("Provider.Cnpj");
+        mapping.ShouldBe("Provider.MunicipalityCode");
     }
 
     // ==========================================================

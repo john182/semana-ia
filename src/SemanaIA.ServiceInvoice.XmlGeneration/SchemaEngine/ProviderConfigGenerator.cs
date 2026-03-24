@@ -233,6 +233,62 @@ public class ProviderConfigGenerator
         return schemaDocument.RootInlineType;
     }
 
+    // Elements that are conditional in the manual serializer and should NOT be auto-generated.
+    // These require explicit rule configuration because their emission depends on business logic.
+    private static readonly HashSet<string> ConditionalElements = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "interm", "obra", "atvEvento", "comExt", "lsadppu",
+        "vDedRed", "vDescCondIncond", "exigSusp", "BM", "subst",
+        "dest", "imovel", "tribFed", "piscofins", "gReeRepRes"
+    };
+
+    // Context-aware field mappings: fields whose meaning changes depending on their parent context.
+    // The CommonFieldMappingDictionary is context-free (maps by field name alone).
+    // This dictionary resolves ambiguity when the same field name (e.g., CNPJ) appears
+    // in multiple contexts (prest, toma) with different domain sources.
+    private static readonly Dictionary<string, Dictionary<string, string>> ContextualMappings = new()
+    {
+        ["prest"] = new(StringComparer.OrdinalIgnoreCase)
+        {
+            ["CNPJ"] = "Provider.Cnpj",
+            ["CPF"] = "Provider.FederalTaxNumber | padLeft:11:0",
+            ["IM"] = "Provider.MunicipalTaxNumber",
+            ["cMun"] = "Provider.MunicipalityCode",
+            ["CEP"] = "Provider.Address.PostalCode | digitsOnly | padLeft:8:0",
+            ["xLgr"] = "Provider.Address.Street",
+            ["nro"] = "Provider.Address.Number",
+            ["xBairro"] = "Provider.Address.District",
+        },
+        ["IBSCBS"] = new(StringComparer.OrdinalIgnoreCase)
+        {
+            ["finNFSe"] = "IbsCbs.FinNFSeCode",
+            ["indFinal"] = "IbsCbs.PersonalUse",
+            ["cIndOp"] = "IbsCbs.OperationIndicator | digitsOnly | maxLength:6",
+            ["indDest"] = "IbsCbs.DestinationIndicator",
+            ["CST"] = "IbsCbs.CstCode",
+            ["cClassTrib"] = "IbsCbs.ClassCode",
+            // Skip sub-structures that need explicit rules
+            ["CNPJ"] = "",
+            ["CPF"] = "",
+            ["xNome"] = "",
+            ["IM"] = "",
+        },
+        ["toma"] = new(StringComparer.OrdinalIgnoreCase)
+        {
+            ["CNPJ"] = "",  // Skip in auto-gen — requires ConditionalEmission rule to choose CNPJ vs CPF
+            ["CPF"] = "Borrower.FederalTaxNumber | padLeft:11:0",
+            ["IM"] = "",  // Skip — borrower IM not commonly available
+            ["xNome"] = "Borrower.Name",
+            ["cMun"] = "Borrower.Address.City.Code",
+            ["CEP"] = "Borrower.Address.PostalCode | digitsOnly | padLeft:8:0",
+            ["xLgr"] = "Borrower.Address.Street",
+            ["nro"] = "Borrower.Address.Number",
+            ["xBairro"] = "Borrower.Address.District",
+            ["email"] = "Borrower.Email",
+            ["fone"] = "Borrower.PhoneNumber",
+        },
+    };
+
     private static void WalkSchemaTree(
         SchemaComplexType complexType,
         string pathPrefix,
@@ -247,6 +303,10 @@ public class ProviderConfigGenerator
                 ? element.Name
                 : $"{pathPrefix}.{element.Name}";
 
+            // Skip conditional elements — they require explicit business-logic rules
+            if (ConditionalElements.Contains(element.Name))
+                continue;
+
             var childType = element.InlineType;
             if (childType is null)
                 typeMap.TryGetValue(element.TypeName, out childType);
@@ -259,7 +319,14 @@ public class ProviderConfigGenerator
 
             var bindingPath = BuildBindingPath(elementPath, dataPathPrefix);
 
-            if (CommonFieldMappingDictionary.Mappings.TryGetValue(element.Name, out var propertyPath))
+            // Try context-aware mapping first (resolves CNPJ in prest vs toma etc.)
+            var contextMapping = ResolveContextualMapping(elementPath, element.Name);
+            if (contextMapping is not null)
+            {
+                if (contextMapping.Length > 0)  // Empty string means skip
+                    bindings[bindingPath] = contextMapping;
+            }
+            else if (CommonFieldMappingDictionary.Mappings.TryGetValue(element.Name, out var propertyPath))
             {
                 bindings[bindingPath] = propertyPath;
             }
@@ -274,6 +341,22 @@ public class ProviderConfigGenerator
                 formatting[element.Name] = formattingRule;
             }
         }
+    }
+
+    private static string? ResolveContextualMapping(string elementPath, string elementName)
+    {
+        foreach (var (contextKey, mappings) in ContextualMappings)
+        {
+            // Check if the element path contains this context (e.g., "infDPS.prest.end.cMun" contains "prest")
+            if (!elementPath.Contains($".{contextKey}.", StringComparison.OrdinalIgnoreCase) &&
+                !elementPath.StartsWith($"{contextKey}.", StringComparison.OrdinalIgnoreCase))
+                continue;
+
+            if (mappings.TryGetValue(elementName, out var mapping))
+                return mapping;
+        }
+
+        return null;
     }
 
     private static List<ProviderRule> GenerateTypedRules(
@@ -354,6 +437,10 @@ public class ProviderConfigGenerator
         else if (pipe == "digitsOnly")
         {
             rule.DigitsOnly = true;
+        }
+        else if (pipe.StartsWith("maxLength:"))
+        {
+            rule.MaxLength = int.Parse(pipe[10..]);
         }
         else if (pipe.StartsWith("decimal:"))
         {

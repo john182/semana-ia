@@ -122,9 +122,82 @@ public class SchemaBasedXmlSerializerAttributeTests
     // ==========================================================
 
     [Fact]
-    public void Given_OptionalElementWithOnlyGenericAddressData_Should_BeSkipped()
+    public void Given_DeepOptionalElementWithOnlyGenericAddressData_Should_BeSkipped()
     {
-        // Arrange -- schema has an optional complex element; data provides only generic address fields
+        // Arrange -- deep optional element (5+ segments) with only generic address fields.
+        // Models spillover scenario like infDPS.valores.vDedRed.documentos.docDedRed.fornec.end
+        // where generic dictionary data propagates into a deeply nested optional sub-structure.
+        var addressType = new SchemaComplexType(
+            "AddressType",
+            [
+                new SchemaElement("cMun", "string", false, 0, 1),
+                new SchemaElement("CEP", "string", false, 0, 1),
+                new SchemaElement("xLgr", "string", false, 0, 1)
+            ]);
+
+        var fornecType = new SchemaComplexType(
+            "FornecType",
+            [
+                new SchemaElement("address", "AddressType", false, 0, 1)
+            ]);
+
+        var docType = new SchemaComplexType(
+            "DocType",
+            [
+                new SchemaElement("fornec", "FornecType", false, 0, 1)
+            ]);
+
+        var docsType = new SchemaComplexType(
+            "DocsType",
+            [
+                new SchemaElement("docDedRed", "DocType", false, 0, 1)
+            ]);
+
+        var valoresType = new SchemaComplexType(
+            "ValoresType",
+            [
+                new SchemaElement("documentos", "DocsType", false, 0, 1)
+            ]);
+
+        var rootType = new SchemaComplexType(
+            "RootType",
+            [
+                new SchemaElement("name", "string", true, 1, 1),
+                new SchemaElement("valores", "ValoresType", false, 0, 1)
+            ]);
+
+        var schema = new SchemaDocument(
+            "http://test.com",
+            "Root",
+            [rootType, valoresType, docsType, docType, fornecType, addressType]);
+
+        var data = new Dictionary<string, object?>
+        {
+            ["name"] = "Test",
+            ["valores.documentos.docDedRed.fornec.address.cMun"] = "3550308",
+            ["valores.documentos.docDedRed.fornec.address.CEP"] = "01000000",
+            ["valores.documentos.docDedRed.fornec.address.xLgr"] = "RUA SAMPLE"
+        };
+
+        var resolver = new TypedRuleResolver([]);
+
+        // Act
+        var result = _sut.Serialize(schema, data, resolver, "RootType", "Root");
+
+        // Assert
+        result.Xml.ShouldNotBeNull();
+        var doc = XDocument.Parse(result.Xml!);
+        var ns = XNamespace.Get("http://test.com");
+        var addressElement = doc.Root!.Descendants(ns + "address").FirstOrDefault();
+        addressElement.ShouldBeNull("Deep optional element with only generic address fields should be skipped");
+    }
+
+    [Fact]
+    public void Given_ShallowOptionalElementWithOnlyGenericAddressData_Should_BeEmitted()
+    {
+        // Arrange -- shallow optional element (< 5 segments) should NOT be skipped
+        // even when only generic address fields are present, because shallow elements
+        // represent core business data (e.g., prest.end, toma.end).
         var addressType = new SchemaComplexType(
             "AddressType",
             [
@@ -163,7 +236,7 @@ public class SchemaBasedXmlSerializerAttributeTests
         var doc = XDocument.Parse(result.Xml!);
         var ns = XNamespace.Get("http://test.com");
         var addressElement = doc.Root!.Element(ns + "address");
-        addressElement.ShouldBeNull("Optional element with only generic address fields should be skipped");
+        addressElement.ShouldNotBeNull("Shallow optional element should be emitted even with only generic fields");
     }
 
     [Fact]

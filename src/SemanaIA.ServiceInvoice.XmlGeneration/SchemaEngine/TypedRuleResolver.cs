@@ -199,7 +199,7 @@ public class TypedRuleResolver : IProviderRuleResolver
         }
 
         var rawValue = fieldResolver.Resolve(rule.Source);
-        if (rawValue is null)
+        if (rawValue is null || IsEmptyOrDefaultValue(rawValue))
             return;
 
         var formattedValue = ApplyBindingFormatting(rawValue, rule);
@@ -332,7 +332,10 @@ public class TypedRuleResolver : IProviderRuleResolver
         if (rawValue.GetType().IsEnum)
             rawValue = Convert.ToInt32(rawValue);
 
-        var valueText = rawValue.ToString();
+        // Use InvariantCulture for decimals to ensure dot separator (not comma)
+        var valueText = rawValue is decimal decimalRaw
+            ? decimalRaw.ToString("0.00", CultureInfo.InvariantCulture)
+            : rawValue.ToString();
         if (valueText is null)
             return null;
 
@@ -423,5 +426,25 @@ public class TypedRuleResolver : IProviderRuleResolver
     {
         var lastDotIndex = target.LastIndexOf('.');
         return lastDotIndex >= 0 ? target[(lastDotIndex + 1)..] : target;
+    }
+
+    /// <summary>
+    /// Checks whether a resolved value is empty or represents an unset default that should not
+    /// populate the data dictionary. This prevents optional structures (like toma, interm)
+    /// from being emitted when their source data is unset (empty strings, zero identifiers).
+    /// Only long zero is treated as unset (identifier fields like FederalTaxNumber use 0 as default).
+    /// Int zero is NOT filtered — it is a valid domain value (e.g., regEspTrib=0 means "Nenhum").
+    /// </summary>
+    private static bool IsEmptyOrDefaultValue(object rawValue)
+    {
+        if (rawValue is string stringValue)
+            return string.IsNullOrWhiteSpace(stringValue);
+
+        // Only filter zero for long (identifier fields like FederalTaxNumber use 0 as "not set").
+        // Don't filter zero for int — int 0 is a valid domain value (e.g., regEspTrib=0 means "Nenhum").
+        if (rawValue is long longValue)
+            return longValue == 0;
+
+        return false;
     }
 }
