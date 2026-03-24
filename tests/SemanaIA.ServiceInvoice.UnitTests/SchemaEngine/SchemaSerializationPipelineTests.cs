@@ -92,7 +92,7 @@ public class SchemaSerializationPipelineTests
         Number = 1,
         IssuedOn = new DateTimeOffset(2026, 1, 20, 10, 0, 0, TimeSpan.FromHours(-3)),
         CompetenceDate = new DateOnly(2026, 1, 20),
-        Provider = new Provider
+        Provider = new Person
         {
             Cnpj = "00000000000000",
             MunicipalityCode = "3550308"
@@ -104,11 +104,8 @@ public class SchemaSerializationPipelineTests
             NbsCode = "101010100",
             MunicipalityCode = "3550308"
         },
-        Values = new Values
-        {
-            ServicesAmount = 1000.00m,
-            TaxationType = TaxationType.WithinCity
-        }
+        ServicesAmount = 1000.00m,
+        TaxationType = TaxationType.WithinCity
     };
 
     private static DpsDocument CreateProductionLikeDocument() => new()
@@ -119,14 +116,14 @@ public class SchemaSerializationPipelineTests
         Number = 1,
         IssuedOn = new DateTimeOffset(2026, 3, 10, 14, 58, 55, TimeSpan.FromHours(-3)),
         CompetenceDate = new DateOnly(2026, 3, 10),
-        Provider = new Provider
+        Provider = new Person
         {
             Cnpj = "11222333000181",
             MunicipalityCode = "3102100",
             TaxRegime = TaxRegime.LucroReal,
             SpecialTaxRegime = SpecialTaxRegime.ProfessionalSociety
         },
-        Borrower = new Borrower
+        Borrower = new Person
         {
             Name = "TOMADOR EXEMPLO S.A.",
             FederalTaxNumber = 99888777000166,
@@ -149,13 +146,10 @@ public class SchemaSerializationPipelineTests
             NbsCode = "118067000",
             MunicipalityCode = "3102100"
         },
-        Values = new Values
-        {
-            ServicesAmount = 0.10m,
-            TaxationType = TaxationType.WithinCity,
-            IssRate = 0.02m
-        },
-        Location = new Location
+        ServicesAmount = 0.10m,
+        TaxationType = TaxationType.WithinCity,
+        IssRate = 0.02m,
+        Location = new Address
         {
             State = "SP",
             City = new City { Code = "3550308", Name = "Sao Paulo" }

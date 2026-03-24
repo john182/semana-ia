@@ -23,8 +23,8 @@ public class NfseRequestToDpsDocumentModelMapperTests
         result.Borrower.Address.Country.ShouldBe("BRA");
         result.Service.FederalServiceCode.ShouldBe("01.01");
         result.Service.Description.ShouldBe("Serviço de teste");
-        result.Values.ServicesAmount.ShouldBe(1000.00m);
-        result.Values.TaxationType.ShouldBe(TaxationType.WithinCity);
+        result.ServicesAmount.ShouldBe(1000.00m);
+        result.TaxationType.ShouldBe(TaxationType.WithinCity);
     }
 
     [Fact]
@@ -65,9 +65,9 @@ public class NfseRequestToDpsDocumentModelMapperTests
         result.Benefit.ShouldNotBeNull();
         result.ActivityEvent.ShouldNotBeNull();
         result.AdditionalInformationGroup.ShouldNotBeNull();
-        result.Values.DiscountUnconditionedAmount.ShouldBe(200);
-        result.Values.DiscountConditionedAmount.ShouldBe(100);
-        result.Values.PisRate.ShouldBe(0.0065m);
+        result.DiscountUnconditionedAmount.ShouldBe(200);
+        result.DiscountConditionedAmount.ShouldBe(100);
+        result.PisRate.ShouldBe(0.0065m);
     }
 
     [Fact]
@@ -80,7 +80,7 @@ public class NfseRequestToDpsDocumentModelMapperTests
         var result = NfseRequestToDpsDocumentModelMapper.Map(request);
 
         // Assert
-        result.Values.TaxationType.ShouldBe(TaxationType.Export);
+        result.TaxationType.ShouldBe(TaxationType.Export);
     }
 
     [Fact]
@@ -93,7 +93,7 @@ public class NfseRequestToDpsDocumentModelMapperTests
         var result = NfseRequestToDpsDocumentModelMapper.Map(request);
 
         // Assert
-        result.Values.TaxationType.ShouldBe(TaxationType.WithinCity);
+        result.TaxationType.ShouldBe(TaxationType.WithinCity);
     }
 
     [Fact]
@@ -137,7 +137,7 @@ public class NfseRequestToDpsDocumentModelMapperTests
 
         // Assert
         result.ForeignTrade.ShouldNotBeNull();
-        result.ForeignTrade!.ServiceMode.ShouldBe(4);
+        result.ForeignTrade!.ServiceMode.ShouldBe(ServiceModeEnum.ConsumptionAbroad);
         result.ForeignTrade.Currency.ShouldBe("220");
         result.ForeignTrade.ServiceAmountInCurrency.ShouldBe(20000);
         result.ForeignTrade.MdicDelivery.ShouldBeTrue();

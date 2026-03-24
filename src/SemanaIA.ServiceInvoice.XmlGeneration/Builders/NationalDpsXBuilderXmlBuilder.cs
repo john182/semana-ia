@@ -94,21 +94,23 @@ public class NationalDpsXBuilderXmlBuilder
         {
             xml.vServPrest(XBuilder.Fragment(vServPrest =>
             {
-                vServPrest.vServ(model.Values.ServicesAmount.ToString("0.00", CultureInfo.InvariantCulture));
+                vServPrest.vServ(model.ServicesAmount.ToString("0.00", CultureInfo.InvariantCulture));
             }));
             xml.trib(XBuilder.Fragment(trib =>
             {
                 trib.tribMun(XBuilder.Fragment(tribMun =>
                 {
-                    tribMun.tribISSQN(model.Values.TaxationType switch
-                    {
-                        TaxationType.Export => "3",
-                        TaxationType.Immune => "2",
-                        TaxationType.Free => "4",
-                        _ => "1"
-                    });
-                    tribMun.tpRetISSQN(1);
+                    tribMun.tribISSQN(GetTribISSQNCode(model.TaxationType));
+                    tribMun.tpRetISSQN((int)(model.RetentionType ?? RetentionTypeEnum.NotWithheld) + 1);
                 }));
             }));
         });
+
+    private static string GetTribISSQNCode(TaxationType taxationType)
+    {
+        if (taxationType.HasFlag(TaxationType.Export)) return "3";
+        if (taxationType.HasFlag(TaxationType.Immune)) return "2";
+        if (taxationType.HasFlag(TaxationType.Free)) return "4";
+        return "1";
+    }
 }

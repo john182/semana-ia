@@ -79,7 +79,7 @@ public class ProviderSerializerFactoryTests
         IssuedOn = new DateTimeOffset(2026, 1, 20, 10, 0, 0, TimeSpan.FromHours(-3)),
         CompetenceDate = new DateOnly(2026, 1, 20),
         CityServiceCode = "040101",
-        Provider = new Provider
+        Provider = new Person
         {
             Cnpj = "00000000000000",
             MunicipalTaxNumber = "12345",
@@ -87,7 +87,7 @@ public class ProviderSerializerFactoryTests
             FederalTaxNumber = 12345678000199,
             TaxRegime = TaxRegime.SimplesNacional
         },
-        Borrower = new Borrower
+        Borrower = new Person
         {
             Name = "Sample Borrower",
             FederalTaxNumber = 98765432100
@@ -99,11 +99,8 @@ public class ProviderSerializerFactoryTests
             NbsCode = "101010100",
             MunicipalityCode = "3550308"
         },
-        Values = new Values
-        {
-            ServicesAmount = 1000.00m,
-            TaxationType = TaxationType.WithinCity
-        }
+        ServicesAmount = 1000.00m,
+        TaxationType = TaxationType.WithinCity
     };
 
 }

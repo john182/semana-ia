@@ -23,7 +23,7 @@
   "conditionals": {},
   "bindings": {
     "InfDeclaracaoPrestacaoServico.Competencia": "CompetenceDate | format:yyyy-MM-dd",
-    "InfDeclaracaoPrestacaoServico.Servico.Valores.ValorServicos": "Values.ServicesAmount | decimal:2",
+    "InfDeclaracaoPrestacaoServico.Servico.Valores.ValorServicos": "ServicesAmount | decimal:2",
     "InfDeclaracaoPrestacaoServico.Servico.IssRetido": "const:2",
     "InfDeclaracaoPrestacaoServico.Servico.ItemListaServico": "Service.FederalServiceCode",
     "InfDeclaracaoPrestacaoServico.Servico.CodigoNbs": "Service.NbsCode",

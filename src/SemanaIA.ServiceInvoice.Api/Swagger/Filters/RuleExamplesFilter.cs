@@ -56,10 +56,10 @@ public class RuleExamplesFilter : IOperationFilter
                 Summary = "Binding com formatacao: digitos, padding e complemento de zeros",
                 Value = ToJsonNode(RuleExamplesFactory.BindingFormattingExample())
             },
-            ["DefaultComFallback"] = new OpenApiExample
+            ["RetentionTypeEnumMapping"] = new OpenApiExample
             {
-                Summary = "Default com fallback: valor do dominio com padrao quando nulo",
-                Value = ToJsonNode(RuleExamplesFactory.DefaultWithFallbackExample())
+                Summary = "EnumMapping retencao ISSQN: mapeia enum do dominio (0-based) para XSD (1-based)",
+                Value = ToJsonNode(RuleExamplesFactory.RetentionTypeEnumMappingExample())
             },
             ["MapeamentoEnum"] = new OpenApiExample
             {

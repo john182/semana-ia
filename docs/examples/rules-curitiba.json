@@ -52,7 +52,7 @@
     {
       "type": "EnumMapping",
       "target": "InfRps.NaturezaOperacao",
-      "source": "Values.TaxationType",
+      "source": "TaxationType",
       "mappings": {
         "WithinCity": "1",
         "OutsideCity": "2",
@@ -96,48 +96,48 @@
     {
       "type": "Binding",
       "target": "InfRps.Servico.Valores.ValorServicos",
-      "source": "Values.ServicesAmount",
+      "source": "ServicesAmount",
       "format": "0.00"
     },
     {
       "type": "Default",
       "target": "InfRps.Servico.Valores.ValorDeducoes",
-      "source": "Values.DeductionsAmount",
+      "source": "DeductionsAmount",
       "fallbackValue": "0.00",
       "format": "0.00"
     },
     {
       "type": "Default",
       "target": "InfRps.Servico.Valores.ValorPis",
-      "source": "Values.PisAmountWithheld",
+      "source": "PisAmountWithheld",
       "fallbackValue": "0.00",
       "format": "0.00"
     },
     {
       "type": "Default",
       "target": "InfRps.Servico.Valores.ValorCofins",
-      "source": "Values.CofinsAmountWithheld",
+      "source": "CofinsAmountWithheld",
       "fallbackValue": "0.00",
       "format": "0.00"
     },
     {
       "type": "Default",
       "target": "InfRps.Servico.Valores.ValorInss",
-      "source": "Values.InssAmountWithheld",
+      "source": "InssAmountWithheld",
       "fallbackValue": "0.00",
       "format": "0.00"
     },
     {
       "type": "Default",
       "target": "InfRps.Servico.Valores.ValorIr",
-      "source": "Values.IrAmountWithheld",
+      "source": "IrAmountWithheld",
       "fallbackValue": "0.00",
       "format": "0.00"
     },
     {
       "type": "Default",
       "target": "InfRps.Servico.Valores.ValorCsll",
-      "source": "Values.CsllAmountWithheld",
+      "source": "CsllAmountWithheld",
       "fallbackValue": "0.00",
       "format": "0.00"
     },
@@ -147,19 +147,19 @@
       "sourceType": "constant",
       "constantValue": "1",
       "action": "Emit",
-      "condition": { "field": "Values.IssAmountWithheld", "operator": "GreaterThan", "value": "0" },
+      "condition": { "field": "IssAmountWithheld", "operator": "GreaterThan", "value": "0" },
       "fallbackValue": "2"
     },
     {
       "type": "ConditionalEmission",
       "target": "InfRps.Servico.Valores.ValorIss",
-      "source": "Values.IssTaxAmount",
+      "source": "IssTaxAmount",
       "action": "Emit",
       "condition": {
         "logicalOperator": "Or",
         "conditions": [
-          { "field": "Values.IssTaxAmount", "operator": "GreaterThan", "value": "0" },
-          { "field": "Values.IssAmountWithheld", "operator": "GreaterThan", "value": "0" }
+          { "field": "IssTaxAmount", "operator": "GreaterThan", "value": "0" },
+          { "field": "IssAmountWithheld", "operator": "GreaterThan", "value": "0" }
         ]
       },
       "format": "0.00"
@@ -167,34 +167,34 @@
     {
       "type": "ConditionalEmission",
       "target": "InfRps.Servico.Valores.ValorIssRetido",
-      "source": "Values.IssAmountWithheld",
+      "source": "IssAmountWithheld",
       "action": "Emit",
-      "condition": { "field": "Values.IssAmountWithheld", "operator": "GreaterThan", "value": "0" },
+      "condition": { "field": "IssAmountWithheld", "operator": "GreaterThan", "value": "0" },
       "format": "0.00"
     },
     {
       "type": "Default",
       "target": "InfRps.Servico.Valores.OutrasRetencoes",
-      "source": "Values.OthersAmountWithheld",
+      "source": "OthersAmountWithheld",
       "fallbackValue": "0.00",
       "format": "0.00"
     },
     {
       "type": "Binding",
       "target": "InfRps.Servico.Valores.Aliquota",
-      "source": "Values.IssRate",
+      "source": "IssRate",
       "format": "0.0000"
     },
     {
       "type": "ConditionalEmission",
       "target": "InfRps.Servico.Valores.DescontoIncondicionado",
-      "source": "Values.DiscountUnconditionedAmount",
+      "source": "DiscountUnconditionedAmount",
       "action": "Emit",
       "condition": {
         "logicalOperator": "Or",
         "conditions": [
-          { "field": "Values.DiscountUnconditionedAmount", "operator": "GreaterThan", "value": "0" },
-          { "field": "Values.IssAmountWithheld", "operator": "GreaterThan", "value": "0" }
+          { "field": "DiscountUnconditionedAmount", "operator": "GreaterThan", "value": "0" },
+          { "field": "IssAmountWithheld", "operator": "GreaterThan", "value": "0" }
         ]
       },
       "format": "0.00"
@@ -202,13 +202,13 @@
     {
       "type": "ConditionalEmission",
       "target": "InfRps.Servico.Valores.DescontoCondicionado",
-      "source": "Values.DiscountConditionedAmount",
+      "source": "DiscountConditionedAmount",
       "action": "Emit",
       "condition": {
         "logicalOperator": "Or",
         "conditions": [
-          { "field": "Values.DiscountConditionedAmount", "operator": "GreaterThan", "value": "0" },
-          { "field": "Values.IssAmountWithheld", "operator": "GreaterThan", "value": "0" }
+          { "field": "DiscountConditionedAmount", "operator": "GreaterThan", "value": "0" },
+          { "field": "IssAmountWithheld", "operator": "GreaterThan", "value": "0" }
         ]
       },
       "format": "0.00"

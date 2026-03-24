@@ -215,7 +215,7 @@ public class IbsCbsManualBuilder
         }
     }
 
-    private static Action<dynamic> BuildEndereco(Location address)
+    private static Action<dynamic> BuildEndereco(Address address)
     {
         return XBuilder.Fragment(end =>
         {
@@ -251,7 +251,7 @@ public class IbsCbsManualBuilder
         });
     }
 
-    private static Action<dynamic> BuildEnderecoSimples(Location location)
+    private static Action<dynamic> BuildEnderecoSimples(Address location)
     {
         return XBuilder.Fragment(end =>
         {
@@ -278,7 +278,7 @@ public class IbsCbsManualBuilder
         });
     }
 
-    private static bool HasAddressData(Location? address) =>
+    private static bool HasAddressData(Address? address) =>
         address is not null &&
         (!string.IsNullOrWhiteSpace(address.Street) ||
          !string.IsNullOrWhiteSpace(address.PostalCode) ||

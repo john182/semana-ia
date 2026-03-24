@@ -113,7 +113,7 @@ public class ExternalProviderXmlGenerationTests
         IssuedOn = DateTimeOffset.Now,
         CompetenceDate = DateOnly.FromDateTime(DateTime.Today),
         Series = "WEB", Number = 1, Version = "V_1.00.02",
-        Provider = new Provider
+        Provider = new Person
         {
             Cnpj = "12345678000199",
             MunicipalityCode = "3550308",
@@ -127,7 +127,8 @@ public class ExternalProviderXmlGenerationTests
             MunicipalityCode = "3550308",
             CnaeCode = "6201501"
         },
-        Values = new Values { ServicesAmount = 100.00m, TaxationType = TaxationType.WithinCity },
+        ServicesAmount = 100.00m,
+        TaxationType = TaxationType.WithinCity,
         CityServiceCode = "0101"
     };
 
@@ -137,7 +138,7 @@ public class ExternalProviderXmlGenerationTests
         IssuedOn = DateTimeOffset.Now,
         CompetenceDate = DateOnly.FromDateTime(DateTime.Today),
         Series = "WEB", Number = 1, Version = "V_1.00.02",
-        Provider = new Provider
+        Provider = new Person
         {
             Cnpj = "12345678000199",
             MunicipalityCode = "3550308",
@@ -148,7 +149,7 @@ public class ExternalProviderXmlGenerationTests
             TaxRegime = TaxRegime.SimplesNacional,
             SpecialTaxRegime = SpecialTaxRegime.Automatico
         },
-        Borrower = new Borrower
+        Borrower = new Person
         {
             Name = "TOMADOR EXEMPLO S.A.",
             FederalTaxNumber = 98765432000100,
@@ -169,12 +170,10 @@ public class ExternalProviderXmlGenerationTests
             MunicipalityCode = "3550308",
             CnaeCode = "6201501"
         },
-        Values = new Values
-        {
-            ServicesAmount = 5000.00m,
-            TaxationType = TaxationType.WithinCity,
-            IssRate = 0.05m, RetentionType = 1
-        },
+        ServicesAmount = 5000.00m,
+        TaxationType = TaxationType.WithinCity,
+        IssRate = 0.05m,
+        RetentionType = RetentionTypeEnum.NotWithheld,
         CityServiceCode = "040101"
     };
 
@@ -184,13 +183,13 @@ public class ExternalProviderXmlGenerationTests
         IssuedOn = DateTimeOffset.Now,
         CompetenceDate = DateOnly.FromDateTime(DateTime.Today),
         Series = "WEB", Number = 2, Version = "V_1.00.02",
-        Provider = new Provider
+        Provider = new Person
         {
             Cnpj = "11222333000181",
             MunicipalityCode = "3550308",
             MunicipalTaxNumber = "54321"
         },
-        Borrower = new Borrower
+        Borrower = new Person
         {
             Name = "TOMADOR PESSOA FISICA",
             FederalTaxNumber = 12345678901,
@@ -209,7 +208,8 @@ public class ExternalProviderXmlGenerationTests
             MunicipalityCode = "3550308",
             CnaeCode = "6201501"
         },
-        Values = new Values { ServicesAmount = 15000.00m, TaxationType = TaxationType.WithinCity },
+        ServicesAmount = 15000.00m,
+        TaxationType = TaxationType.WithinCity,
         CityServiceCode = "1701"
     };
 
@@ -408,11 +408,11 @@ public class ExternalProviderXmlGenerationTests
             "Service.NbsCode" => document.Service.NbsCode,
             "Service.MunicipalityCode" => document.Service.MunicipalityCode,
             "Service.CnaeCode" => document.Service.CnaeCode,
-            "Values.ServicesAmount" => document.Values.ServicesAmount.ToString("F2", CultureInfo.InvariantCulture),
-            "Values.TaxationType" => ((int)document.Values.TaxationType).ToString(),
-            "Values.IssRate" => document.Values.IssRate?.ToString("F4", CultureInfo.InvariantCulture) ?? "0.00",
-            "Values.RetentionType" => document.Values.RetentionType?.ToString() ?? "2",
-            "Values.IssAmount" => (document.Values.ServicesAmount * (document.Values.IssRate ?? 0)).ToString("F2", CultureInfo.InvariantCulture),
+            "ServicesAmount" => document.ServicesAmount.ToString("F2", CultureInfo.InvariantCulture),
+            "TaxationType" => ((int)document.TaxationType).ToString(),
+            "IssRate" => document.IssRate?.ToString("F4", CultureInfo.InvariantCulture) ?? "0.00",
+            "RetentionType" => ((int)(document.RetentionType ?? RetentionTypeEnum.NotWithheld) + 1).ToString(),
+            "IssAmount" => (document.ServicesAmount * (document.IssRate ?? 0)).ToString("F2", CultureInfo.InvariantCulture),
             "CityServiceCode" => document.CityServiceCode,
             "Environment" => document.Environment.ToString(),
             "Series" => document.Series,

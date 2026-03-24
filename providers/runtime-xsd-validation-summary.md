@@ -22,19 +22,19 @@
 
 | Provider | OperationalStatus | Status | Checks Passed | Total Checks | Failed Checks |
 |----------|-------------------|--------|---------------|--------------|---------------|
-| abrasf | NeedsEngineering | Schema Only | 3 | 5 | BindingsPresent, RuntimeProducible |
-| gissonline | NeedsEngineering | Schema Only | 3 | 5 | BindingsPresent, RuntimeProducible |
-| issnet | SupportReady | Fully Onboarded | 5 | 5 | None |
 | nacional | SupportReady | Fully Onboarded | 5 | 5 | None |
+| gissonline | NeedsEngineering | Schema Only | 3 | 5 | BindingsPresent, RuntimeProducible |
 | paulistana | SupportReady | Fully Onboarded | 5 | 5 | None |
-| simpliss | SupportReady | Fully Onboarded | 5 | 5 | None |
+| abrasf | NeedsEngineering | Schema Only | 3 | 5 | BindingsPresent, RuntimeProducible |
 | webiss | SupportReady | Fully Onboarded | 5 | 5 | None |
+| issnet | SupportReady | Fully Onboarded | 5 | 5 | None |
+| simpliss | SupportReady | Fully Onboarded | 5 | 5 | None |
 
 ## Gaps
 
 | Provider | Gap Kind | Gap | Reason |
 |----------|----------|-----|--------|
-| abrasf | ConfigurationGap | BindingsPresent | No typed rules configured. |
-| abrasf | EngineGap | RuntimeProducible | Skipped: analysis or bindings not available. |
 | gissonline | ConfigurationGap | BindingsPresent | No typed rules configured. |
 | gissonline | EngineGap | RuntimeProducible | Skipped: analysis or bindings not available. |
+| abrasf | ConfigurationGap | BindingsPresent | No typed rules configured. |
+| abrasf | EngineGap | RuntimeProducible | Skipped: analysis or bindings not available. |

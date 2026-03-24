@@ -51,16 +51,22 @@ public static class RuleExamplesFactory
     };
 
     /// <summary>
-    /// Default com fallback: usa valor do dominio quando disponivel, senao aplica valor padrao.
+    /// EnumMapping para retencao ISSQN: mapeia enum do dominio (0-based) para valores XSD (1-based).
     /// </summary>
-    public static object DefaultWithFallbackExample() => new[]
+    public static object RetentionTypeEnumMappingExample() => new[]
     {
         new
         {
-            type = "Default",
+            type = "EnumMapping",
             target = "infDPS.valores.trib.tribMun.tpRetISSQN",
-            source = "Values.RetentionType",
-            fallbackValue = "1"
+            source = "RetentionType",
+            mappings = new Dictionary<string, string>
+            {
+                ["NotWithheld"] = "1",
+                ["WithheldByBuyer"] = "2",
+                ["WithheldByIntermediary"] = "3"
+            },
+            defaultMapping = "1"
         }
     };
 
@@ -73,7 +79,7 @@ public static class RuleExamplesFactory
         {
             type = "EnumMapping",
             target = "infDPS.valores.trib.tribMun.tribISSQN",
-            source = "Values.TaxationType",
+            source = "TaxationType",
             mappings = new Dictionary<string, string>
             {
                 ["WithinCity"] = "1",
@@ -95,11 +101,11 @@ public static class RuleExamplesFactory
         {
             type = "ConditionalEmission",
             target = "infDPS.valores.trib.tribMun.tpImunidade",
-            source = "Values.ImmunityType",
+            source = "ImmunityType",
             action = "Emit",
             condition = new
             {
-                field = "Values.TaxationType",
+                field = "TaxationType",
                 @operator = "Equals",
                 value = "Immune"
             }
@@ -115,7 +121,7 @@ public static class RuleExamplesFactory
         {
             type = "ConditionalEmission",
             target = "infDPS.valores.trib.tribMun.Aliquota",
-            source = "Values.IssRate",
+            source = "IssRate",
             action = "Emit",
             condition = new
             {
@@ -123,7 +129,7 @@ public static class RuleExamplesFactory
                 conditions = new object[]
                 {
                     new { field = "Provider.TaxRegime", @operator = "Equals", value = "SimplesNacional" },
-                    new { field = "Values.IssRate", @operator = "GreaterThan", value = "0" }
+                    new { field = "IssRate", @operator = "GreaterThan", value = "0" }
                 }
             }
         }
@@ -185,7 +191,7 @@ public static class RuleExamplesFactory
         {
             type = "EnumMapping",
             target = "infDPS.valores.trib.tribMun.tribISSQN",
-            source = "Values.TaxationType",
+            source = "TaxationType",
             mappings = new Dictionary<string, string>
             {
                 ["WithinCity"] = "1",
@@ -200,11 +206,11 @@ public static class RuleExamplesFactory
         {
             type = "ConditionalEmission",
             target = "infDPS.valores.trib.tribMun.tpImunidade",
-            source = "Values.ImmunityType",
+            source = "ImmunityType",
             action = "Emit",
             condition = new
             {
-                field = "Values.TaxationType",
+                field = "TaxationType",
                 @operator = "Equals",
                 value = "Immune"
             }

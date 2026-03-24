@@ -55,7 +55,7 @@
     { "type": "Binding", "target": "infDPS.serv.cServ.cTribNac", "source": "Service.FederalServiceCode", "digitsOnly": true, "padLeft": 6, "padChar": "0" },
     { "type": "Binding", "target": "infDPS.serv.cServ.xDescServ", "source": "Service.Description" },
     { "type": "Binding", "target": "infDPS.serv.cServ.cNBS", "source": "Service.NbsCode", "digitsOnly": true },
-    { "type": "Binding", "target": "infDPS.valores.vServPrest.vServ", "source": "Values.ServicesAmount", "format": "F2" },
+    { "type": "Binding", "target": "infDPS.valores.vServPrest.vServ", "source": "ServicesAmount", "format": "F2" },
 
     {
       "type": "EnumMapping",
@@ -76,7 +76,7 @@
     {
       "type": "EnumMapping",
       "target": "infDPS.valores.trib.tribMun.tribISSQN",
-      "source": "Values.TaxationType",
+      "source": "TaxationType",
       "mappings": {
         "WithinCity": "1",
         "OutsideCity": "1",
@@ -87,10 +87,15 @@
       "defaultMapping": "1"
     },
     {
-      "type": "Default",
+      "type": "EnumMapping",
       "target": "infDPS.valores.trib.tribMun.tpRetISSQN",
-      "source": "Values.RetentionType",
-      "fallbackValue": "1"
+      "source": "RetentionType",
+      "mappings": {
+        "NotWithheld": "1",
+        "WithheldByBuyer": "2",
+        "WithheldByIntermediary": "3"
+      },
+      "defaultMapping": "1"
     },
 
     { "type": "Formatting", "target": "cTribNac", "padLeft": 6, "padChar": "0", "digitsOnly": true, "maxLength": 6 },

@@ -107,16 +107,28 @@ public class TypedRuleResolverTests
     // ==========================================================
 
     [Fact]
-    public void Given_DefaultRuleWithNullSource_Should_UseFallback()
+    public void Given_EnumMappingRuleForRetentionType_WithNullSource_Should_UseDefaultMapping()
     {
         // Arrange
         var rules = new List<ProviderRule>
         {
-            new() { Type = RuleType.Default, Target = "infDPS.valores.trib.tribMun.tpRetISSQN", Source = "Values.RetentionType", FallbackValue = "1" }
+            new()
+            {
+                Type = RuleType.EnumMapping,
+                Target = "infDPS.valores.trib.tribMun.tpRetISSQN",
+                Source = "RetentionType",
+                Mappings = new Dictionary<string, string>
+                {
+                    ["NotWithheld"] = "1",
+                    ["WithheldByBuyer"] = "2",
+                    ["WithheldByIntermediary"] = "3"
+                },
+                DefaultMapping = "1"
+            }
         };
         var resolver = new TypedRuleResolver(rules);
         var document = CreateMinimalDocument();
-        document.Values.RetentionType = null;
+        document.RetentionType = null;
         var profile = CreateMinimalProfile(rules);
 
         // Act
@@ -128,16 +140,28 @@ public class TypedRuleResolverTests
     }
 
     [Fact]
-    public void Given_DefaultRuleWithValuePresent_Should_UseSourceValue()
+    public void Given_EnumMappingRuleForRetentionType_WithheldByBuyer_Should_MapToXsdValue2()
     {
         // Arrange
         var rules = new List<ProviderRule>
         {
-            new() { Type = RuleType.Default, Target = "infDPS.valores.trib.tribMun.tpRetISSQN", Source = "Values.RetentionType", FallbackValue = "1" }
+            new()
+            {
+                Type = RuleType.EnumMapping,
+                Target = "infDPS.valores.trib.tribMun.tpRetISSQN",
+                Source = "RetentionType",
+                Mappings = new Dictionary<string, string>
+                {
+                    ["NotWithheld"] = "1",
+                    ["WithheldByBuyer"] = "2",
+                    ["WithheldByIntermediary"] = "3"
+                },
+                DefaultMapping = "1"
+            }
         };
         var resolver = new TypedRuleResolver(rules);
         var document = CreateMinimalDocument();
-        document.Values.RetentionType = 2;
+        document.RetentionType = RetentionTypeEnum.WithheldByBuyer;
         var profile = CreateMinimalProfile(rules);
 
         // Act
@@ -161,7 +185,7 @@ public class TypedRuleResolverTests
             {
                 Type = RuleType.EnumMapping,
                 Target = "infDPS.valores.trib.tribMun.tribISSQN",
-                Source = "Values.TaxationType",
+                Source = "TaxationType",
                 Mappings = new Dictionary<string, string>
                 {
                     ["WithinCity"] = "1",
@@ -173,7 +197,7 @@ public class TypedRuleResolverTests
         };
         var resolver = new TypedRuleResolver(rules);
         var document = CreateMinimalDocument();
-        document.Values.TaxationType = TaxationType.Immune;
+        document.TaxationType = TaxationType.Immune;
         var profile = CreateMinimalProfile(rules);
 
         // Act
@@ -193,7 +217,7 @@ public class TypedRuleResolverTests
             {
                 Type = RuleType.EnumMapping,
                 Target = "infDPS.valores.trib.tribMun.tribISSQN",
-                Source = "Values.TaxationType",
+                Source = "TaxationType",
                 Mappings = new Dictionary<string, string>
                 {
                     ["WithinCity"] = "1",
@@ -204,7 +228,7 @@ public class TypedRuleResolverTests
         };
         var resolver = new TypedRuleResolver(rules);
         var document = CreateMinimalDocument();
-        document.Values.TaxationType = TaxationType.ObjectiveImune;
+        document.TaxationType = TaxationType.ObjectiveImune;
         var profile = CreateMinimalProfile(rules);
 
         // Act
@@ -228,11 +252,11 @@ public class TypedRuleResolverTests
             {
                 Type = RuleType.ConditionalEmission,
                 Target = "infDPS.valores.trib.tribMun.pAliq",
-                Source = "Values.IssRate",
+                Source = "IssRate",
                 Action = RuleAction.Emit,
                 Condition = new RuleCondition
                 {
-                    Field = "Values.IssRate",
+                    Field = "IssRate",
                     Operator = ComparisonOperator.GreaterThan,
                     Value = "0"
                 }
@@ -240,7 +264,7 @@ public class TypedRuleResolverTests
         };
         var resolver = new TypedRuleResolver(rules);
         var document = CreateMinimalDocument();
-        document.Values.IssRate = 0.05m;
+        document.IssRate = 0.05m;
         var profile = CreateMinimalProfile(rules);
 
         // Act
@@ -260,11 +284,11 @@ public class TypedRuleResolverTests
             {
                 Type = RuleType.ConditionalEmission,
                 Target = "infDPS.valores.trib.tribMun.pAliq",
-                Source = "Values.IssRate",
+                Source = "IssRate",
                 Action = RuleAction.Emit,
                 Condition = new RuleCondition
                 {
-                    Field = "Values.IssRate",
+                    Field = "IssRate",
                     Operator = ComparisonOperator.GreaterThan,
                     Value = "0"
                 }
@@ -272,7 +296,7 @@ public class TypedRuleResolverTests
         };
         var resolver = new TypedRuleResolver(rules);
         var document = CreateMinimalDocument();
-        document.Values.IssRate = 0m;
+        document.IssRate = 0m;
         var profile = CreateMinimalProfile(rules);
 
         // Act
@@ -296,11 +320,11 @@ public class TypedRuleResolverTests
             {
                 Type = RuleType.ConditionalEmission,
                 Target = "infDPS.valores.trib.tribMun.tpImunidade",
-                Source = "Values.ImmunityType",
+                Source = "ImmunityType",
                 Action = RuleAction.Skip,
                 Condition = new RuleCondition
                 {
-                    Field = "Values.TaxationType",
+                    Field = "TaxationType",
                     Operator = ComparisonOperator.NotEquals,
                     Value = "Immune"
                 }
@@ -308,8 +332,8 @@ public class TypedRuleResolverTests
         };
         var resolver = new TypedRuleResolver(rules);
         var document = CreateMinimalDocument();
-        document.Values.TaxationType = TaxationType.WithinCity;
-        document.Values.ImmunityType = 1;
+        document.TaxationType = TaxationType.WithinCity;
+        document.ImmunityType = ImmunityTypeEnum.PublicEntitiesMutual;
         var profile = CreateMinimalProfile(rules);
 
         // Act
@@ -329,11 +353,11 @@ public class TypedRuleResolverTests
             {
                 Type = RuleType.ConditionalEmission,
                 Target = "infDPS.valores.trib.tribMun.tpImunidade",
-                Source = "Values.ImmunityType",
+                Source = "ImmunityType",
                 Action = RuleAction.Skip,
                 Condition = new RuleCondition
                 {
-                    Field = "Values.TaxationType",
+                    Field = "TaxationType",
                     Operator = ComparisonOperator.NotEquals,
                     Value = "Immune"
                 }
@@ -341,8 +365,8 @@ public class TypedRuleResolverTests
         };
         var resolver = new TypedRuleResolver(rules);
         var document = CreateMinimalDocument();
-        document.Values.TaxationType = TaxationType.Immune;
-        document.Values.ImmunityType = 1;
+        document.TaxationType = TaxationType.Immune;
+        document.ImmunityType = ImmunityTypeEnum.PublicEntitiesMutual;
         var profile = CreateMinimalProfile(rules);
 
         // Act
@@ -447,7 +471,7 @@ public class TypedRuleResolverTests
             {
                 Type = RuleType.EnumMapping,
                 Target = "infDPS.tribISSQN",
-                Source = "Values.TaxationType",
+                Source = "TaxationType",
                 Mappings = new Dictionary<string, string>
                 {
                     ["WithinCity"] = "1",
@@ -503,7 +527,7 @@ public class TypedRuleResolverTests
         };
         var resolver = new TypedRuleResolver(rules);
         var document = CreateMinimalDocument();
-        document.Borrower = new Borrower { Email = "" };
+        document.Borrower = new Person { Email = "" };
         var profile = CreateMinimalProfile(rules);
 
         // Act
@@ -523,7 +547,7 @@ public class TypedRuleResolverTests
         };
         var resolver = new TypedRuleResolver(rules);
         var document = CreateMinimalDocument();
-        document.Borrower = new Borrower { FederalTaxNumber = 0 };
+        document.Borrower = new Person { FederalTaxNumber = 0 };
         var profile = CreateMinimalProfile(rules);
 
         // Act
@@ -567,7 +591,7 @@ public class TypedRuleResolverTests
         // Arrange
         var rules = new List<ProviderRule>
         {
-            new() { Type = RuleType.Binding, Target = "infDPS.valores.vServPrest.vServ", Source = "Values.ServicesAmount", Format = "F2" }
+            new() { Type = RuleType.Binding, Target = "infDPS.valores.vServPrest.vServ", Source = "ServicesAmount", Format = "F2" }
         };
         var resolver = new TypedRuleResolver(rules);
         var document = CreateMinimalDocument();
@@ -593,7 +617,7 @@ public class TypedRuleResolverTests
         Number = 1,
         IssuedOn = new DateTimeOffset(2026, 1, 20, 10, 0, 0, TimeSpan.FromHours(-3)),
         CompetenceDate = new DateOnly(2026, 1, 20),
-        Provider = new Provider
+        Provider = new Person
         {
             Cnpj = "00000000000000",
             MunicipalityCode = "3550308"
@@ -605,11 +629,8 @@ public class TypedRuleResolverTests
             NbsCode = "101010100",
             MunicipalityCode = "3550308"
         },
-        Values = new Values
-        {
-            ServicesAmount = 1000.00m,
-            TaxationType = TaxationType.WithinCity
-        }
+        ServicesAmount = 1000.00m,
+        TaxationType = TaxationType.WithinCity
     };
 
     private static ProviderProfile CreateMinimalProfile(List<ProviderRule> rules) => new()

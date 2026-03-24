@@ -78,8 +78,7 @@ public class ProviderSampleDocumentGeneratorTests
         sampleDocument.Provider.Cnpj.ShouldNotBeNullOrWhiteSpace();
         sampleDocument.Service.ShouldNotBeNull();
         sampleDocument.Service.FederalServiceCode.ShouldNotBeNullOrWhiteSpace();
-        sampleDocument.Values.ShouldNotBeNull();
-        sampleDocument.Values.ServicesAmount.ShouldBeGreaterThan(0);
+        sampleDocument.ServicesAmount.ShouldBeGreaterThan(0);
     }
 
     // --- Private methods ---

@@ -38,9 +38,9 @@
     "RPS.ValorIR": "const:0",
     "RPS.ValorCSLL": "const:0",
     "RPS.CodigoServico": "Service.FederalServiceCode",
-    "RPS.AliquotaServicos": "Values.IssRate | decimal:4 | nullable:0",
+    "RPS.AliquotaServicos": "IssRate | decimal:4 | nullable:0",
     "RPS.ISSRetido": "const:false",
     "RPS.Discriminacao": "Service.Description",
-    "RPS.ValorInicialCobrado": "Values.ServicesAmount | decimal:2"
+    "RPS.ValorInicialCobrado": "ServicesAmount | decimal:2"
   }
 }

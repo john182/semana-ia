@@ -24,7 +24,6 @@ public class ProviderSampleDocumentGenerator
     private const string DefaultVersion = "V_1.00.02";
     private const int DefaultEnvironment = 2;
     private const int DefaultNumber = 1;
-    private const int DefaultRetentionType = 1; // NotWithheld
     private const decimal DefaultServicesAmount = 100.00m;
     private const long DummyBorrowerFederalTaxNumber = 98765432100;
 
@@ -42,18 +41,15 @@ public class ProviderSampleDocumentGenerator
             IssuedOn = DateTimeOffset.UtcNow,
             CompetenceDate = DateOnly.FromDateTime(DateTime.Today),
             Provider = BuildProvider(municipalityCode, allBindingExpressions),
-            Borrower = new Borrower
+            Borrower = new Person
             {
                 Name = DummyBorrowerName,
                 FederalTaxNumber = DummyBorrowerFederalTaxNumber
             },
             Service = BuildService(municipalityCode, allBindingExpressions),
-            Values = new Values
-            {
-                ServicesAmount = DefaultServicesAmount,
-                TaxationType = TaxationType.WithinCity,
-                RetentionType = DefaultRetentionType
-            }
+            ServicesAmount = DefaultServicesAmount,
+            TaxationType = TaxationType.WithinCity,
+            RetentionType = RetentionTypeEnum.NotWithheld
         };
 
         if (BindingsReferenceField(allBindingExpressions, "CityServiceCode"))
@@ -96,9 +92,9 @@ public class ProviderSampleDocumentGenerator
         return expressions;
     }
 
-    private static Provider BuildProvider(string municipalityCode, HashSet<string> allBindingExpressions)
+    private static Person BuildProvider(string municipalityCode, HashSet<string> allBindingExpressions)
     {
-        var provider = new Provider
+        var provider = new Person
         {
             Cnpj = DummyCnpj,
             MunicipalityCode = municipalityCode,

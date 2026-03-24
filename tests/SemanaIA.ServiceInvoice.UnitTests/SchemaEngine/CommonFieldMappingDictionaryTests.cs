@@ -128,7 +128,7 @@ public class CommonFieldMappingDictionaryTests
 
         // Assert
         exists.ShouldBeTrue();
-        mapping.ShouldBe("Values.ServicesAmount");
+        mapping.ShouldBe("ServicesAmount");
     }
 
     // ==========================================================
