@@ -31,8 +31,13 @@ public class SchemaSerializationPipeline
                 SerializationErrorKind.SchemaError, providerName,
                 $"No XSD files found in {xsdDir}")]);
 
+        // Use SendXsdSelector to find the correct send XSD (not just the first file)
+        var selector = new SendXsdSelector();
+        var selection = selector.Select(xsdDir);
+        var selectedXsd = selection.SelectedFile ?? xsdFiles[0];
+
         SchemaDocument schema;
-        try { schema = _analyzer.Analyze(xsdFiles[0]); }
+        try { schema = _analyzer.Analyze(selectedXsd); }
         catch (Exception ex)
         {
             return SerializationResult.Failure([new SerializationError(
@@ -58,7 +63,9 @@ public class SchemaSerializationPipeline
                 "Data binding failed", ex.Message)]);
         }
 
-        var resolvedVersion = version ?? profile.Version;
+        var resolvedVersion = !string.IsNullOrEmpty(version) ? version
+            : !string.IsNullOrEmpty(profile.Version) ? profile.Version
+            : schema.RootVersionAttribute ?? "1.01";
         var resolver = CreateResolver(profile);
         var resolvedRootComplexTypeName = profile.RootComplexTypeName ?? rootComplexTypeName;
         var resolvedRootElementName = profile.RootElementName ?? rootElementName;

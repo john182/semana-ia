@@ -1,0 +1,222 @@
+using System.Net;
+using System.Net.Http.Headers;
+using System.Net.Http.Json;
+using System.Text.Json;
+using System.Xml.Linq;
+using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.VisualStudio.TestPlatform.TestHost;
+using SemanaIA.ServiceInvoice.XmlGeneration.SchemaEngine;
+using Shouldly;
+using Xunit.Abstractions;
+
+namespace SemanaIA.ServiceInvoice.IntegrationsTests;
+
+/// <summary>
+/// E2E integration test: creates a provider via API, adds IBSCBS rules,
+/// generates XML via /nfse/xml/compare, and asserts manual = engine.
+/// </summary>
+[Trait("Category", "RequiresMongoDB")]
+public class ManualVsEngineApiComparisonTests : IClassFixture<WebApplicationFactory<Program>>, IAsyncLifetime
+{
+    private const string ProvidersEndpoint = "/api/v1/providers";
+    private const string CompareEndpoint = "/api/v1/nfse/xml/compare";
+
+    private readonly HttpClient _client;
+    private readonly ITestOutputHelper _output;
+    private readonly List<string> _createdProviderIds = new();
+    private string _testDataDir = string.Empty;
+
+    public ManualVsEngineApiComparisonTests(WebApplicationFactory<Program> factory, ITestOutputHelper output)
+    {
+        _client = factory.CreateClient();
+        _output = output;
+    }
+
+    public Task InitializeAsync()
+    {
+        _testDataDir = FindTestDataDir();
+        return Task.CompletedTask;
+    }
+
+    public async Task DisposeAsync()
+    {
+        foreach (var id in _createdProviderIds)
+        {
+            try { await _client.DeleteAsync($"{ProvidersEndpoint}/{id}"); }
+            catch { /* best effort */ }
+        }
+    }
+
+    [Fact]
+    public async Task Given_NacionalProviderWithIbscbsRules_Should_ProduceIdenticalXmlToManual()
+    {
+        // Arrange — create provider
+        var uniqueId = Guid.NewGuid().ToString("N")[..6];
+        var providerName = $"e2e-cmp-{uniqueId}";
+        var municipalityCode = $"{3000000 + Math.Abs(uniqueId.GetHashCode()) % 999}";
+        var xsdDir = Path.Combine(_testDataDir, "national", "xsd");
+
+        var createResponse = await CreateProvider(providerName, xsdDir, municipalityCode);
+        createResponse.StatusCode.ShouldBe(HttpStatusCode.Created,
+            $"Create failed: {await createResponse.Content.ReadAsStringAsync()}");
+
+        var createBody = await createResponse.Content.ReadFromJsonAsync<JsonElement>();
+        var providerId = createBody.GetProperty("id").GetString()!;
+        _createdProviderIds.Add(providerId);
+
+        var status = createBody.GetProperty("status").GetString();
+        _output.WriteLine($"Provider created: id={providerId}, status={status}");
+
+        // Add IBSCBS rules
+        var ibscbsRules = new List<object>
+        {
+            new { type = "Binding", target = "infDPS.IBSCBS.finNFSe", source = "IbsCbs.FinNFSeCode" },
+            new { type = "Binding", target = "infDPS.IBSCBS.indFinal", source = "IbsCbs.PersonalUse" },
+            new { type = "Binding", target = "infDPS.IBSCBS.cIndOp", source = "IbsCbs.OperationIndicator", digitsOnly = true, maxLength = 6 },
+            new { type = "Binding", target = "infDPS.IBSCBS.indDest", source = "IbsCbs.DestinationIndicator" },
+            new { type = "Binding", target = "infDPS.IBSCBS.valores.trib.gIBSCBS.CST", source = "IbsCbs.CstCode" },
+            new { type = "Binding", target = "infDPS.IBSCBS.valores.trib.gIBSCBS.cClassTrib", source = "IbsCbs.ClassCode" },
+        };
+
+        var addRulesResponse = await _client.PostAsJsonAsync($"{ProvidersEndpoint}/{providerId}/rules", ibscbsRules);
+        _output.WriteLine($"Add IBSCBS rules: {addRulesResponse.StatusCode}");
+
+        // Act — compare
+        var comparePayload = BuildComparePayload(municipalityCode);
+        var compareResponse = await _client.PostAsJsonAsync(CompareEndpoint, comparePayload);
+        compareResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
+
+        var body = await compareResponse.Content.ReadFromJsonAsync<JsonElement>();
+
+        var manualXml = body.GetProperty("manual").GetProperty("xml").GetString();
+        var engineXml = body.GetProperty("engine").GetProperty("xml").GetString();
+        var engineIsValid = body.GetProperty("engine").GetProperty("isValid").GetBoolean();
+        var engineProvider = body.GetProperty("engine").GetProperty("providerName").GetString();
+        var manualCount = body.GetProperty("comparison").GetProperty("manualElementCount").GetInt32();
+        var engineCount = body.GetProperty("comparison").GetProperty("engineElementCount").GetInt32();
+
+        _output.WriteLine($"Engine provider: {engineProvider}, isValid: {engineIsValid}");
+        _output.WriteLine($"Manual elements: {manualCount}, Engine elements: {engineCount}");
+
+        // Log errors for debugging
+        var serErrors = body.GetProperty("engine").GetProperty("serializationErrors");
+        var valErrors = body.GetProperty("engine").GetProperty("validationErrors");
+        foreach (var err in serErrors.EnumerateArray().Take(5))
+            _output.WriteLine($"  SER: {err.GetString()}");
+        foreach (var err in valErrors.EnumerateArray().Take(5))
+            _output.WriteLine($"  XSD: {err.GetString()}");
+
+        // Assert — engine resolved correct provider
+        engineProvider.ShouldBe(providerName);
+
+        // Assert — engine produced valid XML
+        engineIsValid.ShouldBeTrue("Engine XML should be XSD-valid");
+        engineXml.ShouldNotBeNull();
+        manualXml.ShouldNotBeNull();
+
+        // Assert — compare element paths
+        var manualPaths = CollectPaths(XDocument.Parse(manualXml).Root!);
+        var enginePaths = CollectPaths(XDocument.Parse(engineXml).Root!);
+
+        var onlyInManual = manualPaths.Except(enginePaths).ToList();
+        var onlyInEngine = enginePaths.Except(manualPaths).ToList();
+
+        if (onlyInManual.Count > 0)
+            _output.WriteLine($"Only in manual ({onlyInManual.Count}): {string.Join(", ", onlyInManual.Take(5))}");
+        if (onlyInEngine.Count > 0)
+            _output.WriteLine($"Only in engine ({onlyInEngine.Count}): {string.Join(", ", onlyInEngine.Take(5))}");
+
+        // Engine should have all elements manual has
+        onlyInManual.ShouldBeEmpty(
+            $"Engine missing {onlyInManual.Count} element(s) from manual:\n{string.Join("\n", onlyInManual)}");
+
+        // Engine should not have phantom elements
+        onlyInEngine.ShouldBeEmpty(
+            $"Engine has {onlyInEngine.Count} phantom element(s):\n{string.Join("\n", onlyInEngine)}");
+    }
+
+    // --- Private methods ---
+
+    private async Task<HttpResponseMessage> CreateProvider(string name, string xsdDir, string municipalityCode)
+    {
+        var content = new MultipartFormDataContent();
+        content.Add(new StringContent(name), "name");
+        content.Add(new StringContent(municipalityCode), "municipalityCodes");
+
+        foreach (var xsd in Directory.GetFiles(xsdDir, "*.xsd"))
+        {
+            var bytes = await File.ReadAllBytesAsync(xsd);
+            var xsdContent = new ByteArrayContent(bytes);
+            xsdContent.Headers.ContentType = new MediaTypeHeaderValue("application/xml");
+            content.Add(xsdContent, "xsdFiles", Path.GetFileName(xsd));
+        }
+
+        return await _client.PostAsync(ProvidersEndpoint, content);
+    }
+
+    private static object BuildComparePayload(string municipalityCode) => new
+    {
+        provider = new
+        {
+            federalTaxNumber = 12345678000199L,
+            municipalTaxNumber = "12345678",
+            taxRegime = "SimplesNacional",
+            address = new
+            {
+                country = "BRA", postalCode = "01000-000",
+                street = "RUA DO PRESTADOR", number = "500", district = "CENTRO",
+                city = new { code = municipalityCode }, state = "SP"
+            }
+        },
+        borrower = new
+        {
+            name = "CONSUMIDOR MINIMO LTDA",
+            federalTaxNumber = 191,
+            address = new
+            {
+                country = "BRA", postalCode = "01000-000",
+                street = "RUA DAS FLORES", number = "100", district = "CENTRO",
+                city = new { code = "3550308" }, state = "SP"
+            }
+        },
+        externalId = "NFSE-MIN-V4-0001",
+        federalServiceCode = "01.01",
+        description = "Serviço de Consultoria e Assessoria",
+        servicesAmount = 1000.00,
+        issuedOn = "2026-01-20T10:00:00-03:00",
+        taxationType = "WithinCity",
+        nbsCode = "101010100",
+        ibsCbs = new
+        {
+            isDonation = false,
+            operationIndicator = "1005011",
+            personalUse = false,
+            classCode = "000001"
+        },
+        location = new
+        {
+            country = "BRA", postalCode = "01000-000",
+            street = "RUA DA PRESTACAO", number = "50", district = "CENTRO",
+            city = new { code = municipalityCode }, state = "SP"
+        }
+    };
+
+    private static List<string> CollectPaths(XElement root, string prefix = "")
+    {
+        var paths = new List<string>();
+        var path = string.IsNullOrEmpty(prefix) ? root.Name.LocalName : $"{prefix}/{root.Name.LocalName}";
+        if (!root.HasElements) paths.Add(path);
+        else foreach (var child in root.Elements()) paths.AddRange(CollectPaths(child, path));
+        return paths;
+    }
+
+    private static string FindTestDataDir()
+    {
+        for (var dir = AppContext.BaseDirectory; dir is not null; dir = Directory.GetParent(dir)?.FullName)
+        {
+            var candidate = Path.Combine(dir, "tests", "SemanaIA.ServiceInvoice.UnitTests", "data");
+            if (Directory.Exists(candidate)) return candidate;
+        }
+        throw new DirectoryNotFoundException("data/ not found");
+    }
+}

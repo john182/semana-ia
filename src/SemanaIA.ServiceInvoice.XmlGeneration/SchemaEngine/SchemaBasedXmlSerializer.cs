@@ -65,7 +65,7 @@ public class SchemaBasedXmlSerializer
 
             AddNamespaceDeclarations(rootElement, schema.NamespaceMap, schema.TargetNamespace);
 
-            if (version is not null && RootTypeHasVersaoAttribute(rootType))
+            if (!string.IsNullOrEmpty(version) && RootTypeHasVersaoAttribute(rootType))
                 rootElement.SetAttributeValue(VersaoAttributeName, version);
 
             BuildComplexTypeContent(rootElement, rootType, "", data, resolver, typeMap, ns, errors);
