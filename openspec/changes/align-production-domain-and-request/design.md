@@ -39,13 +39,25 @@ O SemanaIA possui modelos simplificados (`DpsDocument`, `NfseGenerateXmlRequest`
 
 **Alternativa descartada**: Manter enums como string na request e converter — adiciona camada de conversão desnecessária.
 
-### D3: Manter `Provider` e `Borrower` como classes separadas (não unificar em `Person`)
+### D3: Unificar `Provider`, `Borrower`, `Person` em uma única classe `Person`
 
-**Decisão**: Manter separação `Provider`/`Borrower`/`Person` no SemanaIA, mas alinhar campos com produção.
+**Decisão**: Remover `Provider` e `Borrower` como classes separadas. Usar uma única classe `Person` para todos os papéis: prestador, tomador, intermediário e destinatário.
 
-**Racional**: Na produção, `Provider` é `LegalPerson` (com `TaxRegime`, `SpecialTaxRegime`, `MunicipalTaxNumber`) e `Borrower` é uma classe separada com `ServiceTakerType`. A engine usa paths como `Provider.Cnpj` e `Borrower.FederalTaxNumber` nos bindings. Unificar quebraria paths existentes sem ganho.
+**Racional**: Prestador, tomador, intermediário e destinatário são todos pessoas (física ou jurídica). Ter classes separadas com 80% dos campos repetidos é duplicidade desnecessária. A diferença entre PF e PJ é resolvida por `PersonType` (inferido pelo tamanho do `FederalTaxNumber`). Campos específicos de PJ (`TaxRegime`, `SpecialTaxRegime`, `TradeName`, etc.) ficam nullable — preenchidos apenas quando aplicável.
 
-**Campos a adicionar**: `Provider` ganha `TradeName`, `LegalNature`, `CompanyRegistryNumber`, `FederalTaxDetermination`, `MunicipalTaxDetermination`. `Borrower` ganha `StateTaxNumber`, `ServiceTakerType`, `TaxRegime`, `SpecialTaxRegime`, `LegalNature`.
+**Alternativa descartada**: Manter classes separadas como na produção (`LegalPerson`, `Borrower`, `PartyResource`) — a produção já sofre com essa duplicidade.
+
+**Impacto**: Bindings mudam de `Provider.Cnpj` para `Provider.FederalTaxNumber` (uniforme). `DpsDocument` usa `Person` para Provider, Borrower, Intermediary e Recipient.
+
+**Campos da `Person` unificada**: `Name`, `FederalTaxNumber`, `Email`, `PhoneNumber`, `Address`, `MunicipalTaxNumber`, `StateTaxNumber`, `Caepf`, `Nif`, `NoTaxIdReason`, `ServiceTakerType`, `TaxRegime`, `SpecialTaxRegime`, `LegalNature`, `TradeName`, `CompanyRegistryNumber`, `RegionalTaxNumber`, `MunicipalTaxId`, `FederalTaxDetermination`, `MunicipalTaxDetermination`.
+
+### D3b: Unificar `Location` e `Address` em uma única classe `Address`
+
+**Decisão**: Remover `Location` como classe separada. Usar uma única classe `Address` para todos os endereços: pessoa, local de prestação, obra, evento.
+
+**Racional**: `Location` e `Address` têm exatamente os mesmos campos. Hoje `Address : Location` é uma herança vazia. Uma classe só elimina a duplicidade e simplifica o modelo.
+
+**Impacto**: `DpsDocument.Location` muda de tipo `Location` para `Address`. Renaming simples sem mudança de campos.
 
 ### D4: Documentação de referência como markdown na wiki
 

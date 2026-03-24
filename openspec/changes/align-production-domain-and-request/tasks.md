@@ -20,36 +20,36 @@
 - [ ] 2.8 Adicionar enum `ServiceTakerType` e atualizar `PersonType` com valores flags de produção
 - [ ] 2.9 Adicionar enums de status: `InvoiceStatus`, `RpsType`, `RpsStatus`, `NotaFiscalFlowStatus`
 
-## 3. Alinhar DpsDocument (Fase 2 — domain)
+## 3. Unificar modelos e alinhar DpsDocument (Fase 2 — domain)
 
-- [ ] 3.1 Flatten: mover campos de `Values` para nível raiz do `DpsDocument` (`ServicesAmount`, `IssRate`, `IssTaxAmount`, `DeductionsAmount`, `DiscountUnconditionedAmount`, `DiscountConditionedAmount`, `IrAmountWithheld`, `PisAmountWithheld`, `CofinsAmountWithheld`, `CsllAmountWithheld`, `InssAmountWithheld`, `IssAmountWithheld`, `OthersAmountWithheld`)
-- [ ] 3.2 Remover classe `Values`
-- [ ] 3.3 Adicionar campos fiscais ausentes: `PaidAmount`, `BaseTaxAmount` (calculado), `AmountWithheld` (calculado), `AmountNet` (calculado), `InssRate`, `PisCofinsBaseTax`, `PisRate`, `PisAmount`, `CofinsRate`, `CofinsAmount`, `IpiRate`, `IpiAmount`
-- [ ] 3.4 Adicionar campos de controle: `PaymentMethod`, `RetentionType`, `ImmunityType`, `CstPisCofins`, `NcmCode`, `IsEarlyInstallmentPayment`
-- [ ] 3.5 Trocar `TaxationType` de campo em `Values` para enum tipado na raiz do `DpsDocument`
-- [ ] 3.6 Atualizar `Provider`: adicionar `TradeName`, `LegalNature`, `CompanyRegistryNumber`, `RegionalTaxNumber`, `FederalTaxDetermination`, `MunicipalTaxDetermination`, `MunicipalTaxId`
-- [ ] 3.7 Atualizar `Borrower`/`Person`: adicionar `StateTaxNumber`, `ServiceTakerType`, `TaxRegime`, `SpecialTaxRegime`, `LegalNature`
-- [ ] 3.8 Adicionar campo `Recipient` (tipo `Person`) ao `DpsDocument`
-- [ ] 3.9 Adicionar campo `RealEstate` ao `DpsDocument`
-- [ ] 3.10 Adicionar campo `ServiceAmountDetails` ao `DpsDocument`
-- [ ] 3.11 Alinhar sub-modelos: `Suspension` adicionar `Reason`; `Lease` usar enums tipados; `ForeignTrade` usar enums tipados
-- [ ] 3.12 Adicionar campo `ReferenceSubstitution` com `Id` e `Reason` (alinhar com produção)
+- [ ] 3.1 Unificar `Provider`, `Borrower` e `Person` em uma única classe `Person` com campos de PF e PJ: `Name`, `FederalTaxNumber`, `Email`, `PhoneNumber`, `Address`, `MunicipalTaxNumber`, `StateTaxNumber`, `Caepf`, `Nif`, `NoTaxIdReason`, `ServiceTakerType`, `TaxRegime`, `SpecialTaxRegime`, `LegalNature`, `TradeName`, `CompanyRegistryNumber`, `RegionalTaxNumber`, `MunicipalTaxId`, `FederalTaxDetermination`, `MunicipalTaxDetermination`
+- [ ] 3.2 Remover classes `Provider`, `Borrower` — usar `Person` em todos os papéis
+- [ ] 3.3 Unificar `Location` e `Address` em uma única classe `Address` com: `Country`, `PostalCode`, `Street`, `Number`, `AdditionalInformation`, `District`, `City`, `State`. Remover classe `Location`
+- [ ] 3.4 Atualizar `DpsDocument`: `Provider`, `Borrower`, `Intermediary`, `Recipient` são todos tipo `Person`; `Location` passa a tipo `Address`
+- [ ] 3.5 Atualizar `Construction.SiteAddress`, `ActivityEvent.Address` para tipo `Address`
+- [ ] 3.6 Flatten: mover campos de `Values` para nível raiz do `DpsDocument` (`ServicesAmount`, `IssRate`, `IssTaxAmount`, `DeductionsAmount`, `DiscountUnconditionedAmount`, `DiscountConditionedAmount`, `IrAmountWithheld`, `PisAmountWithheld`, `CofinsAmountWithheld`, `CsllAmountWithheld`, `InssAmountWithheld`, `IssAmountWithheld`, `OthersAmountWithheld`)
+- [ ] 3.7 Remover classe `Values`
+- [ ] 3.8 Adicionar campos fiscais ausentes: `PaidAmount`, `BaseTaxAmount` (calculado), `AmountWithheld` (calculado), `AmountNet` (calculado), `InssRate`, `PisCofinsBaseTax`, `PisRate`, `PisAmount`, `CofinsRate`, `CofinsAmount`, `IpiRate`, `IpiAmount`
+- [ ] 3.9 Adicionar campos de controle: `PaymentMethod`, `RetentionType`, `ImmunityType`, `CstPisCofins`, `NcmCode`, `IsEarlyInstallmentPayment`
+- [ ] 3.10 Trocar `TaxationType` de campo em `Values` para enum tipado na raiz do `DpsDocument`
+- [ ] 3.11 Adicionar campo `RealEstate` e `ServiceAmountDetails` ao `DpsDocument`
+- [ ] 3.12 Alinhar sub-modelos: `Suspension` adicionar `Reason`; `Lease` usar enums tipados; `ForeignTrade` usar enums tipados; `ReferenceSubstitution` com `Id` e `Reason`
 
 ## 4. Alinhar NfseGenerateXmlRequest (Fase 2 — API)
 
-- [ ] 4.1 Adicionar campos faltantes: `PaymentMethod`, `InssRate`, `NcmCode` (já existe parcial — verificar completude)
-- [ ] 4.2 Atualizar sub-requests para espelhar produção: `SuspensionRequest` com `Reason`, `LeaseRequest` com enums tipados, `ForeignTradeRequest` com enums tipados
-- [ ] 4.3 Adicionar `RecipientRequest` (PartyRequest) ao request principal
-- [ ] 4.4 Adicionar `RealEstateRequest` ao request principal
-- [ ] 4.5 Adicionar `ServiceAmountDetailsRequest` ao request principal (verificar se já existe)
-- [ ] 4.6 Atualizar exemplos Swagger para refletir novos campos
+- [ ] 4.1 Unificar `BorrowerRequest`, `PartyRequest`, `ProviderRequest` em um único `PersonRequest` — mesma lógica do domain
+- [ ] 4.2 Unificar `LocationRequest` e `AddressRequest` em um único `AddressRequest`
+- [ ] 4.3 Adicionar campos faltantes: `PaymentMethod`, `InssRate`, `NcmCode` (já existe parcial — verificar completude)
+- [ ] 4.4 Atualizar sub-requests: `SuspensionRequest` com `Reason`, `LeaseRequest` com enums tipados, `ForeignTradeRequest` com enums tipados
+- [ ] 4.5 Adicionar `Recipient` (tipo `PersonRequest`) e `RealEstateRequest` ao request principal
+- [ ] 4.6 Atualizar exemplos Swagger para refletir novos campos e tipos unificados
 
 ## 5. Atualizar mapper e binder (Fase 2 — engine)
 
-- [ ] 5.1 Atualizar `NfseRequestToDpsDocumentModelMapper` — remover intermediário `Values`, mapear campos flat
-- [ ] 5.2 Atualizar `ServiceInvoiceSchemaDataBinder` — paths flat sem `Values.` prefixo
-- [ ] 5.3 Atualizar `DpsDocumentFieldResolver` — suportar novos paths (`Provider.TradeName`, `Borrower.StateTaxNumber`, etc.)
-- [ ] 5.4 Atualizar `CommonFieldMappingDictionary` — paths flat para campos fiscais
+- [ ] 5.1 Atualizar `NfseRequestToDpsDocumentModelMapper` — remover intermediário `Values`, mapear campos flat, converter `PersonRequest` → `Person`
+- [ ] 5.2 Atualizar `ServiceInvoiceSchemaDataBinder` — paths flat sem `Values.` prefixo, paths unificados de `Person` (sem `Provider.Cnpj` → `Provider.FederalTaxNumber`)
+- [ ] 5.3 Atualizar `DpsDocumentFieldResolver` — suportar campos unificados de `Person` para todos os papéis
+- [ ] 5.4 Atualizar `CommonFieldMappingDictionary` — paths flat para campos fiscais, paths de `Person` para todas as parties
 
 ## 6. Migrar rules dos providers (Fase 2 — providers)
 

@@ -11,17 +11,20 @@ O modelo canônico `DpsDocument` DEVE espelhar a estrutura do `ServiceInvoice` d
 - **WHEN** o `DpsDocument` usa `TaxationType`
 - **THEN** o enum possui valores flags: `None=0`, `WithinCity=1`, `OutsideCity=2`, `Export=4`, `Free=8`, `Immune=16`, `SuspendedCourtDecision=32`, `SuspendedAdministrativeProcedure=64`, `FixedISSQN=128`
 
-#### Scenario: DpsDocument Provider has production fields
-- **WHEN** o `Provider` do `DpsDocument` é instanciado
-- **THEN** possui: `TradeName`, `LegalNature`, `CompanyRegistryNumber`, `RegionalTaxNumber`, `FederalTaxDetermination`, `MunicipalTaxDetermination`, `MunicipalTaxId`, além dos campos existentes
+#### Scenario: DpsDocument uses unified Person for all parties
+- **WHEN** o `DpsDocument` é instanciado
+- **THEN** `Provider`, `Borrower`, `Intermediary` e `Recipient` são todos do tipo `Person`
+- **AND** a classe `Person` possui: `Name`, `FederalTaxNumber`, `Email`, `PhoneNumber`, `Address` (tipo `Address`), `MunicipalTaxNumber`, `StateTaxNumber`, `Caepf`, `Nif`, `NoTaxIdReason`, `ServiceTakerType`, `TaxRegime`, `SpecialTaxRegime`, `LegalNature`, `TradeName`, `CompanyRegistryNumber`, `RegionalTaxNumber`, `MunicipalTaxId`, `FederalTaxDetermination`, `MunicipalTaxDetermination`
 
-#### Scenario: DpsDocument Borrower has production fields
-- **WHEN** o `Borrower` do `DpsDocument` é instanciado
-- **THEN** possui: `StateTaxNumber`, `ServiceTakerType`, `TaxRegime`, `SpecialTaxRegime`, `LegalNature`, além dos campos existentes
+#### Scenario: DpsDocument uses unified Address for all locations
+- **WHEN** o `DpsDocument` é instanciado
+- **THEN** `Location`, `Person.Address`, `Construction.SiteAddress`, `ActivityEvent.Address` são todos do tipo `Address`
+- **AND** a classe `Address` possui: `Country`, `PostalCode`, `Street`, `Number`, `AdditionalInformation`, `District`, `City` (Code, Name), `State`
+- **AND** não existe classe `Location` separada
 
 #### Scenario: DpsDocument has additional production fields
 - **WHEN** o `DpsDocument` é instanciado
-- **THEN** possui campos adicionais: `PaymentMethod`, `InssRate`, `NcmCode`, `RetentionType`, `ImmunityType`, `CstPisCofins`, `PisCofinsBaseTax`, `PisRate`, `PisAmount`, `CofinsRate`, `CofinsAmount`, `IpiRate`, `IpiAmount`, `IsEarlyInstallmentPayment`, `RealEstate`, `Recipient`, `ServiceAmountDetails`
+- **THEN** possui campos adicionais: `PaymentMethod`, `InssRate`, `NcmCode`, `RetentionType`, `ImmunityType`, `CstPisCofins`, `PisCofinsBaseTax`, `PisRate`, `PisAmount`, `CofinsRate`, `CofinsAmount`, `IpiRate`, `IpiAmount`, `IsEarlyInstallmentPayment`, `RealEstate`, `Recipient` (tipo `Person`), `ServiceAmountDetails`
 
 ### Requirement: Request model aligned with production issue message
 O `NfseGenerateXmlRequest` DEVE conter todos os campos presentes em `ServiceInvoiceIssueMessage` de produção, com tipos compatíveis.

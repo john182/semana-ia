@@ -14,13 +14,13 @@ O `ServiceInvoiceSchemaDataBinder` DEVE resolver campos fiscais diretamente do `
 ### Requirement: Field resolver supports new domain paths
 O `DpsDocumentFieldResolver` DEVE suportar os novos paths introduzidos pelo alinhamento com produção.
 
-#### Scenario: Resolver handles new Provider fields
-- **WHEN** o resolver recebe path `Provider.TradeName` ou `Provider.LegalNature`
-- **THEN** retorna o valor correto do `DpsDocument.Provider`
+#### Scenario: Resolver handles unified Person fields for all parties
+- **WHEN** o resolver recebe path `Provider.FederalTaxNumber`, `Provider.TradeName`, `Borrower.StateTaxNumber`, `Intermediary.Name` ou `Recipient.FederalTaxNumber`
+- **THEN** retorna o valor correto — todos são `Person` com os mesmos campos disponíveis
 
-#### Scenario: Resolver handles new Borrower fields
-- **WHEN** o resolver recebe path `Borrower.StateTaxNumber` ou `Borrower.ServiceTakerType`
-- **THEN** retorna o valor correto do `DpsDocument.Borrower`
+#### Scenario: Resolver handles unified Address paths
+- **WHEN** o resolver recebe path `Provider.Address.City.Code` ou `Location.City.Code`
+- **THEN** retorna o valor correto — ambos são tipo `Address`
 
 ### Requirement: Common field mapping dictionary updated for flat paths
 O `CommonFieldMappingDictionary` DEVE usar paths sem prefixo `Values.` para campos fiscais.
