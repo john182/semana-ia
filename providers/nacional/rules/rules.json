@@ -102,13 +102,6 @@
     { "type": "Formatting", "target": "CPF", "padLeft": 11, "padChar": "0" },
     { "type": "Formatting", "target": "CEP", "digitsOnly": true, "padLeft": 8, "padChar": "0" },
     { "type": "Formatting", "target": "cMun", "digitsOnly": true, "padLeft": 7, "padChar": "0" },
-    { "type": "Formatting", "target": "nProcesso", "digitsOnly": true },
-
-    { "type": "Binding", "target": "infDPS.IBSCBS.finNFSe", "source": "IbsCbs.FinNFSeCode" },
-    { "type": "Binding", "target": "infDPS.IBSCBS.indFinal", "source": "IbsCbs.PersonalUse" },
-    { "type": "Binding", "target": "infDPS.IBSCBS.cIndOp", "source": "IbsCbs.OperationIndicator", "digitsOnly": true, "maxLength": 6 },
-    { "type": "Binding", "target": "infDPS.IBSCBS.indDest", "source": "IbsCbs.DestinationIndicator" },
-    { "type": "Binding", "target": "infDPS.IBSCBS.valores.trib.gIBSCBS.CST", "source": "IbsCbs.CstCode" },
-    { "type": "Binding", "target": "infDPS.IBSCBS.valores.trib.gIBSCBS.cClassTrib", "source": "IbsCbs.ClassCode" }
+    { "type": "Formatting", "target": "nProcesso", "digitsOnly": true }
   ]
 }

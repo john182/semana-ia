@@ -241,7 +241,7 @@ public class ProviderConfigGenerator
     // by the manual serializer's business logic.
     private static readonly HashSet<string> ConditionalElements = new(StringComparer.OrdinalIgnoreCase)
     {
-        "interm", "obra", "atvEvento", "comExt", "lsadppu", "IBSCBS",
+        "interm", "obra", "atvEvento", "comExt", "lsadppu",
         "vDedRed", "vDescCondIncond", "exigSusp", "BM", "subst",
         "dest", "imovel", "tribFed", "piscofins", "gReeRepRes"
     };
@@ -262,6 +262,20 @@ public class ProviderConfigGenerator
             ["xLgr"] = "Provider.Address.Street",
             ["nro"] = "Provider.Address.Number",
             ["xBairro"] = "Provider.Address.District",
+        },
+        ["IBSCBS"] = new(StringComparer.OrdinalIgnoreCase)
+        {
+            ["finNFSe"] = "IbsCbs.FinNFSeCode",
+            ["indFinal"] = "IbsCbs.PersonalUse",
+            ["cIndOp"] = "IbsCbs.OperationIndicator | digitsOnly | maxLength:6",
+            ["indDest"] = "IbsCbs.DestinationIndicator",
+            ["CST"] = "IbsCbs.CstCode",
+            ["cClassTrib"] = "IbsCbs.ClassCode",
+            // Skip sub-structures that need explicit rules
+            ["CNPJ"] = "",
+            ["CPF"] = "",
+            ["xNome"] = "",
+            ["IM"] = "",
         },
         ["toma"] = new(StringComparer.OrdinalIgnoreCase)
         {
@@ -427,6 +441,10 @@ public class ProviderConfigGenerator
         else if (pipe == "digitsOnly")
         {
             rule.DigitsOnly = true;
+        }
+        else if (pipe.StartsWith("maxLength:"))
+        {
+            rule.MaxLength = int.Parse(pipe[10..]);
         }
         else if (pipe.StartsWith("decimal:"))
         {
