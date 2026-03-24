@@ -411,7 +411,7 @@ public class ExternalProviderXmlGenerationTests
             "ServicesAmount" => document.ServicesAmount.ToString("F2", CultureInfo.InvariantCulture),
             "TaxationType" => ((int)document.TaxationType).ToString(),
             "IssRate" => document.IssRate?.ToString("F4", CultureInfo.InvariantCulture) ?? "0.00",
-            "RetentionType" => ((int)(document.RetentionType ?? RetentionTypeEnum.WithheldByBuyer)).ToString(),
+            "RetentionType" => ((int)(document.RetentionType ?? RetentionTypeEnum.NotWithheld) + 1).ToString(),
             "IssAmount" => (document.ServicesAmount * (document.IssRate ?? 0)).ToString("F2", CultureInfo.InvariantCulture),
             "CityServiceCode" => document.CityServiceCode,
             "Environment" => document.Environment.ToString(),

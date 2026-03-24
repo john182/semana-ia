@@ -111,7 +111,7 @@ public class ProviderConfigGeneratorTests
 
         var hasAbrasfRules = manualProfile.Rules!
             .Any(rule => rule.Source is not null &&
-                         (rule.Source.Contains("Provider.") || rule.Source.Contains("Service.") || rule.Source == "ServicesAmount" || RuleSourceFieldCatalog.Contains(rule.Source)));
+                         (rule.Source.Contains("Provider.") || rule.Source.Contains("Service.") || RuleSourceFieldCatalog.Contains(rule.Source)));
         hasAbrasfRules.ShouldBeTrue("Simpliss rules.json should have ABRASF-style typed rules");
     }
 
