@@ -14,9 +14,4 @@ public class BenefitRequest
     /// Valor do benefício.
     /// </summary>
     public decimal? Amount { get; set; }
-
-    /// <summary>
-    /// Alíquota do benefício.
-    /// </summary>
-    public decimal? Rate { get; set; }
 }

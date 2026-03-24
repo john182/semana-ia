@@ -101,7 +101,7 @@ public class NationalDpsXBuilderXmlBuilder
                 trib.tribMun(XBuilder.Fragment(tribMun =>
                 {
                     tribMun.tribISSQN(GetTribISSQNCode(model.TaxationType));
-                    tribMun.tpRetISSQN(1);
+                    tribMun.tpRetISSQN((int)(model.RetentionType ?? RetentionTypeEnum.NotWithheld) + 1);
                 }));
             }));
         });

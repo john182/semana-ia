@@ -1127,6 +1127,11 @@ public class ApproximateTotals
     public decimal? Rate { get; set; }
 
     /// <summary>
+    /// Valor total aproximado dos tributos.
+    /// </summary>
+    public decimal? Amount { get; set; }
+
+    /// <summary>
     /// Indicador do tipo de totalização.
     /// </summary>
     public TotalTaxIndicator? Indicator { get; set; }

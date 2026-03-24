@@ -217,12 +217,40 @@ public class NfseRequestToDpsDocumentModelMapper
     private static Domain.Models.Deduction? MapDeduction(DeductionRequest? src, decimal? simpleAmount)
     {
         if (src is not null)
-            return new Domain.Models.Deduction { Rate = src.Rate, Amount = src.Amount };
+            return new Domain.Models.Deduction
+            {
+                Rate = src.Rate,
+                Amount = src.Amount,
+                Documents = src.Documents?.Select(MapDeductionDocument).ToList()
+            };
 
         if (simpleAmount is > 0)
             return new Domain.Models.Deduction { Amount = simpleAmount };
 
         return null;
+    }
+
+    private static DeductionDocument MapDeductionDocument(DeductionDocumentRequest src)
+    {
+        return new DeductionDocument
+        {
+            NfseKey = src.NfseKey,
+            NfeKey = src.NfeKey,
+            MunicipalElectronic = src.MunicipalElectronic is not null
+                ? new MunicipalElectronicDoc { CityCode = src.MunicipalElectronic.CityCode, Number = src.MunicipalElectronic.Number, VerificationCode = src.MunicipalElectronic.VerificationCode }
+                : null,
+            NonElectronic = src.NonElectronic is not null
+                ? new NonElectronicDoc { Number = src.NonElectronic.Number, Model = src.NonElectronic.Model, Series = src.NonElectronic.Series }
+                : null,
+            FiscalDocId = src.OtherFiscalId,
+            NonFiscalDocId = src.OtherDocId,
+            DeductionType = ParseEnum<DeductionType>(src.DeductionType) ?? DeductionType.Other,
+            OtherDeductionDescription = src.OtherDeductionDescription,
+            IssueDate = src.IssueDate ?? DateOnly.MinValue,
+            DeductibleTotal = src.DeductibleTotal ?? 0,
+            UsedAmount = src.UsedAmount ?? 0,
+            Supplier = MapPerson(src.Supplier)
+        };
     }
 
     private static Domain.Models.Benefit? MapBenefit(BenefitRequest? src)
@@ -244,6 +272,7 @@ public class NfseRequestToDpsDocumentModelMapper
         return new Domain.Models.ApproximateTotals
         {
             Rate = src.Rate,
+            Amount = src.Amount,
             Federal = src.Federal is not null ? new TaxTier { Rate = src.Federal.Rate, Amount = src.Federal.Amount } : null,
             State = src.State is not null ? new TaxTier { Rate = src.State.Rate, Amount = src.State.Amount } : null,
             Municipal = src.Municipal is not null ? new TaxTier { Rate = src.Municipal.Rate, Amount = src.Municipal.Amount } : null
