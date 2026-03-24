@@ -13,8 +13,8 @@ public class ValidationDiagnosticEnricherTests
         // Arrange
         var errors = new List<SerializationError>
         {
-            new(SerializationErrorKind.InputError, "InfRps.CNPJ",
-                "Required element 'CNPJ' has no value and no default")
+            new(SerializationErrorKind.InputError, "InfRps.InscricaoMunicipal",
+                "Required element 'InscricaoMunicipal' has no value and no default")
         };
 
         // Act
@@ -22,8 +22,8 @@ public class ValidationDiagnosticEnricherTests
 
         // Assert
         diagnostics.Count.ShouldBe(1);
-        diagnostics[0].FieldPath.ShouldBe("InfRps.CNPJ");
-        diagnostics[0].SuggestedSource.ShouldBe("Provider.Cnpj");
+        diagnostics[0].FieldPath.ShouldBe("InfRps.InscricaoMunicipal");
+        diagnostics[0].SuggestedSource.ShouldBe("Provider.MunicipalTaxNumber");
         diagnostics[0].Confidence.ShouldBe(SuggestionConfidence.Exact);
         diagnostics[0].IsRequired.ShouldBeTrue();
     }
@@ -108,8 +108,8 @@ public class ValidationDiagnosticEnricherTests
         // Arrange -- mix of exact, partial, and no match
         var errors = new List<SerializationError>
         {
-            new(SerializationErrorKind.InputError, "InfRps.CNPJ",
-                "Required element 'CNPJ' has no value"),
+            new(SerializationErrorKind.InputError, "InfRps.InscricaoMunicipal",
+                "Required element 'InscricaoMunicipal' has no value"),
             new(SerializationErrorKind.InputError, "InfRps.tcNumeroRps",
                 "Required element 'tcNumeroRps' has no value"),
             new(SerializationErrorKind.InputError, "InfRps.CustomUnknownField",
@@ -124,9 +124,9 @@ public class ValidationDiagnosticEnricherTests
         // Assert -- should only process the 3 InputError entries
         diagnostics.Count.ShouldBe(3);
 
-        var exactDiagnostic = diagnostics.First(d => d.FieldPath == "InfRps.CNPJ");
+        var exactDiagnostic = diagnostics.First(d => d.FieldPath == "InfRps.InscricaoMunicipal");
         exactDiagnostic.Confidence.ShouldBe(SuggestionConfidence.Exact);
-        exactDiagnostic.SuggestedSource.ShouldBe("Provider.Cnpj");
+        exactDiagnostic.SuggestedSource.ShouldBe("Provider.MunicipalTaxNumber");
 
         var partialDiagnostic = diagnostics.First(d => d.FieldPath == "InfRps.tcNumeroRps");
         partialDiagnostic.Confidence.ShouldBe(SuggestionConfidence.Partial);

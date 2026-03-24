@@ -233,6 +233,47 @@ public class ProviderConfigGenerator
         return schemaDocument.RootInlineType;
     }
 
+    // Elements that are conditional in the manual serializer and should NOT be auto-generated.
+    // These require explicit rule configuration because their emission depends on business logic.
+    private static readonly HashSet<string> ConditionalElements = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "interm", "obra", "atvEvento", "comExt", "lsadppu", "IBSCBS",
+        "vDedRed", "vDescCondIncond", "exigSusp", "BM", "subst"
+    };
+
+    // Context-aware field mappings: fields whose meaning changes depending on their parent context.
+    // The CommonFieldMappingDictionary is context-free (maps by field name alone).
+    // This dictionary resolves ambiguity when the same field name (e.g., CNPJ) appears
+    // in multiple contexts (prest, toma) with different domain sources.
+    private static readonly Dictionary<string, Dictionary<string, string>> ContextualMappings = new()
+    {
+        ["prest"] = new(StringComparer.OrdinalIgnoreCase)
+        {
+            ["CNPJ"] = "Provider.Cnpj",
+            ["CPF"] = "Provider.Cnpj",
+            ["IM"] = "Provider.MunicipalTaxNumber",
+            ["cMun"] = "Provider.MunicipalityCode",
+            ["CEP"] = "Provider.Address.PostalCode | digitsOnly | padLeft:8:0",
+            ["xLgr"] = "Provider.Address.Street",
+            ["nro"] = "Provider.Address.Number",
+            ["xBairro"] = "Provider.Address.District",
+        },
+        ["toma"] = new(StringComparer.OrdinalIgnoreCase)
+        {
+            ["CNPJ"] = "",  // Skip in auto-gen — requires ConditionalEmission rule to choose CNPJ vs CPF
+            ["CPF"] = "Borrower.FederalTaxNumber | padLeft:11:0",
+            ["IM"] = "",  // Skip — borrower IM not commonly available
+            ["xNome"] = "Borrower.Name",
+            ["cMun"] = "Borrower.Address.City.Code",
+            ["CEP"] = "Borrower.Address.PostalCode | digitsOnly | padLeft:8:0",
+            ["xLgr"] = "Borrower.Address.Street",
+            ["nro"] = "Borrower.Address.Number",
+            ["xBairro"] = "Borrower.Address.District",
+            ["email"] = "Borrower.Email",
+            ["fone"] = "Borrower.PhoneNumber",
+        },
+    };
+
     private static void WalkSchemaTree(
         SchemaComplexType complexType,
         string pathPrefix,
@@ -247,27 +288,30 @@ public class ProviderConfigGenerator
                 ? element.Name
                 : $"{pathPrefix}.{element.Name}";
 
+            // Skip conditional elements — they require explicit business-logic rules
+            if (ConditionalElements.Contains(element.Name))
+                continue;
+
             var childType = element.InlineType;
             if (childType is null)
                 typeMap.TryGetValue(element.TypeName, out childType);
 
             if (childType is not null)
             {
-                // Skip optional complex elements at depth > 1 — these are conditional sub-structures
-                // (obra, atvEvento, interm, vDedRed, IBSCBS, etc.) that should only have bindings
-                // when explicitly configured by the operator, not auto-generated from the dictionary.
-                // This prevents phantom data from causing empty optional structures in the XML.
-                var depth = elementPath.Count(c => c == '.') + 1;
-                if (!element.IsRequired && depth > 2)
-                    continue;
-
                 WalkSchemaTree(childType, elementPath, typeMap, bindings, formatting, dataPathPrefix);
                 continue;
             }
 
             var bindingPath = BuildBindingPath(elementPath, dataPathPrefix);
 
-            if (CommonFieldMappingDictionary.Mappings.TryGetValue(element.Name, out var propertyPath))
+            // Try context-aware mapping first (resolves CNPJ in prest vs toma etc.)
+            var contextMapping = ResolveContextualMapping(elementPath, element.Name);
+            if (contextMapping is not null)
+            {
+                if (contextMapping.Length > 0)  // Empty string means skip
+                    bindings[bindingPath] = contextMapping;
+            }
+            else if (CommonFieldMappingDictionary.Mappings.TryGetValue(element.Name, out var propertyPath))
             {
                 bindings[bindingPath] = propertyPath;
             }
@@ -282,6 +326,22 @@ public class ProviderConfigGenerator
                 formatting[element.Name] = formattingRule;
             }
         }
+    }
+
+    private static string? ResolveContextualMapping(string elementPath, string elementName)
+    {
+        foreach (var (contextKey, mappings) in ContextualMappings)
+        {
+            // Check if the element path contains this context (e.g., "infDPS.prest.end.cMun" contains "prest")
+            if (!elementPath.Contains($".{contextKey}.", StringComparison.OrdinalIgnoreCase) &&
+                !elementPath.StartsWith($"{contextKey}.", StringComparison.OrdinalIgnoreCase))
+                continue;
+
+            if (mappings.TryGetValue(elementName, out var mapping))
+                return mapping;
+        }
+
+        return null;
     }
 
     private static List<ProviderRule> GenerateTypedRules(

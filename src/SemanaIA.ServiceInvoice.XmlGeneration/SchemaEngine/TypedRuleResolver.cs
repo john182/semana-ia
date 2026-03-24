@@ -440,11 +440,10 @@ public class TypedRuleResolver : IProviderRuleResolver
         if (rawValue is string stringValue)
             return string.IsNullOrWhiteSpace(stringValue);
 
+        // Only filter zero for long (identifier fields like FederalTaxNumber use 0 as "not set").
+        // Don't filter zero for int — int 0 is a valid domain value (e.g., regEspTrib=0 means "Nenhum").
         if (rawValue is long longValue)
             return longValue == 0;
-
-        if (rawValue is int intValue)
-            return intValue == 0;
 
         return false;
     }
