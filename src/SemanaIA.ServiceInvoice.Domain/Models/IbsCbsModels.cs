@@ -42,11 +42,14 @@ public class IbsCbs
     public string? SituationCode { get; set; }
 
     /// <summary>
-    /// CST code: uses SituationCode if provided, otherwise first 3 digits of ClassCode.
+    /// CST code: uses SituationCode if provided; otherwise computed from ClassCode by
+    /// left-padding to 6 characters with '0' and taking the first 3 digits.
     /// </summary>
     public string? CstCode => !string.IsNullOrEmpty(SituationCode)
         ? SituationCode
-        : ClassCode?.Length >= 3 ? ClassCode[..3] : ClassCode;
+        : string.IsNullOrEmpty(ClassCode)
+            ? ClassCode
+            : ClassCode.PadLeft(6, '0')[..3];
 
     public decimal? Basis { get; set; }
     public decimal? ReimbursedResuppliedAmount { get; set; }
