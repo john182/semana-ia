@@ -1,18 +1,18 @@
 # Provider Onboarding Report
 
-Generated: 2026-03-24 21:29:49 UTC
+Generated: 2026-03-24 22:48:35 UTC
 
 ## Provider Status Overview
 
 | Provider | OperationalStatus | Status | SchemaLoadable | AnalysisOk | BindingsPresent | RuntimeProducible | XsdValid |
 |----------|-------------------|--------|----------------|------------|-----------------|-------------------|----------|
-| abrasf | NeedsEngineering | Schema Only | PASS | PASS | FAIL | FAIL | PASS |
-| gissonline | NeedsEngineering | Schema Only | PASS | PASS | FAIL | FAIL | PASS |
-| issnet | SupportReady | Fully Onboarded | PASS | PASS | PASS | PASS | PASS |
 | nacional | SupportReady | Fully Onboarded | PASS | PASS | PASS | PASS | PASS |
+| gissonline | NeedsEngineering | Schema Only | PASS | PASS | FAIL | FAIL | PASS |
 | paulistana | SupportReady | Fully Onboarded | PASS | PASS | PASS | PASS | PASS |
-| simpliss | SupportReady | Fully Onboarded | PASS | PASS | PASS | PASS | PASS |
+| abrasf | NeedsEngineering | Schema Only | PASS | PASS | FAIL | FAIL | PASS |
 | webiss | SupportReady | Fully Onboarded | PASS | PASS | PASS | PASS | PASS |
+| issnet | SupportReady | Fully Onboarded | PASS | PASS | PASS | PASS | PASS |
+| simpliss | SupportReady | Fully Onboarded | PASS | PASS | PASS | PASS | PASS |
 
 ## Summary
 
@@ -25,17 +25,17 @@ Generated: 2026-03-24 21:29:49 UTC
 
 | Provider | Check | Gap Kind | Details | Actionable Recommendation |
 |----------|-------|----------|---------|---------------------------|
-| abrasf | BindingsPresent | ConfigurationGap | No typed rules configured. | Configure rules in providers/abrasf/rules/rules.json or use ProviderConfigGenerator to auto-generate |
-| abrasf | RuntimeProducible | EngineGap | Skipped: analysis or bindings not available. | No recommendation |
 | gissonline | BindingsPresent | ConfigurationGap | No typed rules configured. | Configure rules in providers/gissonline/rules/rules.json or use ProviderConfigGenerator to auto-generate |
 | gissonline | RuntimeProducible | EngineGap | Skipped: analysis or bindings not available. | No recommendation |
+| abrasf | BindingsPresent | ConfigurationGap | No typed rules configured. | Configure rules in providers/abrasf/rules/rules.json or use ProviderConfigGenerator to auto-generate |
+| abrasf | RuntimeProducible | EngineGap | Skipped: analysis or bindings not available. | No recommendation |
 
 ## Backlog Classification
 
 | Category | Description | Providers Affected |
 |----------|-------------|-------------------|
-| Configuration | Bindings, rules or profile configuration needed | abrasf, gissonline |
-| Development | Engine or serializer changes needed | abrasf, gissonline |
+| Configuration | Bindings, rules or profile configuration needed | gissonline, abrasf |
+| Development | Engine or serializer changes needed | gissonline, abrasf |
 
 ## Onboarding Workflow
 
