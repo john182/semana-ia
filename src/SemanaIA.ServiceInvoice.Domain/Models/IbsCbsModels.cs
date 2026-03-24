@@ -115,7 +115,7 @@ public class RealEstate
 {
     public string? PropertyFiscalRegistration { get; set; }
     public string? CibCode { get; set; }
-    public Location? SiteAddress { get; set; }
+    public Address? SiteAddress { get; set; }
 }
 
 public class IbsCbsDeferment

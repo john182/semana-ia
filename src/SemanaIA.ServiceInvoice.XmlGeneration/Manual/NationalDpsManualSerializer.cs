@@ -71,8 +71,8 @@ public class NationalDpsManualSerializer
 
     private bool ShouldIncludeBorrower(DpsDocument doc)
     {
-        var retentionType = doc.Values.RetentionType ?? 1;
-        var isWithheld = retentionType is 2 or 3;
+        var retentionType = doc.RetentionType ?? RetentionTypeEnum.NotWithheld;
+        var isWithheld = retentionType is RetentionTypeEnum.WithheldByBuyer or RetentionTypeEnum.WithheldByIntermediary;
 
         if (isWithheld) return true;
         if (doc.Borrower.FederalTaxNumber != 0) return true;
@@ -86,7 +86,7 @@ public class NationalDpsManualSerializer
 
     // --- Provider (TCInfoPrestador) ---
 
-    private Action<dynamic> BuildProvider(Provider provider)
+    private Action<dynamic> BuildProvider(Person provider)
     {
         return XBuilder.Fragment(xml =>
         {
@@ -134,7 +134,7 @@ public class NationalDpsManualSerializer
         });
     }
 
-    private static Action<dynamic> BuildRegTrib(Provider provider)
+    private static Action<dynamic> BuildRegTrib(Person provider)
     {
         return XBuilder.Fragment(xml =>
         {
@@ -201,7 +201,7 @@ public class NationalDpsManualSerializer
 
     // --- Address (TCEndereco) ---
 
-    private Action<dynamic> BuildEndereco(Location address)
+    private Action<dynamic> BuildEndereco(Address address)
     {
         return XBuilder.Fragment(xml =>
         {
@@ -243,7 +243,7 @@ public class NationalDpsManualSerializer
         });
     }
 
-    private Action<dynamic> BuildEnderecoSimples(Location address)
+    private Action<dynamic> BuildEnderecoSimples(Address address)
     {
         return XBuilder.Fragment(xml =>
         {
@@ -312,7 +312,7 @@ public class NationalDpsManualSerializer
         {
             if (doc.Location is null)
             {
-                if (doc.Values.TaxationType == TaxationType.OutsideCity)
+                if (doc.TaxationType == TaxationType.OutsideCity)
                 {
                     var borrowerCountry = doc.Borrower.Address?.Country;
                     if (string.IsNullOrWhiteSpace(borrowerCountry) || borrowerCountry.Equals(BRA, StringComparison.OrdinalIgnoreCase))
@@ -377,13 +377,13 @@ public class NationalDpsManualSerializer
     {
         return XBuilder.Fragment(xml =>
         {
-            xml.mdPrestacao(ft.ServiceMode);
-            xml.vincPrest(ft.RelationShip);
+            xml.mdPrestacao((int)ft.ServiceMode);
+            xml.vincPrest((int)ft.RelationShip);
             xml.tpMoeda(ft.Currency ?? "0");
             xml.vServMoeda(Fix(ft.ServiceAmountInCurrency));
-            xml.mecAFComexP(Math.Min(8, Math.Max(0, ft.SupportMechanismProvider)).ToString("D2"));
-            xml.mecAFComexT(Math.Min(26, Math.Max(0, ft.SupportMechanismReceiver)).ToString("D2"));
-            xml.movTempBens(ft.TemporaryGoods);
+            xml.mecAFComexP(Math.Min(8, Math.Max(0, (int)ft.SupportMechanismProvider)).ToString("D2"));
+            xml.mecAFComexT(Math.Min(26, Math.Max(0, (int)ft.SupportMechanismReceiver)).ToString("D2"));
+            xml.movTempBens((int)ft.TemporaryGoods);
 
             if (ft.ImportDeclaration is not null)
             {
@@ -405,8 +405,8 @@ public class NationalDpsManualSerializer
     {
         return XBuilder.Fragment(xml =>
         {
-            xml.categ(lease.Category);
-            xml.objeto(lease.ObjectType);
+            xml.categ((int)lease.Category);
+            xml.objeto((int)lease.ObjectType);
             xml.extensao((int)(lease.TotalLength ?? 0));
             xml.nPostes(lease.PolesCount ?? 0);
         });
@@ -483,15 +483,14 @@ public class NationalDpsManualSerializer
     {
         return XBuilder.Fragment(xml =>
         {
-            xml.vServPrest(XBuilder.Fragment(v => { v.vServ(Fix(doc.Values.ServicesAmount)); }));
+            xml.vServPrest(XBuilder.Fragment(v => { v.vServ(Fix(doc.ServicesAmount)); }));
 
-            var v = doc.Values;
-            if (v.DiscountConditionedAmount > 0 || v.DiscountUnconditionedAmount > 0)
+            if (doc.DiscountConditionedAmount > 0 || doc.DiscountUnconditionedAmount > 0)
             {
                 xml.vDescCondIncond(XBuilder.Fragment(desc =>
                 {
-                    if (v.DiscountUnconditionedAmount > 0) desc.vDescIncond(Fix(v.DiscountUnconditionedAmount));
-                    if (v.DiscountConditionedAmount > 0) desc.vDescCond(Fix(v.DiscountConditionedAmount));
+                    if (doc.DiscountUnconditionedAmount > 0) desc.vDescIncond(Fix(doc.DiscountUnconditionedAmount));
+                    if (doc.DiscountConditionedAmount > 0) desc.vDescCond(Fix(doc.DiscountConditionedAmount));
                 }));
             }
 
@@ -509,8 +508,8 @@ public class NationalDpsManualSerializer
             {
                 trib.tribMun(BuildTribMun(doc));
 
-                if (HasFederalTaxes(v))
-                    trib.tribFed(BuildTribFed(v));
+                if (HasFederalTaxes(doc))
+                    trib.tribFed(BuildTribFed(doc));
 
                 trib.totTrib(BuildTotTrib(doc));
             }));
@@ -521,9 +520,7 @@ public class NationalDpsManualSerializer
     {
         return XBuilder.Fragment(xml =>
         {
-            var v = doc.Values;
-
-            xml.tribISSQN(v.TaxationType switch
+            xml.tribISSQN(doc.TaxationType switch
             {
                 TaxationType.Export => "3",
                 TaxationType.Immune => "2",
@@ -531,17 +528,17 @@ public class NationalDpsManualSerializer
                 _ => "1"
             });
 
-            if (v.TaxationType == TaxationType.Export)
+            if (doc.TaxationType == TaxationType.Export)
             {
                 var country = doc.Borrower.Address?.Country;
                 if (!string.IsNullOrWhiteSpace(country))
                     xml.cPaisResult(country);
             }
 
-            if (v.ImmunityType is not null)
-                xml.tpImunidade((int)v.ImmunityType);
+            if (doc.ImmunityType is not null)
+                xml.tpImunidade((int)doc.ImmunityType);
 
-            if (v.TaxationType is TaxationType.SuspendedCourtDecision or TaxationType.SuspendedAdministrativeProcedure)
+            if (doc.TaxationType is TaxationType.SuspendedCourtDecision or TaxationType.SuspendedAdministrativeProcedure)
             {
                 var processNumber = doc.Suspension?.ProcessNumber is not null
                     ? new string(doc.Suspension.ProcessNumber.Where(char.IsDigit).ToArray())
@@ -551,7 +548,7 @@ public class NationalDpsManualSerializer
                 {
                     xml.exigSusp(XBuilder.Fragment(es =>
                     {
-                        es.tpSusp(v.TaxationType == TaxationType.SuspendedCourtDecision ? "1" : "2");
+                        es.tpSusp(doc.TaxationType == TaxationType.SuspendedCourtDecision ? "1" : "2");
                         es.nProcesso(processNumber);
                     }));
                 }
@@ -569,18 +566,18 @@ public class NationalDpsManualSerializer
                 }));
             }
 
-            var retType = v.RetentionType ?? 1;
-            xml.tpRetISSQN(retType);
+            var retentionTypeXmlValue = (int)(doc.RetentionType ?? RetentionTypeEnum.NotWithheld) + 1;
+            xml.tpRetISSQN(retentionTypeXmlValue);
 
-            if (v.IssRate is not null && v.IssRate > 0 &&
-                v.TaxationType is not (TaxationType.Export or TaxationType.Immune))
+            if (doc.IssRate is not null && doc.IssRate > 0 &&
+                doc.TaxationType is not (TaxationType.Export or TaxationType.Immune))
             {
-                xml.pAliq(Fix(v.IssRate * 100));
+                xml.pAliq(Fix(doc.IssRate * 100));
             }
         });
     }
 
-    private static bool HasFederalTaxes(Values v)
+    private static bool HasFederalTaxes(DpsDocument v)
     {
         return v.PisAmountWithheld > 0 || v.CofinsAmountWithheld > 0 ||
                v.PisAmount > 0 || v.CofinsAmount > 0 ||
@@ -590,7 +587,7 @@ public class NationalDpsManualSerializer
                v.IrAmountWithheld > 0;
     }
 
-    private static Action<dynamic> BuildTribFed(Values v)
+    private static Action<dynamic> BuildTribFed(DpsDocument v)
     {
         return XBuilder.Fragment(xml =>
         {
@@ -601,7 +598,7 @@ public class NationalDpsManualSerializer
             {
                 xml.piscofins(XBuilder.Fragment(pc =>
                 {
-                    var cst = v.CstPisCofins.HasValue ? v.CstPisCofins.Value.ToString("D2") : "00";
+                    var cst = v.CstPisCofins.HasValue ? ((int)v.CstPisCofins.Value).ToString("D2") : "00";
                     pc.CST(cst);
 
                     if (v.PisCofinsBaseTax.HasValue && cst is not ("00" or "08" or "09"))
@@ -800,7 +797,7 @@ public class NationalDpsManualSerializer
 
     // --- Helpers ---
 
-    private static bool HasAddressData(Location? address)
+    private static bool HasAddressData(Address? address)
     {
         return address is not null &&
                (!string.IsNullOrWhiteSpace(address.Street) ||

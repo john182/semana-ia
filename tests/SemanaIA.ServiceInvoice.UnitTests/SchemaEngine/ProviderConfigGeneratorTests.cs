@@ -111,7 +111,7 @@ public class ProviderConfigGeneratorTests
 
         var hasAbrasfRules = manualProfile.Rules!
             .Any(rule => rule.Source is not null &&
-                         (rule.Source.Contains("Provider.") || rule.Source.Contains("Service.") || rule.Source.Contains("Values.")));
+                         (rule.Source.Contains("Provider.") || rule.Source.Contains("Service.") || rule.Source == "ServicesAmount" || RuleSourceFieldCatalog.Contains(rule.Source)));
         hasAbrasfRules.ShouldBeTrue("Simpliss rules.json should have ABRASF-style typed rules");
     }
 
@@ -174,7 +174,7 @@ public class ProviderConfigGeneratorTests
         var hasDeepFieldBindings = bindingRules.Any(rule =>
             rule.Source == "Provider.Cnpj" ||
             rule.Source == "Service.Description" ||
-            rule.Source == "Values.ServicesAmount");
+            rule.Source == "ServicesAmount");
         hasDeepFieldBindings.ShouldBeTrue(
             "Binding rules should include fields from inside the deep data node (CNPJ, Discriminacao, ValorServicos)");
     }

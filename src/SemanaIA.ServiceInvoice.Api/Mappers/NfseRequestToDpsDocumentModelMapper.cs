@@ -19,7 +19,8 @@ public class NfseRequestToDpsDocumentModelMapper
             Provider = MapProvider(request.Provider, request.Location),
             Borrower = MapBorrower(request.Borrower),
             Intermediary = MapPerson(request.Intermediary),
-            Location = MapLocation(request.Location),
+            Recipient = MapPerson(request.Recipient),
+            Location = MapAddress(request.Location),
             Service = new Service
             {
                 FederalServiceCode = request.FederalServiceCode,
@@ -27,23 +28,57 @@ public class NfseRequestToDpsDocumentModelMapper
                 NbsCode = request.NbsCode,
                 MunicipalityCode = request.Location.City.Code ?? string.Empty
             },
-            Values = MapValues(request),
+
+            // Fiscal fields (flat on DpsDocument)
+            ServicesAmount = request.ServicesAmount,
+            TaxationType = Enum.TryParse<TaxationType>(request.TaxationType, true, out var taxationType) ? taxationType : TaxationType.WithinCity,
+            PaidAmount = request.PaidAmount,
+            PaymentMethod = ParseEnum<PaymentMethods>(request.PaymentMethod) ?? PaymentMethods.None,
+            DeductionsAmount = request.DeductionsAmount,
+            DiscountUnconditionedAmount = request.DiscountUnconditionedAmount,
+            DiscountConditionedAmount = request.DiscountConditionedAmount,
+            IssRate = request.IssRate,
+            IssTaxAmount = request.IssTaxAmount,
+            IssAmountWithheld = request.IssAmountWithheld,
+            RetentionType = ParseEnum<RetentionTypeEnum>(request.RetentionType),
+            ImmunityType = ParseEnum<ImmunityTypeEnum>(request.ImmunityType),
+            CstPisCofins = ParseEnum<CstPisCofins>(request.CstPisCofins),
+            PisCofinsBaseTax = request.PisCofinsBaseTax,
+            PisRate = request.PisRate,
+            PisAmount = request.PisAmount,
+            PisAmountWithheld = request.PisAmountWithheld,
+            CofinsRate = request.CofinsRate,
+            CofinsAmount = request.CofinsAmount,
+            CofinsAmountWithheld = request.CofinsAmountWithheld,
+            IrAmountWithheld = request.IrAmountWithheld,
+            CsllAmountWithheld = request.CsllAmountWithheld,
+            InssRate = request.InssRate,
+            InssAmountWithheld = request.InssAmountWithheld,
+            IpiRate = request.IpiRate,
+            IpiAmount = request.IpiAmount,
+            OthersAmountWithheld = request.OthersAmountWithheld,
+            NcmCode = request.NcmCode,
+            IsEarlyInstallmentPayment = request.IsEarlyInstallmentPayment,
+
+            // Groups
             ForeignTrade = MapForeignTrade(request.ForeignTrade),
             Lease = MapLease(request.Lease),
             Construction = MapConstruction(request.Construction),
+            RealEstate = MapRealEstate(request.RealEstate),
             ActivityEvent = MapActivityEvent(request.ActivityEvent),
             AdditionalInformationGroup = MapAdditionalInformationGroup(request.AdditionalInformationGroup),
             Deduction = MapDeduction(request.Deduction, request.DeductionsAmount),
             Benefit = MapBenefit(request.Benefit),
             Suspension = MapSuspension(request.Suspension),
             ApproximateTotals = MapApproximateTotals(request.ApproximateTotals),
+            ServiceAmountDetails = MapServiceAmountDetails(request.ServiceAmountDetails),
             IbsCbs = MapIbsCbs(request.IbsCbs)
         };
     }
 
-    private static Borrower MapBorrower(BorrowerRequest src)
+    private static Person MapBorrower(BorrowerRequest src)
     {
-        return new Borrower
+        return new Person
         {
             Name = src.Name,
             FederalTaxNumber = src.FederalTaxNumber,
@@ -51,7 +86,7 @@ public class NfseRequestToDpsDocumentModelMapper
             PhoneNumber = src.PhoneNumber,
             MunicipalTaxNumber = src.MunicipalTaxNumber,
             Caepf = src.Caepf,
-            NoTaxIdReason = ParseNoTaxIdReason(src.NoTaxIdReason),
+            NoTaxIdReason = ParseEnum<NoTaxIdReason>(src.NoTaxIdReason),
             Address = MapAddress(src.Address)
         };
     }
@@ -68,7 +103,7 @@ public class NfseRequestToDpsDocumentModelMapper
             PhoneNumber = src.PhoneNumber,
             MunicipalTaxNumber = src.MunicipalTaxNumber,
             Caepf = src.Caepf,
-            NoTaxIdReason = ParseNoTaxIdReason(src.NoTaxIdReason),
+            NoTaxIdReason = ParseEnum<NoTaxIdReason>(src.NoTaxIdReason),
             Address = src.Address is not null ? MapAddress(src.Address) : new Address()
         };
     }
@@ -92,63 +127,19 @@ public class NfseRequestToDpsDocumentModelMapper
         };
     }
 
-    private static Location MapLocation(LocationRequest src)
-    {
-        return new Location
-        {
-            Country = src.Country,
-            PostalCode = src.PostalCode,
-            Street = src.Street,
-            Number = src.Number,
-            AdditionalInformation = src.AdditionalInformation,
-            District = src.District,
-            City = new City
-            {
-                Code = src.City.Code ?? string.Empty,
-                Name = src.City.Name
-            },
-            State = src.State
-        };
-    }
-
-    private static Values MapValues(NfseGenerateXmlRequest req)
-    {
-        return new Values
-        {
-            ServicesAmount = req.ServicesAmount,
-            TaxationType = Enum.TryParse<TaxationType>(req.TaxationType, true, out var tt) ? tt : TaxationType.WithinCity,
-            DiscountUnconditionedAmount = req.DiscountUnconditionedAmount,
-            DiscountConditionedAmount = req.DiscountConditionedAmount,
-            IssRate = req.IssRate,
-            ImmunityType = ParseNullableInt(req.ImmunityType),
-            RetentionType = ParseRetentionType(req.RetentionType),
-            CstPisCofins = ParseNullableInt(req.CstPisCofins),
-            PisCofinsBaseTax = req.PisCofinsBaseTax,
-            PisRate = req.PisRate,
-            CofinsRate = req.CofinsRate,
-            PisAmount = req.PisAmount,
-            PisAmountWithheld = req.PisAmountWithheld,
-            CofinsAmount = req.CofinsAmount,
-            CofinsAmountWithheld = req.CofinsAmountWithheld,
-            InssAmountWithheld = req.InssAmountWithheld,
-            IrAmountWithheld = req.IrAmountWithheld,
-            CsllAmountWithheld = req.CsllAmountWithheld
-        };
-    }
-
     private static Domain.Models.ForeignTrade? MapForeignTrade(ForeignTradeRequest? src)
     {
         if (src is null) return null;
 
         return new Domain.Models.ForeignTrade
         {
-            ServiceMode = ParseInt(src.ServiceMode),
-            RelationShip = ParseInt(src.RelationShip),
+            ServiceMode = ParseEnum<ServiceModeEnum>(src.ServiceMode) ?? ServiceModeEnum.Unknown,
+            RelationShip = ParseEnum<RelationShipEnum>(src.RelationShip) ?? RelationShipEnum.NoLink,
             Currency = src.Currency,
             ServiceAmountInCurrency = src.ServiceAmountInCurrency ?? 0,
-            SupportMechanismProvider = ParseInt(src.SupportMechanismProvider),
-            SupportMechanismReceiver = ParseInt(src.SupportMechanismReceiver),
-            TemporaryGoods = ParseInt(src.TemporaryGoods),
+            SupportMechanismProvider = ParseEnum<SupportMechanismProviderEnum>(src.SupportMechanismProvider) ?? SupportMechanismProviderEnum.Unknown,
+            SupportMechanismReceiver = ParseEnum<SupportMechanismReceiverEnum>(src.SupportMechanismReceiver) ?? SupportMechanismReceiverEnum.Unknown,
+            TemporaryGoods = ParseEnum<TemporaryGoodsEnum>(src.TemporaryGoods) ?? TemporaryGoodsEnum.Unknown,
             ImportDeclaration = src.ImportDeclaration,
             ExportRegistration = src.ExportRegistration,
             MdicDelivery = src.MdicDelivery ?? false
@@ -161,8 +152,8 @@ public class NfseRequestToDpsDocumentModelMapper
 
         return new Domain.Models.Lease
         {
-            Category = ParseInt(src.Category),
-            ObjectType = ParseInt(src.ObjectType),
+            Category = ParseEnum<LeaseCategoryEnum>(src.Category) ?? LeaseCategoryEnum.Lease,
+            ObjectType = ParseEnum<LeaseObjectTypeEnum>(src.ObjectType) ?? LeaseObjectTypeEnum.Railway,
             TotalLength = src.TotalLength,
             PolesCount = src.PolesCount
         };
@@ -179,7 +170,19 @@ public class NfseRequestToDpsDocumentModelMapper
             WorkId = src.WorkId is not null
                 ? new ConstructionWorkId { Scheme = src.WorkId.Scheme, Value = src.WorkId.Value }
                 : null,
-            SiteAddress = src.SiteAddress is not null ? MapLocation(src.SiteAddress) : null
+            SiteAddress = src.SiteAddress is not null ? MapAddress(src.SiteAddress) : null
+        };
+    }
+
+    private static Domain.Models.RealEstate? MapRealEstate(RealEstateRequest? src)
+    {
+        if (src is null) return null;
+
+        return new Domain.Models.RealEstate
+        {
+            PropertyFiscalRegistration = src.PropertyFiscalRegistration,
+            CibCode = src.CibCode,
+            SiteAddress = src.SiteAddress is not null ? MapAddress(src.SiteAddress) : null
         };
     }
 
@@ -193,7 +196,7 @@ public class NfseRequestToDpsDocumentModelMapper
             BeginOn = src.BeginOn ?? default,
             EndOn = src.EndOn ?? default,
             Code = src.Code,
-            Address = src.Address is not null ? MapLocation(src.Address) : null
+            Address = src.Address is not null ? MapAddress(src.Address) : null
         };
     }
 
@@ -231,7 +234,7 @@ public class NfseRequestToDpsDocumentModelMapper
     private static Domain.Models.Suspension? MapSuspension(SuspensionRequest? src)
     {
         if (src is null) return null;
-        return new Domain.Models.Suspension { ProcessNumber = src.ProcessNumber };
+        return new Domain.Models.Suspension { ProcessNumber = src.ProcessNumber, Reason = src.Reason };
     }
 
     private static Domain.Models.ApproximateTotals? MapApproximateTotals(ApproximateTotalsRequest? src)
@@ -247,32 +250,17 @@ public class NfseRequestToDpsDocumentModelMapper
         };
     }
 
-    private static NoTaxIdReason? ParseNoTaxIdReason(string? value)
+    private static Domain.Models.ServiceAmountDetails? MapServiceAmountDetails(ServiceAmountDetailsRequest? src)
     {
-        if (value is null) return null;
-        return Enum.TryParse<NoTaxIdReason>(value, true, out var r) ? r : null;
-    }
+        if (src is null) return null;
 
-    private static int? ParseRetentionType(string? value)
-    {
-        return value switch
+        return new Domain.Models.ServiceAmountDetails
         {
-            "NotWithheld" => 1,
-            "WithheldByBuyer" => 2,
-            "WithheldByIntermediary" => 3,
-            _ => null
+            InitialChargedAmount = src.InitialChargedAmount,
+            FinalChargedAmount = src.FinalChargedAmount,
+            FineAmount = src.FineAmount,
+            InterestAmount = src.InterestAmount
         };
-    }
-
-    private static int? ParseNullableInt(string? value)
-    {
-        if (value is null) return null;
-        return int.TryParse(value, out var i) ? i : null;
-    }
-
-    private static int ParseInt(string? value)
-    {
-        return int.TryParse(value, out var i) ? i : 0;
     }
 
     private static Domain.Models.IbsCbs? MapIbsCbs(IbsCbsRequest? src)
@@ -282,13 +270,13 @@ public class NfseRequestToDpsDocumentModelMapper
         return new Domain.Models.IbsCbs
         {
             ClassCode = src.ClassCode,
-            Purpose = Enum.TryParse<IbsCbsPurpose>(src.Purpose, true, out var p) ? p : IbsCbsPurpose.Regular,
+            Purpose = Enum.TryParse<IbsCbsPurpose>(src.Purpose, true, out var ibsCbsPurpose) ? ibsCbsPurpose : IbsCbsPurpose.Regular,
             IsDonation = src.IsDonation,
             PersonalUse = src.PersonalUse ?? false,
             OperationIndicator = src.OperationIndicator,
-            OperationType = Enum.TryParse<IbsCbsOperationType>(src.OperationType, true, out var ot) ? ot : null,
-            DestinationIndicator = Enum.TryParse<IbsCbsDestinationIndicator>(src.DestinationIndicator, true, out var di)
-                ? di : IbsCbsDestinationIndicator.SameAsBuyer,
+            OperationType = Enum.TryParse<IbsCbsOperationType>(src.OperationType, true, out var ibsCbsOperationType) ? ibsCbsOperationType : null,
+            DestinationIndicator = Enum.TryParse<IbsCbsDestinationIndicator>(src.DestinationIndicator, true, out var destinationIndicator)
+                ? destinationIndicator : IbsCbsDestinationIndicator.SameAsBuyer,
             SituationCode = src.SituationCode,
             Basis = src.Basis,
             ReimbursedResuppliedAmount = src.ReimbursedResuppliedAmount,
@@ -300,7 +288,7 @@ public class NfseRequestToDpsDocumentModelMapper
             RegularTaxation = MapRegularTaxation(src.RegularTaxation),
             ThirdPartyReimbursements = MapThirdPartyReimbursements(src.ThirdPartyReimbursements),
             Recipient = MapPerson(src.Recipient),
-            RealEstate = MapRealEstate(src.RealEstate),
+            RealEstate = MapIbsCbsRealEstate(src.RealEstate),
             Deferment = MapDeferment(src.Deferment)
         };
     }
@@ -321,8 +309,8 @@ public class NfseRequestToDpsDocumentModelMapper
         if (src is null) return null;
         return new IbsCbsGovernmentPurchase
         {
-            EntityType = Enum.TryParse<IbsCbsGovernmentEntityType>(src.EntityType, true, out var et) ? et : null,
-            OperationType = Enum.TryParse<IbsCbsOperationType>(src.OperationType, true, out var ot) ? ot : null
+            EntityType = Enum.TryParse<IbsCbsGovernmentEntityType>(src.EntityType, true, out var entityType) ? entityType : null,
+            OperationType = Enum.TryParse<IbsCbsOperationType>(src.OperationType, true, out var operationType) ? operationType : null
         };
     }
 
@@ -338,46 +326,46 @@ public class NfseRequestToDpsDocumentModelMapper
 
         return new IbsCbsThirdPartyReimbursements
         {
-            Documents = src.Documents.Select(d => new IbsCbsReimbursementDocument
+            Documents = src.Documents.Select(reimbursementDoc => new IbsCbsReimbursementDocument
             {
-                OtherNationalDfe = d.OtherNationalDfe is not null
+                OtherNationalDfe = reimbursementDoc.OtherNationalDfe is not null
                     ? new IbsCbsDfeNacional
                     {
-                        DfeType = d.OtherNationalDfe.DfeType,
-                        DfeTypeText = d.OtherNationalDfe.DfeTypeText,
-                        DfeKey = d.OtherNationalDfe.DfeKey
+                        DfeType = reimbursementDoc.OtherNationalDfe.DfeType,
+                        DfeTypeText = reimbursementDoc.OtherNationalDfe.DfeTypeText,
+                        DfeKey = reimbursementDoc.OtherNationalDfe.DfeKey
                     }
                     : null,
-                OtherFiscalDoc = d.OtherFiscalDoc is not null
+                OtherFiscalDoc = reimbursementDoc.OtherFiscalDoc is not null
                     ? new Domain.Models.IbsCbsFiscalDoc
                     {
-                        IssuerCityCode = d.OtherFiscalDoc.IssuerCityCode,
-                        FiscalDocNumber = d.OtherFiscalDoc.FiscalDocNumber,
-                        FiscalDocDescription = d.OtherFiscalDoc.FiscalDocDescription
+                        IssuerCityCode = reimbursementDoc.OtherFiscalDoc.IssuerCityCode,
+                        FiscalDocNumber = reimbursementDoc.OtherFiscalDoc.FiscalDocNumber,
+                        FiscalDocDescription = reimbursementDoc.OtherFiscalDoc.FiscalDocDescription
                     }
                     : null,
-                Supplier = d.Supplier is not null ? MapPerson(d.Supplier) : null,
-                IssueDate = DateOnly.TryParse(d.IssueDate, out var id) ? id : null,
-                AccrualOn = DateOnly.TryParse(d.AccrualOn, out var ac) ? ac : null,
-                ReimbursementType = Enum.TryParse<IbsCbsReimbursementType>(d.ReimbursementType, true, out var rt)
-                    ? rt : IbsCbsReimbursementType.Other,
-                Amount = d.Amount ?? 0
+                Supplier = reimbursementDoc.Supplier is not null ? MapPerson(reimbursementDoc.Supplier) : null,
+                IssueDate = DateOnly.TryParse(reimbursementDoc.IssueDate, out var issueDate) ? issueDate : null,
+                AccrualOn = DateOnly.TryParse(reimbursementDoc.AccrualOn, out var accrualOn) ? accrualOn : null,
+                ReimbursementType = Enum.TryParse<IbsCbsReimbursementType>(reimbursementDoc.ReimbursementType, true, out var reimbursementType)
+                    ? reimbursementType : IbsCbsReimbursementType.Other,
+                Amount = reimbursementDoc.Amount ?? 0
             }).ToList()
         };
     }
 
-    private static Domain.Models.RealEstate? MapRealEstate(IbsCbsRealEstateRequest? src)
+    private static Domain.Models.RealEstate? MapIbsCbsRealEstate(IbsCbsRealEstateRequest? src)
     {
         if (src is null) return null;
         return new Domain.Models.RealEstate
         {
             PropertyFiscalRegistration = src.PropertyFiscalRegistration,
             CibCode = src.CibCode,
-            SiteAddress = src.SiteAddress is not null ? MapLocation(src.SiteAddress) : null
+            SiteAddress = src.SiteAddress is not null ? MapAddress(src.SiteAddress) : null
         };
     }
 
-    private static Provider MapProvider(ProviderRequest src, LocationRequest? fallbackLocation)
+    private static Person MapProvider(ProviderRequest src, LocationRequest? fallbackLocation)
     {
         var cnpj = src.FederalTaxNumber > 0
             ? src.FederalTaxNumber.ToString().PadLeft(14, '0')
@@ -387,7 +375,7 @@ public class NfseRequestToDpsDocumentModelMapper
                                ?? fallbackLocation?.City?.Code
                                ?? string.Empty;
 
-        var provider = new Provider
+        var provider = new Person
         {
             Cnpj = cnpj,
             FederalTaxNumber = src.FederalTaxNumber,
@@ -420,5 +408,11 @@ public class NfseRequestToDpsDocumentModelMapper
             provider.SpecialTaxRegime = specialTaxRegime;
 
         return provider;
+    }
+
+    private static TEnum? ParseEnum<TEnum>(string? value) where TEnum : struct, Enum
+    {
+        if (value is null) return null;
+        return Enum.TryParse<TEnum>(value, true, out var parsed) ? parsed : null;
     }
 }

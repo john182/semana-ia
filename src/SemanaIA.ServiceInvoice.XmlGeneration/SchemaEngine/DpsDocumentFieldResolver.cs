@@ -12,14 +12,20 @@ public class DpsDocumentFieldResolver
         _document = document;
     }
 
+    /// <summary>
+    /// Prefix that was used when fiscal fields lived in a nested Values object.
+    /// Now those fields are flat on DpsDocument, so we strip the prefix transparently.
+    /// </summary>
+    private const string LegacyValuesPrefix = "Values.";
+
     public object? Resolve(string fieldPath)
     {
-        return ResolvePropertyPath(_document, fieldPath);
+        return ResolvePropertyPath(_document, NormalizeLegacyPath(fieldPath));
     }
 
     public object? ResolveWithEnumName(string fieldPath)
     {
-        return ResolvePropertyPathPreservingEnumNames(_document, fieldPath);
+        return ResolvePropertyPathPreservingEnumNames(_document, NormalizeLegacyPath(fieldPath));
     }
 
     public static object? ResolvePropertyPath(object source, string path)
@@ -53,6 +59,14 @@ public class DpsDocumentFieldResolver
     }
 
     // --- Private methods ---
+
+    private static string NormalizeLegacyPath(string path)
+    {
+        if (path.StartsWith(LegacyValuesPrefix, StringComparison.OrdinalIgnoreCase))
+            return path[LegacyValuesPrefix.Length..];
+
+        return path;
+    }
 
     private static object? ResolvePropertyPathPreservingEnumNames(object source, string path)
     {

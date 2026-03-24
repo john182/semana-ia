@@ -36,6 +36,14 @@ public class NfseGenerateXmlRequest
     public string? CnaeCode { get; set; }
     public string? NcmCode { get; set; }
     public decimal? PaidAmount { get; set; }
+
+    /// <summary>
+    /// Forma de pagamento: None, Cash, Check, CreditCard, DebitCard,
+    /// StoreCredit, FoodVoucher, MealVoucher, GiftCard, FuelVoucher, Others.
+    /// </summary>
+    public string? PaymentMethod { get; set; }
+
+    public decimal? InssRate { get; set; }
     public DateOnly? AccrualOn { get; set; }
     public string? CstPisCofins { get; set; }
 

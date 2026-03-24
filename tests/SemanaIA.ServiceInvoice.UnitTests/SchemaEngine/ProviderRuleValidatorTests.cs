@@ -117,7 +117,7 @@ public class ProviderRuleValidatorTests
         // Arrange
         var rules = new List<ProviderRule>
         {
-            new() { Type = RuleType.EnumMapping, Target = "infDPS.tribISSQN", Source = "Values.TaxationType", Mappings = null }
+            new() { Type = RuleType.EnumMapping, Target = "infDPS.tribISSQN", Source = "TaxationType", Mappings = null }
         };
 
         // Act
@@ -142,7 +142,7 @@ public class ProviderRuleValidatorTests
             {
                 Type = RuleType.ConditionalEmission,
                 Target = "infDPS.pAliq",
-                Source = "Values.IssRate",
+                Source = "IssRate",
                 Action = RuleAction.Emit,
                 Condition = null
             }
@@ -170,9 +170,9 @@ public class ProviderRuleValidatorTests
             {
                 Type = RuleType.ConditionalEmission,
                 Target = "infDPS.pAliq",
-                Source = "Values.IssRate",
+                Source = "IssRate",
                 Action = null,
-                Condition = new RuleCondition { Field = "Values.IssRate", Operator = ComparisonOperator.GreaterThan, Value = "0" }
+                Condition = new RuleCondition { Field = "IssRate", Operator = ComparisonOperator.GreaterThan, Value = "0" }
             }
         };
 
@@ -198,11 +198,11 @@ public class ProviderRuleValidatorTests
             {
                 Type = RuleType.ConditionalEmission,
                 Target = "infDPS.pAliq",
-                Source = "Values.IssRate",
+                Source = "IssRate",
                 Action = RuleAction.Emit,
                 Condition = new RuleCondition
                 {
-                    Field = "Values.AliquotaBase",
+                    Field = "AliquotaBase",
                     Operator = ComparisonOperator.GreaterThan,
                     Value = "0"
                 }
@@ -214,7 +214,7 @@ public class ProviderRuleValidatorTests
 
         // Assert
         errors.ShouldNotBeEmpty();
-        errors.ShouldContain(error => error.Message.Contains("Values.AliquotaBase"));
+        errors.ShouldContain(error => error.Message.Contains("AliquotaBase"));
     }
 
     // ==========================================================
@@ -231,7 +231,7 @@ public class ProviderRuleValidatorTests
             {
                 Type = RuleType.ConditionalEmission,
                 Target = "infDPS.pAliq",
-                Source = "Values.IssRate",
+                Source = "IssRate",
                 Action = RuleAction.Emit,
                 Condition = new RuleCondition
                 {

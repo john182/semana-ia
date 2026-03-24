@@ -55,7 +55,7 @@ public class RuleConditionTests
         // Arrange
         var condition = new RuleCondition
         {
-            Field = "Values.TaxationType",
+            Field = "TaxationType",
             Operator = ComparisonOperator.NotEquals,
             Value = "Immune"
         };
@@ -77,7 +77,7 @@ public class RuleConditionTests
         // Arrange
         var condition = new RuleCondition
         {
-            Field = "Values.IssRate",
+            Field = "IssRate",
             Operator = ComparisonOperator.GreaterThan,
             Value = "0"
         };
@@ -95,7 +95,7 @@ public class RuleConditionTests
         // Arrange
         var condition = new RuleCondition
         {
-            Field = "Values.IssRate",
+            Field = "IssRate",
             Operator = ComparisonOperator.GreaterThan,
             Value = "0"
         };
@@ -189,7 +189,7 @@ public class RuleConditionTests
         // Arrange
         var condition = new RuleCondition
         {
-            Field = "Values.TaxationType",
+            Field = "TaxationType",
             Operator = ComparisonOperator.In,
             Value = "WithinCity,OutsideCity,Export"
         };
@@ -207,7 +207,7 @@ public class RuleConditionTests
         // Arrange
         var condition = new RuleCondition
         {
-            Field = "Values.TaxationType",
+            Field = "TaxationType",
             Operator = ComparisonOperator.In,
             Value = "WithinCity,OutsideCity,Export"
         };
@@ -255,7 +255,7 @@ public class RuleConditionTests
             Conditions =
             [
                 new RuleCondition { Field = "Provider.TaxRegime", Operator = ComparisonOperator.Equals, Value = "SimplesNacional" },
-                new RuleCondition { Field = "Values.IssRate", Operator = ComparisonOperator.GreaterThan, Value = "0" }
+                new RuleCondition { Field = "IssRate", Operator = ComparisonOperator.GreaterThan, Value = "0" }
             ]
         };
 
@@ -263,7 +263,7 @@ public class RuleConditionTests
         var result = condition.Evaluate(field => field switch
         {
             "Provider.TaxRegime" => "SimplesNacional",
-            "Values.IssRate" => "0.05",
+            "IssRate" => "0.05",
             _ => null
         });
 
@@ -281,7 +281,7 @@ public class RuleConditionTests
             Conditions =
             [
                 new RuleCondition { Field = "Provider.TaxRegime", Operator = ComparisonOperator.Equals, Value = "SimplesNacional" },
-                new RuleCondition { Field = "Values.IssRate", Operator = ComparisonOperator.GreaterThan, Value = "0" }
+                new RuleCondition { Field = "IssRate", Operator = ComparisonOperator.GreaterThan, Value = "0" }
             ]
         };
 
@@ -289,7 +289,7 @@ public class RuleConditionTests
         var result = condition.Evaluate(field => field switch
         {
             "Provider.TaxRegime" => "LucroPresumido",
-            "Values.IssRate" => "0.05",
+            "IssRate" => "0.05",
             _ => null
         });
 
@@ -310,8 +310,8 @@ public class RuleConditionTests
             LogicalOperator = LogicalOperator.Or,
             Conditions =
             [
-                new RuleCondition { Field = "Values.TaxationType", Operator = ComparisonOperator.Equals, Value = "Immune" },
-                new RuleCondition { Field = "Values.TaxationType", Operator = ComparisonOperator.Equals, Value = "Free" }
+                new RuleCondition { Field = "TaxationType", Operator = ComparisonOperator.Equals, Value = "Immune" },
+                new RuleCondition { Field = "TaxationType", Operator = ComparisonOperator.Equals, Value = "Free" }
             ]
         };
 
@@ -331,8 +331,8 @@ public class RuleConditionTests
             LogicalOperator = LogicalOperator.Or,
             Conditions =
             [
-                new RuleCondition { Field = "Values.TaxationType", Operator = ComparisonOperator.Equals, Value = "Immune" },
-                new RuleCondition { Field = "Values.TaxationType", Operator = ComparisonOperator.Equals, Value = "Free" }
+                new RuleCondition { Field = "TaxationType", Operator = ComparisonOperator.Equals, Value = "Immune" },
+                new RuleCondition { Field = "TaxationType", Operator = ComparisonOperator.Equals, Value = "Free" }
             ]
         };
 
@@ -356,14 +356,14 @@ public class RuleConditionTests
             LogicalOperator = LogicalOperator.And,
             Conditions =
             [
-                new RuleCondition { Field = "Values.ServicesAmount", Operator = ComparisonOperator.GreaterThan, Value = "0" },
+                new RuleCondition { Field = "ServicesAmount", Operator = ComparisonOperator.GreaterThan, Value = "0" },
                 new RuleCondition
                 {
                     LogicalOperator = LogicalOperator.Or,
                     Conditions =
                     [
-                        new RuleCondition { Field = "Values.TaxationType", Operator = ComparisonOperator.Equals, Value = "WithinCity" },
-                        new RuleCondition { Field = "Values.TaxationType", Operator = ComparisonOperator.Equals, Value = "OutsideCity" }
+                        new RuleCondition { Field = "TaxationType", Operator = ComparisonOperator.Equals, Value = "WithinCity" },
+                        new RuleCondition { Field = "TaxationType", Operator = ComparisonOperator.Equals, Value = "OutsideCity" }
                     ]
                 }
             ]
@@ -372,8 +372,8 @@ public class RuleConditionTests
         // Act
         var result = condition.Evaluate(field => field switch
         {
-            "Values.ServicesAmount" => "1000",
-            "Values.TaxationType" => "OutsideCity",
+            "ServicesAmount" => "1000",
+            "TaxationType" => "OutsideCity",
             _ => null
         });
 
@@ -390,14 +390,14 @@ public class RuleConditionTests
             LogicalOperator = LogicalOperator.And,
             Conditions =
             [
-                new RuleCondition { Field = "Values.ServicesAmount", Operator = ComparisonOperator.GreaterThan, Value = "0" },
+                new RuleCondition { Field = "ServicesAmount", Operator = ComparisonOperator.GreaterThan, Value = "0" },
                 new RuleCondition
                 {
                     LogicalOperator = LogicalOperator.Or,
                     Conditions =
                     [
-                        new RuleCondition { Field = "Values.TaxationType", Operator = ComparisonOperator.Equals, Value = "WithinCity" },
-                        new RuleCondition { Field = "Values.TaxationType", Operator = ComparisonOperator.Equals, Value = "OutsideCity" }
+                        new RuleCondition { Field = "TaxationType", Operator = ComparisonOperator.Equals, Value = "WithinCity" },
+                        new RuleCondition { Field = "TaxationType", Operator = ComparisonOperator.Equals, Value = "OutsideCity" }
                     ]
                 }
             ]
@@ -406,8 +406,8 @@ public class RuleConditionTests
         // Act
         var result = condition.Evaluate(field => field switch
         {
-            "Values.ServicesAmount" => "0",
-            "Values.TaxationType" => "WithinCity",
+            "ServicesAmount" => "0",
+            "TaxationType" => "WithinCity",
             _ => null
         });
 
@@ -459,7 +459,7 @@ public class RuleConditionTests
         // Arrange
         var condition = new RuleCondition
         {
-            Field = "Values.ServicesAmount",
+            Field = "ServicesAmount",
             Operator = ComparisonOperator.LessThanOrEqual,
             Value = "100"
         };
@@ -477,7 +477,7 @@ public class RuleConditionTests
         // Arrange
         var condition = new RuleCondition
         {
-            Field = "Values.ServicesAmount",
+            Field = "ServicesAmount",
             Operator = ComparisonOperator.GreaterThanOrEqual,
             Value = "100"
         };

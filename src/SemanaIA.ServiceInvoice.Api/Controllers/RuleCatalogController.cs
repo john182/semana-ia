@@ -100,21 +100,21 @@ public class RuleCatalogController : ControllerBase
                 Name = "Default",
                 Description = "Vincula um campo do dominio com valor fallback quando nulo.",
                 RequiredFields = ["target", "source", "fallbackValue"],
-                Example = """{ "type": "Default", "target": "infDPS.tpRetISSQN", "source": "Values.RetentionType", "fallbackValue": "1" }"""
+                Example = """{ "type": "Default", "target": "infDPS.tpRetISSQN", "source": "RetentionType", "fallbackValue": "1" }"""
             },
             new()
             {
                 Name = "EnumMapping",
                 Description = "Mapeia um enum do dominio para valores do provider.",
                 RequiredFields = ["target", "source", "mappings"],
-                Example = """{ "type": "EnumMapping", "target": "infDPS.tribISSQN", "source": "Values.TaxationType", "mappings": { "WithinCity": "1", "Immune": "2" }, "defaultMapping": "1" }"""
+                Example = """{ "type": "EnumMapping", "target": "infDPS.tribISSQN", "source": "TaxationType", "mappings": { "WithinCity": "1", "Immune": "2" }, "defaultMapping": "1" }"""
             },
             new()
             {
                 Name = "ConditionalEmission",
                 Description = "Emite ou omite um campo com base em uma condicao composta.",
                 RequiredFields = ["target", "source", "condition", "action"],
-                Example = """{ "type": "ConditionalEmission", "target": "infDPS.pAliq", "source": "Values.IssRate", "action": "Emit", "condition": { "field": "Values.IssRate", "operator": "GreaterThan", "value": "0" } }"""
+                Example = """{ "type": "ConditionalEmission", "target": "infDPS.pAliq", "source": "IssRate", "action": "Emit", "condition": { "field": "IssRate", "operator": "GreaterThan", "value": "0" } }"""
             },
             new()
             {
@@ -212,7 +212,7 @@ public class RuleCatalogController : ControllerBase
 public class SourceFieldResponse
 {
     /// <summary>
-    /// Caminho hierarquico do campo (ex: "Provider.Cnpj", "Values.TaxationType").
+    /// Caminho hierarquico do campo (ex: "Provider.Cnpj", "TaxationType").
     /// </summary>
     public string Path { get; set; } = string.Empty;
 

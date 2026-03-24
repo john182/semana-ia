@@ -94,13 +94,13 @@ public class NationalDpsXBuilderXmlBuilder
         {
             xml.vServPrest(XBuilder.Fragment(vServPrest =>
             {
-                vServPrest.vServ(model.Values.ServicesAmount.ToString("0.00", CultureInfo.InvariantCulture));
+                vServPrest.vServ(model.ServicesAmount.ToString("0.00", CultureInfo.InvariantCulture));
             }));
             xml.trib(XBuilder.Fragment(trib =>
             {
                 trib.tribMun(XBuilder.Fragment(tribMun =>
                 {
-                    tribMun.tribISSQN(model.Values.TaxationType switch
+                    tribMun.tribISSQN(model.TaxationType switch
                     {
                         TaxationType.Export => "3",
                         TaxationType.Immune => "2",

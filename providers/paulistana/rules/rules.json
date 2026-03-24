@@ -28,9 +28,9 @@
     { "type": "Binding", "target": "RPS.ValorIR", "sourceType": "constant", "constantValue": "0" },
     { "type": "Binding", "target": "RPS.ValorCSLL", "sourceType": "constant", "constantValue": "0" },
     { "type": "Binding", "target": "RPS.CodigoServico", "source": "Service.FederalServiceCode" },
-    { "type": "Binding", "target": "RPS.AliquotaServicos", "source": "Values.IssRate", "format": "F4" },
+    { "type": "Binding", "target": "RPS.AliquotaServicos", "source": "IssRate", "format": "F4" },
     { "type": "Binding", "target": "RPS.ISSRetido", "sourceType": "constant", "constantValue": "false" },
     { "type": "Binding", "target": "RPS.Discriminacao", "source": "Service.Description" },
-    { "type": "Binding", "target": "RPS.ValorInicialCobrado", "source": "Values.ServicesAmount", "format": "F2" }
+    { "type": "Binding", "target": "RPS.ValorInicialCobrado", "source": "ServicesAmount", "format": "F2" }
   ]
 }

@@ -24,9 +24,9 @@ public static class CommonFieldMappingDictionary
         ["cTribMun"] = "CityServiceCode",
 
         // Values
-        ["vServ"] = "Values.ServicesAmount",
-        ["ValorServicos"] = "Values.ServicesAmount",
-        ["Aliquota"] = "Values.IssRate",
+        ["vServ"] = "ServicesAmount",
+        ["ValorServicos"] = "ServicesAmount",
+        ["Aliquota"] = "IssRate",
 
         // Application metadata (constants)
         ["verAplic"] = "const:V_1.00.02",
@@ -82,7 +82,7 @@ public static class CommonFieldMappingDictionary
 
         // Tax amounts (ABRASF)
         ["ValorIss"] = "const:0.00",
-        ["BaseCalculo"] = "Values.ServicesAmount",
+        ["BaseCalculo"] = "ServicesAmount",
         ["ValorDeducoes"] = "const:0.00",
         ["OutrasInformacoes"] = "const: ",
         ["ValorPis"] = "const:0.00",
@@ -93,7 +93,7 @@ public static class CommonFieldMappingDictionary
         ["DescontoIncondicionado"] = "const:0.00",
         ["DescontoCondicionado"] = "const:0.00",
         ["OutrasRetencoes"] = "const:0.00",
-        ["ValorLiquidoNfse"] = "Values.ServicesAmount",
+        ["ValorLiquidoNfse"] = "ServicesAmount",
 
         // Identification (ABRASF)
         ["InscricaoEstadual"] = "const: ",

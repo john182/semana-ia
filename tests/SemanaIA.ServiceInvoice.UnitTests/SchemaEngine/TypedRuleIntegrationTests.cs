@@ -59,16 +59,16 @@ public class TypedRuleIntegrationTests
         // Arrange
         var rules = new List<ProviderRule>
         {
-            new() { Type = RuleType.Binding, Target = "field1", Source = "Values.ServicesAmount", Format = "F2" },
+            new() { Type = RuleType.Binding, Target = "field1", Source = "ServicesAmount", Format = "F2" },
             new()
             {
                 Type = RuleType.ConditionalEmission,
                 Target = "conditionalField",
-                Source = "Values.ImmunityType",
+                Source = "ImmunityType",
                 Action = RuleAction.Emit,
                 Condition = new RuleCondition
                 {
-                    Field = "Values.TaxationType",
+                    Field = "TaxationType",
                     Operator = ComparisonOperator.Equals,
                     Value = "Immune"
                 }
@@ -76,8 +76,8 @@ public class TypedRuleIntegrationTests
         };
         var resolver = new TypedRuleResolver(rules);
         var document = CreateMinimalNacionalDocument();
-        document.Values.TaxationType = TaxationType.Immune;
-        document.Values.ImmunityType = 1;
+        document.TaxationType = TaxationType.Immune;
+        document.ImmunityType = ImmunityTypeEnum.PublicEntitiesMutual;
         var profile = new ProviderProfile { Rules = rules };
 
         // Act
@@ -97,11 +97,11 @@ public class TypedRuleIntegrationTests
             {
                 Type = RuleType.ConditionalEmission,
                 Target = "conditionalField",
-                Source = "Values.ImmunityType",
+                Source = "ImmunityType",
                 Action = RuleAction.Emit,
                 Condition = new RuleCondition
                 {
-                    Field = "Values.TaxationType",
+                    Field = "TaxationType",
                     Operator = ComparisonOperator.Equals,
                     Value = "Immune"
                 }
@@ -109,7 +109,7 @@ public class TypedRuleIntegrationTests
         };
         var resolver = new TypedRuleResolver(rules);
         var document = CreateMinimalNacionalDocument();
-        document.Values.TaxationType = TaxationType.WithinCity;
+        document.TaxationType = TaxationType.WithinCity;
         var profile = new ProviderProfile { Rules = rules };
 
         // Act
@@ -138,7 +138,7 @@ public class TypedRuleIntegrationTests
             {
                 Type = RuleType.EnumMapping,
                 Target = "tribISSQN",
-                Source = "Values.TaxationType",
+                Source = "TaxationType",
                 Mappings = new Dictionary<string, string>
                 {
                     ["WithinCity"] = "1",
@@ -152,7 +152,7 @@ public class TypedRuleIntegrationTests
         };
         var resolver = new TypedRuleResolver(rules);
         var document = CreateMinimalNacionalDocument();
-        document.Values.TaxationType = taxationType;
+        document.TaxationType = taxationType;
         var profile = new ProviderProfile { Rules = rules };
 
         // Act
@@ -173,7 +173,7 @@ public class TypedRuleIntegrationTests
             {
                 Type = RuleType.EnumMapping,
                 Target = "tribISSQN",
-                Source = "Values.TaxationType",
+                Source = "TaxationType",
                 Mappings = new Dictionary<string, string>
                 {
                     ["WithinCity"] = "1",
@@ -184,7 +184,7 @@ public class TypedRuleIntegrationTests
         };
         var resolver = new TypedRuleResolver(rules);
         var document = CreateMinimalNacionalDocument();
-        document.Values.TaxationType = TaxationType.SuspendedCourtDecision;
+        document.TaxationType = TaxationType.SuspendedCourtDecision;
         var profile = new ProviderProfile { Rules = rules };
 
         // Act
@@ -302,7 +302,7 @@ public class TypedRuleIntegrationTests
         Number = 1,
         IssuedOn = new DateTimeOffset(2026, 1, 20, 10, 0, 0, TimeSpan.FromHours(-3)),
         CompetenceDate = new DateOnly(2026, 1, 20),
-        Provider = new Provider
+        Provider = new Person
         {
             Cnpj = "00000000000000",
             MunicipalityCode = "3550308"
@@ -314,11 +314,8 @@ public class TypedRuleIntegrationTests
             NbsCode = "101010100",
             MunicipalityCode = "3550308"
         },
-        Values = new Values
-        {
-            ServicesAmount = 1000.00m,
-            TaxationType = TaxationType.WithinCity
-        }
+        ServicesAmount = 1000.00m,
+        TaxationType = TaxationType.WithinCity
     };
 
     private static SchemaDocument CreateEmptySchema() => new(

@@ -15,7 +15,7 @@
   },
   "rules": [
     { "type": "Binding", "target": "InfDeclaracaoPrestacaoServico.Competencia", "source": "CompetenceDate", "format": "yyyy-MM-dd" },
-    { "type": "Binding", "target": "InfDeclaracaoPrestacaoServico.Servico.Valores.ValorServicos", "source": "Values.ServicesAmount", "format": "F2" },
+    { "type": "Binding", "target": "InfDeclaracaoPrestacaoServico.Servico.Valores.ValorServicos", "source": "ServicesAmount", "format": "F2" },
     { "type": "Binding", "target": "InfDeclaracaoPrestacaoServico.Servico.IssRetido", "sourceType": "constant", "constantValue": "2" },
     { "type": "Binding", "target": "InfDeclaracaoPrestacaoServico.Servico.ItemListaServico", "source": "Service.FederalServiceCode" },
     { "type": "Binding", "target": "InfDeclaracaoPrestacaoServico.Servico.CodigoNbs", "source": "Service.NbsCode" },

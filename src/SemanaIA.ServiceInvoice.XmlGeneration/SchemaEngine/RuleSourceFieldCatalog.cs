@@ -11,10 +11,17 @@ public class RuleSourceFieldCatalog
 
     public static List<SourceFieldEntry> GetFields() => CachedFields.Value;
 
+    /// <summary>
+    /// Prefix that was used when fiscal fields lived in a nested Values object.
+    /// Now those fields are flat on DpsDocument, so we strip the prefix for lookup.
+    /// </summary>
+    private const string LegacyValuesPrefix = "Values.";
+
     public static bool Contains(string fieldPath)
     {
+        var normalizedPath = NormalizeLegacyPath(fieldPath);
         return CachedFields.Value.Any(entry =>
-            string.Equals(entry.Path, fieldPath, StringComparison.OrdinalIgnoreCase));
+            string.Equals(entry.Path, normalizedPath, StringComparison.OrdinalIgnoreCase));
     }
 
     // --- Private methods ---
@@ -95,5 +102,13 @@ public class RuleSourceFieldCatalog
             return $"Enum {propertyType.Name} — valores: {string.Join(", ", Enum.GetNames(propertyType))}";
 
         return $"Campo {path} ({GetFriendlyTypeName(propertyType)})";
+    }
+
+    private static string NormalizeLegacyPath(string path)
+    {
+        if (path.StartsWith(LegacyValuesPrefix, StringComparison.OrdinalIgnoreCase))
+            return path[LegacyValuesPrefix.Length..];
+
+        return path;
     }
 }

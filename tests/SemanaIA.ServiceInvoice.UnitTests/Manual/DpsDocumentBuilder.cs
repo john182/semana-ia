@@ -55,14 +55,14 @@ public class DpsDocumentBuilder
             Number = "10", District = "NY",
             City = new City { Name = "NEW YORK" }, State = "NY"
         };
-        _doc.Values.RetentionType = 2;
+        _doc.RetentionType = RetentionTypeEnum.WithheldByBuyer;
         return this;
     }
 
     public DpsDocumentBuilder WithBorrowerZeroTax()
     {
         _doc.Borrower.FederalTaxNumber = 0;
-        _doc.Values.RetentionType = 1;
+        _doc.RetentionType = RetentionTypeEnum.NotWithheld;
         return this;
     }
 
@@ -70,7 +70,7 @@ public class DpsDocumentBuilder
     {
         _doc.Borrower.FederalTaxNumber = 0;
         _doc.Borrower.NoTaxIdReason = NoTaxIdReason.NotInformedOriginal;
-        _doc.Values.RetentionType = 2;
+        _doc.RetentionType = RetentionTypeEnum.WithheldByBuyer;
         return this;
     }
 
@@ -120,40 +120,40 @@ public class DpsDocumentBuilder
 
     public DpsDocumentBuilder WithDiscounts(decimal unconditioned = 200, decimal conditioned = 100)
     {
-        _doc.Values.DiscountUnconditionedAmount = unconditioned;
-        _doc.Values.DiscountConditionedAmount = conditioned;
+        _doc.DiscountUnconditionedAmount = unconditioned;
+        _doc.DiscountConditionedAmount = conditioned;
         return this;
     }
 
     public DpsDocumentBuilder WithFederalTaxes()
     {
-        _doc.Values.CstPisCofins = 1;
-        _doc.Values.PisCofinsBaseTax = 25000;
-        _doc.Values.PisRate = 0.0065m;
-        _doc.Values.CofinsRate = 0.03m;
-        _doc.Values.PisAmountWithheld = 162.50m;
-        _doc.Values.CofinsAmountWithheld = 1000;
-        _doc.Values.InssAmountWithheld = 2750;
-        _doc.Values.IrAmountWithheld = 250;
-        _doc.Values.CsllAmountWithheld = 250;
+        _doc.CstPisCofins = Domain.Models.CstPisCofins.TributavelAliquotaBasica;
+        _doc.PisCofinsBaseTax = 25000;
+        _doc.PisRate = 0.0065m;
+        _doc.CofinsRate = 0.03m;
+        _doc.PisAmountWithheld = 162.50m;
+        _doc.CofinsAmountWithheld = 1000;
+        _doc.InssAmountWithheld = 2750;
+        _doc.IrAmountWithheld = 250;
+        _doc.CsllAmountWithheld = 250;
         return this;
     }
 
     public DpsDocumentBuilder WithIssRate(decimal rate)
     {
-        _doc.Values.IssRate = rate;
+        _doc.IssRate = rate;
         return this;
     }
 
     public DpsDocumentBuilder WithTaxationType(TaxationType taxationType)
     {
-        _doc.Values.TaxationType = taxationType;
+        _doc.TaxationType = taxationType;
         return this;
     }
 
     public DpsDocumentBuilder WithExportTaxation(string borrowerCountry = "US")
     {
-        _doc.Values.TaxationType = TaxationType.Export;
+        _doc.TaxationType = TaxationType.Export;
         _doc.Borrower.Address = new Address
         {
             Country = borrowerCountry, PostalCode = "10001", Street = "1st AVE",
@@ -165,7 +165,7 @@ public class DpsDocumentBuilder
 
     public DpsDocumentBuilder WithSuspendedCourtDecision(string processNumber)
     {
-        _doc.Values.TaxationType = TaxationType.SuspendedCourtDecision;
+        _doc.TaxationType = TaxationType.SuspendedCourtDecision;
         _doc.Suspension = new Suspension { ProcessNumber = processNumber };
         return this;
     }
@@ -190,9 +190,13 @@ public class DpsDocumentBuilder
     {
         _doc.ForeignTrade = new ForeignTrade
         {
-            ServiceMode = 4, RelationShip = 3, Currency = "220",
-            ServiceAmountInCurrency = 20000, SupportMechanismProvider = 8,
-            SupportMechanismReceiver = 26, MdicDelivery = true
+            ServiceMode = ServiceModeEnum.ConsumptionAbroad,
+            RelationShip = RelationShipEnum.Affiliate,
+            Currency = "220",
+            ServiceAmountInCurrency = 20000,
+            SupportMechanismProvider = SupportMechanismProviderEnum.ProexFinancing,
+            SupportMechanismReceiver = SupportMechanismReceiverEnum.Zpe,
+            MdicDelivery = true
         };
         return this;
     }

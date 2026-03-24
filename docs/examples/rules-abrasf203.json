@@ -67,79 +67,79 @@
     {
       "type": "Binding",
       "target": "Servico.Valores.ValorServicos",
-      "source": "Values.ServicesAmount",
+      "source": "ServicesAmount",
       "format": "0.00"
     },
     {
       "type": "ConditionalEmission",
       "target": "Servico.Valores.ValorDeducoes",
-      "source": "Values.DeductionsAmount",
+      "source": "DeductionsAmount",
       "action": "Emit",
-      "condition": { "field": "Values.DeductionsAmount", "operator": "GreaterThan", "value": "0" },
+      "condition": { "field": "DeductionsAmount", "operator": "GreaterThan", "value": "0" },
       "format": "0.00"
     },
     {
       "type": "ConditionalEmission",
       "target": "Servico.Valores.ValorPis",
-      "source": "Values.PisAmountWithheld",
+      "source": "PisAmountWithheld",
       "action": "Emit",
-      "condition": { "field": "Values.PisAmountWithheld", "operator": "GreaterThan", "value": "0" },
+      "condition": { "field": "PisAmountWithheld", "operator": "GreaterThan", "value": "0" },
       "format": "0.00"
     },
     {
       "type": "ConditionalEmission",
       "target": "Servico.Valores.ValorCofins",
-      "source": "Values.CofinsAmountWithheld",
+      "source": "CofinsAmountWithheld",
       "action": "Emit",
-      "condition": { "field": "Values.CofinsAmountWithheld", "operator": "GreaterThan", "value": "0" },
+      "condition": { "field": "CofinsAmountWithheld", "operator": "GreaterThan", "value": "0" },
       "format": "0.00"
     },
     {
       "type": "ConditionalEmission",
       "target": "Servico.Valores.ValorInss",
-      "source": "Values.InssAmountWithheld",
+      "source": "InssAmountWithheld",
       "action": "Emit",
-      "condition": { "field": "Values.InssAmountWithheld", "operator": "GreaterThan", "value": "0" },
+      "condition": { "field": "InssAmountWithheld", "operator": "GreaterThan", "value": "0" },
       "format": "0.00"
     },
     {
       "type": "ConditionalEmission",
       "target": "Servico.Valores.ValorIr",
-      "source": "Values.IrAmountWithheld",
+      "source": "IrAmountWithheld",
       "action": "Emit",
-      "condition": { "field": "Values.IrAmountWithheld", "operator": "GreaterThan", "value": "0" },
+      "condition": { "field": "IrAmountWithheld", "operator": "GreaterThan", "value": "0" },
       "format": "0.00"
     },
     {
       "type": "ConditionalEmission",
       "target": "Servico.Valores.ValorCsll",
-      "source": "Values.CsllAmountWithheld",
+      "source": "CsllAmountWithheld",
       "action": "Emit",
-      "condition": { "field": "Values.CsllAmountWithheld", "operator": "GreaterThan", "value": "0" },
+      "condition": { "field": "CsllAmountWithheld", "operator": "GreaterThan", "value": "0" },
       "format": "0.00"
     },
     {
       "type": "ConditionalEmission",
       "target": "Servico.Valores.OutrasRetencoes",
-      "source": "Values.OthersAmountWithheld",
+      "source": "OthersAmountWithheld",
       "action": "Emit",
-      "condition": { "field": "Values.OthersAmountWithheld", "operator": "GreaterThan", "value": "0" },
+      "condition": { "field": "OthersAmountWithheld", "operator": "GreaterThan", "value": "0" },
       "format": "0.00"
     },
     {
       "type": "ConditionalEmission",
       "target": "Servico.Valores.Aliquota",
-      "source": "Values.IssRate",
+      "source": "IssRate",
       "action": "Emit",
-      "condition": { "field": "Values.IssRate", "operator": "GreaterThan", "value": "0" },
+      "condition": { "field": "IssRate", "operator": "GreaterThan", "value": "0" },
       "format": "0.0000"
     },
     {
       "type": "ConditionalEmission",
       "target": "Servico.Valores.ValorIss",
-      "source": "Values.IssAmountWithheld",
+      "source": "IssAmountWithheld",
       "action": "Emit",
-      "condition": { "field": "Values.IssAmountWithheld", "operator": "GreaterThan", "value": "0" },
+      "condition": { "field": "IssAmountWithheld", "operator": "GreaterThan", "value": "0" },
       "format": "0.00"
     },
     {
@@ -148,7 +148,7 @@
       "sourceType": "constant",
       "constantValue": "1",
       "action": "Emit",
-      "condition": { "field": "Values.IssAmountWithheld", "operator": "GreaterThan", "value": "0" },
+      "condition": { "field": "IssAmountWithheld", "operator": "GreaterThan", "value": "0" },
       "fallbackValue": "2"
     },
     {
@@ -196,7 +196,7 @@
     {
       "type": "EnumMapping",
       "target": "Servico.ExigibilidadeISS",
-      "source": "Values.TaxationType",
+      "source": "TaxationType",
       "mappings": {
         "WithinCity": "1",
         "OutsideCity": "2",
@@ -217,7 +217,7 @@
       "source": "Provider.MunicipalityCode",
       "action": "Emit",
       "condition": {
-        "field": "Values.TaxationType",
+        "field": "TaxationType",
         "operator": "In",
         "value": "WithinCity,SuspendedCourtDecision,SuspendedAdministrativeProcedure,OutsideCitySuspended"
       }

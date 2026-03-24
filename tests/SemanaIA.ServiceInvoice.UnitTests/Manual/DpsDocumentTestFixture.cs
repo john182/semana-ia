@@ -11,12 +11,12 @@ public static class DpsDocumentTestFixture
         Number = 1,
         IssuedOn = new DateTimeOffset(2026, 1, 20, 10, 0, 0, TimeSpan.FromHours(-3)),
         CompetenceDate = new DateOnly(2026, 1, 20),
-        Provider = new Provider
+        Provider = new Person
         {
             Cnpj = "00000000000000",
             MunicipalityCode = "3550308"
         },
-        Borrower = new Borrower
+        Borrower = new Person
         {
             Name = "CONSUMIDOR MINIMO LTDA",
             FederalTaxNumber = 191,
@@ -38,11 +38,8 @@ public static class DpsDocumentTestFixture
             NbsCode = "101010100",
             MunicipalityCode = "3550308"
         },
-        Values = new Values
-        {
-            ServicesAmount = 1000.00m,
-            TaxationType = TaxationType.WithinCity
-        }
+        ServicesAmount = 1000.00m,
+        TaxationType = TaxationType.WithinCity
     };
 
     public static DpsDocument CreateComplete() => new DpsDocumentBuilder()
