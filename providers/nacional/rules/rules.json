@@ -56,9 +56,6 @@
     { "type": "Binding", "target": "infDPS.serv.cServ.xDescServ", "source": "Service.Description" },
     { "type": "Binding", "target": "infDPS.serv.cServ.cNBS", "source": "Service.NbsCode", "digitsOnly": true },
     { "type": "Binding", "target": "infDPS.valores.vServPrest.vServ", "source": "Values.ServicesAmount", "format": "F2" },
-    { "type": "Binding", "target": "infDPS.valores.trib.totTrib.vTotTrib.vTotTribFed", "sourceType": "constant", "constantValue": "0.00" },
-    { "type": "Binding", "target": "infDPS.valores.trib.totTrib.vTotTrib.vTotTribEst", "sourceType": "constant", "constantValue": "0.00" },
-    { "type": "Binding", "target": "infDPS.valores.trib.totTrib.vTotTrib.vTotTribMun", "sourceType": "constant", "constantValue": "0.00" },
 
     {
       "type": "EnumMapping",
@@ -100,6 +97,7 @@
     { "type": "Formatting", "target": "cTribMun", "padLeft": 3, "padChar": "0", "digitsOnly": true, "maxLength": 3 },
     { "type": "Formatting", "target": "CNPJ", "padLeft": 14, "padChar": "0" },
     { "type": "Formatting", "target": "CPF", "padLeft": 11, "padChar": "0" },
+    { "type": "Binding", "target": "infDPS.valores.trib.totTrib.pTotTribSN", "sourceType": "constant", "constantValue": "0.00" },
     { "type": "Formatting", "target": "CEP", "digitsOnly": true, "padLeft": 8, "padChar": "0" },
     { "type": "Formatting", "target": "cMun", "digitsOnly": true, "padLeft": 7, "padChar": "0" },
     { "type": "Formatting", "target": "nProcesso", "digitsOnly": true }

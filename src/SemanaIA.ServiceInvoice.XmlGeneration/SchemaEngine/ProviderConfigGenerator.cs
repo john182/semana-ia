@@ -235,10 +235,8 @@ public class ProviderConfigGenerator
 
     // Elements that are conditional in the manual serializer and should NOT be auto-generated.
     // These require explicit rule configuration because their emission depends on business logic.
-    // Elements that are conditional in the manual serializer and should NOT be auto-generated.
-    // Elements that are conditional in the manual serializer.
-    // Auto-gen skips these — they require explicit rules or are handled
-    // by the manual serializer's business logic.
+    // Elements that are conditional in the manual serializer and therefore should NOT be auto-generated;
+    // auto-generation skips them, and their emission is controlled by explicit rules/business logic.
     private static readonly HashSet<string> ConditionalElements = new(StringComparer.OrdinalIgnoreCase)
     {
         "interm", "obra", "atvEvento", "comExt", "lsadppu",

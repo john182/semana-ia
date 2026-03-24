@@ -82,6 +82,10 @@ public class ManualVsEngineComparisonTests
             }
         }
 
+        // Assert — shared elements must have identical values
+        valueDiffs.ShouldBeEmpty(
+            $"Engine produced {valueDiffs.Count} element(s) with differing values:\n{string.Join("\n", valueDiffs)}");
+
         // Assert — engine must not have phantom elements
         onlyInEngine.ShouldBeEmpty(
             $"Engine produces {onlyInEngine.Count} phantom element(s) not in manual:\n{string.Join("\n", onlyInEngine)}");
@@ -110,9 +114,18 @@ public class ManualVsEngineComparisonTests
         _output.WriteLine("\n=== Engine XML (filesystem rules) ===");
         _output.WriteLine(XDocument.Parse(engineXml).ToString());
 
-        var manualElements = XDocument.Parse(manualResult.Xml).Root!.Descendants().Count();
-        var engineElements = XDocument.Parse(engineXml).Root!.Descendants().Count();
-        _output.WriteLine($"\nManual: {manualElements}, Engine: {engineElements}");
+        var manualDoc = XDocument.Parse(manualResult.Xml);
+        var engineDoc = XDocument.Parse(engineXml);
+        _output.WriteLine($"\nManual: {manualDoc.Root!.Descendants().Count()}, Engine: {engineDoc.Root!.Descendants().Count()}");
+
+        // Structural element-path equivalence (element paths must match)
+        var manualPaths = CollectElementPaths(manualDoc.Root!, "").OrderBy(p => p).ToList();
+        var enginePaths = CollectElementPaths(engineDoc.Root!, "").OrderBy(p => p).ToList();
+        var onlyInManual = manualPaths.Except(enginePaths).ToList();
+        var onlyInEngine = enginePaths.Except(manualPaths).ToList();
+
+        onlyInEngine.ShouldBeEmpty(
+            $"Engine has {onlyInEngine.Count} phantom element(s):\n{string.Join("\n", onlyInEngine)}");
     }
 
     // --- Private methods ---

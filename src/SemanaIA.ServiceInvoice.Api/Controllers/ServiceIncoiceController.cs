@@ -92,12 +92,24 @@ public class ServiceIncoiceController : ControllerBase
             {
                 manualElementCount = CountXmlElements(manualResult.Xml),
                 engineElementCount = CountXmlElements(engineResult.Xml),
-                areIdentical = manualResult.Xml == engineResult.Xml,
+                areStructurallyEqual = AreXmlStructurallyEqual(manualResult.Xml, engineResult.Xml),
             }
         });
     }
 
     // --- Private methods ---
+
+    private static bool AreXmlStructurallyEqual(string? xml1, string? xml2)
+    {
+        if (xml1 is null || xml2 is null) return false;
+        try
+        {
+            return System.Xml.Linq.XNode.DeepEquals(
+                System.Xml.Linq.XDocument.Parse(xml1),
+                System.Xml.Linq.XDocument.Parse(xml2));
+        }
+        catch { return false; }
+    }
 
     private static int CountXmlElements(string? xml)
     {
