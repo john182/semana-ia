@@ -42,20 +42,21 @@ public class ProviderConfigGenerator
 
         var bindings = new Dictionary<string, string>();
         var formatting = new Dictionary<string, FormattingRule>();
+        var conditionalEmissionRules = new List<ProviderRule>();
 
         var envelopeDetection = DetectEnvelopePattern(schemaDocument, typeMap);
 
         var rootType = ResolveRootType(rootComplexTypeName, typeMap, schemaDocument);
         if (rootType is not null)
         {
-            WalkSchemaTree(rootType, "", typeMap, bindings, formatting, envelopeDetection?.DataPathPrefix);
+            WalkSchemaTree(rootType, "", typeMap, bindings, formatting, conditionalEmissionRules, envelopeDetection?.DataPathPrefix);
         }
 
         var schemaVersion = schemaDocument.RootVersionAttribute ?? DefaultVersion;
 
         var profile = BuildProfile(
             providerName, rootComplexTypeName, rootElementName,
-            bindings, formatting, envelopeDetection, schemaVersion);
+            bindings, formatting, conditionalEmissionRules, envelopeDetection, schemaVersion);
 
         WriteSuggestedRules(providerDir, profile);
 
@@ -104,6 +105,7 @@ public class ProviderConfigGenerator
 
         var bindings = new Dictionary<string, string>();
         var formatting = new Dictionary<string, FormattingRule>();
+        var conditionalEmissionRules = new List<ProviderRule>();
         var missingFields = new List<string>();
 
         // Only attempt envelope detection when a send-specific root element was found (ABRASF providers).
@@ -121,11 +123,11 @@ public class ProviderConfigGenerator
                 // Envelope-level bindings are handled separately via WrapperBindings.
                 var dataContainerType = ResolveTypeAtPath(rootType, envelopeDetection.DataPathPrefix, typeMap);
                 if (dataContainerType is not null)
-                    WalkSchemaTree(dataContainerType, envelopeDetection.DataPathPrefix, typeMap, bindings, formatting, envelopeDetection.DataPathPrefix);
+                    WalkSchemaTree(dataContainerType, envelopeDetection.DataPathPrefix, typeMap, bindings, formatting, conditionalEmissionRules, envelopeDetection.DataPathPrefix);
             }
             else
             {
-                WalkSchemaTree(rootType, "", typeMap, bindings, formatting, null);
+                WalkSchemaTree(rootType, "", typeMap, bindings, formatting, conditionalEmissionRules, null);
             }
         }
 
@@ -138,6 +140,7 @@ public class ProviderConfigGenerator
 
         var schemaVersion = schemaDocument.RootVersionAttribute ?? DefaultVersion;
         var rules = GenerateTypedRules(bindings, formatting);
+        rules.AddRange(conditionalEmissionRules);
 
         // Add rules for required attributes on types inside the data container.
         // Envelope-level attributes (e.g., versao on LoteRps) are handled by WrapperBindings.
@@ -295,8 +298,32 @@ public class ProviderConfigGenerator
         Dictionary<string, SchemaComplexType> typeMap,
         Dictionary<string, string> bindings,
         Dictionary<string, FormattingRule> formatting,
+        List<ProviderRule> conditionalEmissionRules,
         string? dataPathPrefix)
     {
+        // Detect and handle choice groups (e.g., CPF/CNPJ) before iterating elements
+        var choiceGroups = ConditionalEmissionInferrer.GroupChoiceElements(complexType);
+        var elementsHandledByChoice = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var (_, choiceElements) in choiceGroups)
+        {
+            if (!ConditionalEmissionInferrer.IsCpfCnpjChoiceGroup(choiceElements))
+                continue;
+
+            var choiceRules = ConditionalEmissionInferrer.InferCpfCnpjChoiceRules(choiceElements, pathPrefix);
+
+            foreach (var choiceRule in choiceRules)
+            {
+                // Adjust target path: strip dataPathPrefix for rules inside the data container
+                choiceRule.Target = BuildBindingPath(choiceRule.Target, dataPathPrefix);
+                conditionalEmissionRules.Add(choiceRule);
+            }
+
+            // Mark choice elements as handled to avoid duplicate bindings
+            foreach (var choiceElement in choiceElements)
+                elementsHandledByChoice.Add(choiceElement.Name);
+        }
+
         foreach (var element in complexType.Elements)
         {
             var elementPath = string.IsNullOrEmpty(pathPrefix)
@@ -307,13 +334,17 @@ public class ProviderConfigGenerator
             if (ConditionalElements.Contains(element.Name))
                 continue;
 
+            // Skip elements already handled by choice group inference
+            if (elementsHandledByChoice.Contains(element.Name))
+                continue;
+
             var childType = element.InlineType;
             if (childType is null)
                 typeMap.TryGetValue(element.TypeName, out childType);
 
             if (childType is not null)
             {
-                WalkSchemaTree(childType, elementPath, typeMap, bindings, formatting, dataPathPrefix);
+                WalkSchemaTree(childType, elementPath, typeMap, bindings, formatting, conditionalEmissionRules, dataPathPrefix);
                 continue;
             }
 
@@ -324,10 +355,35 @@ public class ProviderConfigGenerator
             if (contextMapping is not null)
             {
                 if (contextMapping.Length > 0)  // Empty string means skip
+                {
+                    // For optional elements with a contextual mapping, generate HasValue conditional
+                    if (element.MinOccurs == 0)
+                    {
+                        var hasValueRule = ConditionalEmissionInferrer.InferHasValueRule(element, bindingPath, contextMapping);
+                        if (hasValueRule is not null)
+                        {
+                            ApplyPipeModifiersToRule(hasValueRule, contextMapping);
+                            conditionalEmissionRules.Add(hasValueRule);
+                            continue;
+                        }
+                    }
+
                     bindings[bindingPath] = contextMapping;
+                }
             }
             else if (CommonFieldMappingDictionary.Mappings.TryGetValue(element.Name, out var propertyPath))
             {
+                // For optional elements with a known mapping, generate HasValue conditional
+                if (element.MinOccurs == 0)
+                {
+                    var hasValueRule = ConditionalEmissionInferrer.InferHasValueRule(element, bindingPath);
+                    if (hasValueRule is not null)
+                    {
+                        conditionalEmissionRules.Add(hasValueRule);
+                        continue;
+                    }
+                }
+
                 bindings[bindingPath] = propertyPath;
             }
             else if (element.IsRequired)
@@ -456,6 +512,21 @@ public class ProviderConfigGenerator
         {
             // Enum mapping requires the enum definition which is not available here.
             // Leave as binding for now; the operator can refine via API.
+        }
+    }
+
+    /// <summary>
+    /// Extracts pipe modifiers from a binding expression and applies them to a ProviderRule.
+    /// Used when converting a contextual mapping expression (e.g., "Borrower.Email | padLeft:11:0")
+    /// into formatting properties on a ConditionalEmission rule.
+    /// </summary>
+    private static void ApplyPipeModifiersToRule(ProviderRule rule, string bindingExpression)
+    {
+        var parts = bindingExpression.Split('|').Select(part => part.Trim()).ToArray();
+
+        for (var pipeIndex = 1; pipeIndex < parts.Length; pipeIndex++)
+        {
+            ApplyPipeToRule(rule, parts[pipeIndex]);
         }
     }
 
@@ -765,10 +836,12 @@ public class ProviderConfigGenerator
         string rootElementName,
         Dictionary<string, string> bindings,
         Dictionary<string, FormattingRule> formatting,
+        List<ProviderRule> conditionalEmissionRules,
         EnvelopeDetectionResult? envelopeDetection,
         string version)
     {
         var typedRules = GenerateTypedRules(bindings, formatting);
+        typedRules.AddRange(conditionalEmissionRules);
 
         return new ProviderProfile
         {

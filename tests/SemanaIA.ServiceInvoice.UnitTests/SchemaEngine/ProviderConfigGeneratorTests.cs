@@ -34,9 +34,11 @@ public class ProviderConfigGeneratorTests
         tpAmbRule.ShouldNotBeNull("Should have a binding rule for tpAmb");
         tpAmbRule!.Source.ShouldBe("Environment");
 
-        var cnpjRule = bindingRules.FirstOrDefault(rule => rule.Target.EndsWith("CNPJ"));
-        cnpjRule.ShouldNotBeNull("Should have a binding rule for CNPJ");
-        cnpjRule!.Source.ShouldBe("Provider.Cnpj");
+        // CNPJ in prest context is now auto-generated as ConditionalEmission (choice CPF/CNPJ)
+        var cnpjRule = generatedProfile.Rules.FirstOrDefault(rule =>
+            rule.Target.EndsWith("CNPJ") && rule.Target.Contains("prest"));
+        cnpjRule.ShouldNotBeNull("Should have a rule for prest CNPJ");
+        cnpjRule!.Type.ShouldBe(RuleType.ConditionalEmission);
     }
 
     [Fact]
