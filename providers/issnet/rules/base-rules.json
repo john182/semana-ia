@@ -151,7 +151,7 @@
     "infDPS.serv.cServ.cNBS": "Service.NbsCode | digitsOnly",
     "infDPS.valores.vServPrest.vServ": "ServicesAmount | decimal:2",
     "infDPS.valores.trib.tribMun.tribISSQN": "TaxationType | enum:tribISSQN",
-    "infDPS.valores.trib.tribMun.tpRetISSQN": "RetentionType | nullable:1",
+    "infDPS.valores.trib.tribMun.tpRetISSQN": "RetentionType | enum:tpRetISSQN",
     "infDPS.valores.trib.totTrib.vTotTrib.vTotTribFed": "const:0.00",
     "infDPS.valores.trib.totTrib.vTotTrib.vTotTribEst": "const:0.00",
     "infDPS.valores.trib.totTrib.vTotTrib.vTotTribMun": "const:0.00"

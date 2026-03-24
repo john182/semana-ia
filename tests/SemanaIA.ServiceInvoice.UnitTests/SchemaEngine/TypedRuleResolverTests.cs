@@ -107,12 +107,24 @@ public class TypedRuleResolverTests
     // ==========================================================
 
     [Fact]
-    public void Given_DefaultRuleWithNullSource_Should_UseFallback()
+    public void Given_EnumMappingRuleForRetentionType_WithNullSource_Should_UseDefaultMapping()
     {
         // Arrange
         var rules = new List<ProviderRule>
         {
-            new() { Type = RuleType.Default, Target = "infDPS.valores.trib.tribMun.tpRetISSQN", Source = "RetentionType", FallbackValue = "1" }
+            new()
+            {
+                Type = RuleType.EnumMapping,
+                Target = "infDPS.valores.trib.tribMun.tpRetISSQN",
+                Source = "RetentionType",
+                Mappings = new Dictionary<string, string>
+                {
+                    ["NotWithheld"] = "1",
+                    ["WithheldByBuyer"] = "2",
+                    ["WithheldByIntermediary"] = "3"
+                },
+                DefaultMapping = "1"
+            }
         };
         var resolver = new TypedRuleResolver(rules);
         var document = CreateMinimalDocument();
@@ -128,12 +140,24 @@ public class TypedRuleResolverTests
     }
 
     [Fact]
-    public void Given_DefaultRuleWithValuePresent_Should_UseSourceValue()
+    public void Given_EnumMappingRuleForRetentionType_WithheldByBuyer_Should_MapToXsdValue2()
     {
         // Arrange
         var rules = new List<ProviderRule>
         {
-            new() { Type = RuleType.Default, Target = "infDPS.valores.trib.tribMun.tpRetISSQN", Source = "RetentionType", FallbackValue = "1" }
+            new()
+            {
+                Type = RuleType.EnumMapping,
+                Target = "infDPS.valores.trib.tribMun.tpRetISSQN",
+                Source = "RetentionType",
+                Mappings = new Dictionary<string, string>
+                {
+                    ["NotWithheld"] = "1",
+                    ["WithheldByBuyer"] = "2",
+                    ["WithheldByIntermediary"] = "3"
+                },
+                DefaultMapping = "1"
+            }
         };
         var resolver = new TypedRuleResolver(rules);
         var document = CreateMinimalDocument();
@@ -144,7 +168,7 @@ public class TypedRuleResolverTests
         var data = resolver.BuildDataDictionary(document, CreateEmptySchema(), profile);
 
         // Assert
-        data["infDPS.valores.trib.tribMun.tpRetISSQN"]!.ToString().ShouldBe("1");
+        data["infDPS.valores.trib.tribMun.tpRetISSQN"]!.ToString().ShouldBe("2");
     }
 
     // ==========================================================

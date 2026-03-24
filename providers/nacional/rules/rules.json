@@ -87,10 +87,15 @@
       "defaultMapping": "1"
     },
     {
-      "type": "Default",
+      "type": "EnumMapping",
       "target": "infDPS.valores.trib.tribMun.tpRetISSQN",
       "source": "RetentionType",
-      "fallbackValue": "1"
+      "mappings": {
+        "NotWithheld": "1",
+        "WithheldByBuyer": "2",
+        "WithheldByIntermediary": "3"
+      },
+      "defaultMapping": "1"
     },
 
     { "type": "Formatting", "target": "cTribNac", "padLeft": 6, "padChar": "0", "digitsOnly": true, "maxLength": 6 },

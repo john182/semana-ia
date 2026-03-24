@@ -51,16 +51,22 @@ public static class RuleExamplesFactory
     };
 
     /// <summary>
-    /// Default com fallback: usa valor do dominio quando disponivel, senao aplica valor padrao.
+    /// EnumMapping para retencao ISSQN: mapeia enum do dominio (0-based) para valores XSD (1-based).
     /// </summary>
-    public static object DefaultWithFallbackExample() => new[]
+    public static object RetentionTypeEnumMappingExample() => new[]
     {
         new
         {
-            type = "Default",
+            type = "EnumMapping",
             target = "infDPS.valores.trib.tribMun.tpRetISSQN",
             source = "RetentionType",
-            fallbackValue = "1"
+            mappings = new Dictionary<string, string>
+            {
+                ["NotWithheld"] = "1",
+                ["WithheldByBuyer"] = "2",
+                ["WithheldByIntermediary"] = "3"
+            },
+            defaultMapping = "1"
         }
     };
 

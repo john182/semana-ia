@@ -100,7 +100,7 @@ public class RuleCatalogController : ControllerBase
                 Name = "Default",
                 Description = "Vincula um campo do dominio com valor fallback quando nulo.",
                 RequiredFields = ["target", "source", "fallbackValue"],
-                Example = """{ "type": "Default", "target": "infDPS.tpRetISSQN", "source": "RetentionType", "fallbackValue": "1" }"""
+                Example = """{ "type": "Default", "target": "infDPS.regEspTrib", "source": "Provider.SpecialTaxRegime", "fallbackValue": "0" }"""
             },
             new()
             {
