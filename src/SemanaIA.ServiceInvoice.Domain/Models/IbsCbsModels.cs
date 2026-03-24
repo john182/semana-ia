@@ -28,6 +28,12 @@ public class IbsCbs
 {
     public string? ClassCode { get; set; }
     public IbsCbsPurpose Purpose { get; set; } = IbsCbsPurpose.Regular;
+
+    /// <summary>
+    /// NFSe finNFSe code: 0-based (Purpose enum is 1-based: Regular=1 → finNFSe=0).
+    /// </summary>
+    public int FinNFSeCode => (int)Purpose - 1;
+
     public bool? IsDonation { get; set; }
     public bool? PersonalUse { get; set; }
     public string? OperationIndicator { get; set; }

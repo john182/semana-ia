@@ -103,9 +103,9 @@ public static class CommonFieldMappingDictionary
         ["CodigoMunicipioIBGE"] = "Provider.MunicipalityCode",
 
         // IBSCBS (Nacional)
-        ["finNFSe"] = "IbsCbs.Purpose",
+        ["finNFSe"] = "IbsCbs.FinNFSeCode",
         ["indFinal"] = "IbsCbs.PersonalUse",
-        ["cIndOp"] = "IbsCbs.OperationIndicator | digitsOnly | padLeft:6:0",
+        ["cIndOp"] = "IbsCbs.OperationIndicator | digitsOnly | maxLength:6",
         ["indDest"] = "IbsCbs.DestinationIndicator",
         ["cClassTrib"] = "IbsCbs.ClassCode",
 
