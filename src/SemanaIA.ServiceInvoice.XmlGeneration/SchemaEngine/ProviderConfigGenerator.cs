@@ -310,7 +310,7 @@ public class ProviderConfigGenerator
             if (!ConditionalEmissionInferrer.IsCpfCnpjChoiceGroup(choiceElements))
                 continue;
 
-            var choiceRules = ConditionalEmissionInferrer.InferCpfCnpjChoiceRules(choiceElements, pathPrefix);
+            var (choiceRules, handledNames) = ConditionalEmissionInferrer.InferCpfCnpjChoiceRules(choiceElements, pathPrefix);
 
             foreach (var choiceRule in choiceRules)
             {
@@ -319,9 +319,9 @@ public class ProviderConfigGenerator
                 conditionalEmissionRules.Add(choiceRule);
             }
 
-            // Mark choice elements as handled to avoid duplicate bindings
-            foreach (var choiceElement in choiceElements)
-                elementsHandledByChoice.Add(choiceElement.Name);
+            // Mark only CPF/CNPJ elements as handled; other options (NIF, cNaoNIF) remain processable
+            foreach (var name in handledNames)
+                elementsHandledByChoice.Add(name);
         }
 
         foreach (var element in complexType.Elements)

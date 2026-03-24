@@ -118,9 +118,46 @@ public class ConditionalEmissionInferrerTests
         result.ShouldBeFalse();
     }
 
+    [Fact]
+    public void Given_ChoiceWithCpfCnpjAndAdditionalOptions_Should_StillDetectAsCpfCnpj()
+    {
+        // Arrange -- choice group that includes CPF/CNPJ plus other options (NIF, cNaoNIF)
+        var elements = CreateChoiceElements("choice_1",
+            ("Cpf", true), ("Cnpj", true), ("NIF", true), ("cNaoNIF", true));
+
+        // Act
+        var result = ConditionalEmissionInferrer.IsCpfCnpjChoiceGroup(elements);
+
+        // Assert
+        result.ShouldBeTrue();
+    }
+
     // ==========================================================
     // InferCpfCnpjChoiceRules
     // ==========================================================
+
+    [Fact]
+    public void Given_CpfCnpjChoiceWithExtraOptions_Should_OnlyHandleCpfAndCnpj()
+    {
+        // Arrange -- choice with CPF, CNPJ, NIF, cNaoNIF (Nacional schema pattern)
+        var elements = CreateChoiceElements("choice_1",
+            ("Cpf", true), ("Cnpj", true), ("NIF", true), ("cNaoNIF", true));
+
+        // Act
+        var (rules, handledNames) = ConditionalEmissionInferrer.InferCpfCnpjChoiceRules(elements, "toma");
+
+        // Assert -- only CPF/CNPJ get rules
+        rules.Count.ShouldBe(2);
+        rules.ShouldContain(r => r.Target.Contains("Cpf"));
+        rules.ShouldContain(r => r.Target.Contains("Cnpj"));
+
+        // Only CPF/CNPJ are marked as handled; NIF and cNaoNIF remain processable
+        handledNames.Count.ShouldBe(2);
+        handledNames.ShouldContain("Cpf");
+        handledNames.ShouldContain("Cnpj");
+        handledNames.ShouldNotContain("NIF");
+        handledNames.ShouldNotContain("cNaoNIF");
+    }
 
     [Fact]
     public void Given_CpfCnpjChoiceInBorrowerContext_Should_GenerateBorrowerFederalTaxNumberRules()
@@ -130,7 +167,7 @@ public class ConditionalEmissionInferrerTests
         var parentPath = "infDPS.toma";
 
         // Act
-        var rules = ConditionalEmissionInferrer.InferCpfCnpjChoiceRules(elements, parentPath);
+        var (rules, _) = ConditionalEmissionInferrer.InferCpfCnpjChoiceRules(elements, parentPath);
 
         // Assert
         rules.Count.ShouldBe(2);
@@ -152,7 +189,7 @@ public class ConditionalEmissionInferrerTests
         var parentPath = "infDPS.prest";
 
         // Act
-        var rules = ConditionalEmissionInferrer.InferCpfCnpjChoiceRules(elements, parentPath);
+        var (rules, _) = ConditionalEmissionInferrer.InferCpfCnpjChoiceRules(elements, parentPath);
 
         // Assert
         rules.Count.ShouldBe(2);
@@ -173,7 +210,7 @@ public class ConditionalEmissionInferrerTests
         var elements = CreateChoiceElements("choice_1", ("Cpf", true), ("Cnpj", true));
 
         // Act
-        var rules = ConditionalEmissionInferrer.InferCpfCnpjChoiceRules(elements, "toma");
+        var (rules, _) = ConditionalEmissionInferrer.InferCpfCnpjChoiceRules(elements, "toma");
 
         // Assert
         var cnpjRule = rules.First(r => r.Target.Contains("Cnpj"));
@@ -191,7 +228,7 @@ public class ConditionalEmissionInferrerTests
         var elements = CreateChoiceElements("choice_1", ("Cpf", true), ("Cnpj", true));
 
         // Act
-        var rules = ConditionalEmissionInferrer.InferCpfCnpjChoiceRules(elements, "toma");
+        var (rules, _) = ConditionalEmissionInferrer.InferCpfCnpjChoiceRules(elements, "toma");
 
         // Assert
         var cpfRule = rules.First(r => r.Target.Contains("Cpf"));
@@ -216,7 +253,7 @@ public class ConditionalEmissionInferrerTests
         var elements = CreateChoiceElements("choice_1", ("Cpf", true), ("Cnpj", true));
 
         // Act
-        var rules = ConditionalEmissionInferrer.InferCpfCnpjChoiceRules(elements, "toma");
+        var (rules, _) = ConditionalEmissionInferrer.InferCpfCnpjChoiceRules(elements, "toma");
 
         // Assert
         var cnpjRule = rules.First(r => r.Target.Contains("Cnpj"));
@@ -353,7 +390,7 @@ public class ConditionalEmissionInferrerTests
         var elements = CreateChoiceElements("choice_1", ("Cpf", true), ("Cnpj", true));
 
         // Act
-        var rules = ConditionalEmissionInferrer.InferCpfCnpjChoiceRules(elements, "");
+        var (rules, _) = ConditionalEmissionInferrer.InferCpfCnpjChoiceRules(elements, "");
 
         // Assert -- when parentPath is empty, target is just the element name
         var cnpjRule = rules.First(r => r.Target.Contains("Cnpj"));
@@ -370,7 +407,7 @@ public class ConditionalEmissionInferrerTests
         var elements = CreateChoiceElements("choice_1", ("Cpf", true), ("Cnpj", true));
 
         // Act
-        var rules = ConditionalEmissionInferrer.InferCpfCnpjChoiceRules(elements, "infDPS.toma");
+        var (rules, _) = ConditionalEmissionInferrer.InferCpfCnpjChoiceRules(elements, "infDPS.toma");
 
         // Assert
         var cnpjRule = rules.First(r => r.Target.Contains("Cnpj"));
@@ -448,7 +485,7 @@ public class ConditionalEmissionInferrerTests
         var parentPath = "someOtherContext";
 
         // Act
-        var rules = ConditionalEmissionInferrer.InferCpfCnpjChoiceRules(elements, parentPath);
+        var (rules, _) = ConditionalEmissionInferrer.InferCpfCnpjChoiceRules(elements, parentPath);
 
         // Assert
         var cnpjRule = rules.First(r => r.Target.Contains("Cnpj"));

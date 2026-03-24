@@ -19,12 +19,6 @@ public class ConditionalEmissionInferrer
     private static readonly HashSet<string> CpfElementNames = new(StringComparer.OrdinalIgnoreCase) { "Cpf", "CPF" };
     private static readonly HashSet<string> CnpjElementNames = new(StringComparer.OrdinalIgnoreCase) { "Cnpj", "CNPJ" };
 
-    // Contexts that map to the borrower (toma, Tomador, etc.)
-    private static readonly HashSet<string> BorrowerContextPrefixes = new(StringComparer.OrdinalIgnoreCase)
-    {
-        "toma", "Tomador"
-    };
-
     // Contexts that map to the provider (prest, Prestador, etc.)
     private static readonly HashSet<string> ProviderContextPrefixes = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -72,21 +66,26 @@ public class ConditionalEmissionInferrer
     }
 
     /// <summary>
-    /// Generates a pair of ConditionalEmission rules for a CPF/CNPJ choice group.
+    /// Generates a pair of ConditionalEmission rules for the CPF/CNPJ elements in a choice group.
     /// The CNPJ rule emits when FederalTaxNumber > 99999999999 (14-digit range).
     /// The CPF rule emits when FederalTaxNumber > 0 AND <= 99999999999 (11-digit range).
     /// The source field is determined by the element path context (borrower vs provider).
+    /// Returns the rules and the names of the handled elements (only CPF/CNPJ, not other options like NIF).
     /// </summary>
-    public static List<ProviderRule> InferCpfCnpjChoiceRules(
+    public static (List<ProviderRule> Rules, HashSet<string> HandledElementNames) InferCpfCnpjChoiceRules(
         List<SchemaElement> choiceElements, string parentPath)
     {
         var rules = new List<ProviderRule>();
+        var handledNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
         var sourceField = ResolveFederalTaxNumberSource(parentPath);
         var cnpjSourceField = ResolveCnpjSource(parentPath);
 
         var cnpjElement = choiceElements.First(element => CnpjElementNames.Contains(element.Name));
         var cpfElement = choiceElements.First(element => CpfElementNames.Contains(element.Name));
+
+        handledNames.Add(cnpjElement.Name);
+        handledNames.Add(cpfElement.Name);
 
         var cnpjTargetPath = string.IsNullOrEmpty(parentPath) ? cnpjElement.Name : $"{parentPath}.{cnpjElement.Name}";
         var cpfTargetPath = string.IsNullOrEmpty(parentPath) ? cpfElement.Name : $"{parentPath}.{cpfElement.Name}";
@@ -138,7 +137,7 @@ public class ConditionalEmissionInferrer
             PadChar = DefaultPadChar
         });
 
-        return rules;
+        return (rules, handledNames);
     }
 
     /// <summary>
