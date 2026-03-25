@@ -3,6 +3,8 @@ using SemanaIA.ServiceInvoice.Domain.Models;
 using SemanaIA.ServiceInvoice.XmlGeneration.Manual;
 using Shouldly;
 
+using SemanaIA.ServiceInvoice.UnitTests.Manual;
+
 namespace SemanaIA.ServiceInvoice.UnitTests.Manual.Nacional;
 
 public class NacionalXmlSerializerTaxationTypeTests

@@ -2,6 +2,8 @@ using System.Xml.Linq;
 using SemanaIA.ServiceInvoice.XmlGeneration.Manual;
 using Shouldly;
 
+using SemanaIA.ServiceInvoice.UnitTests.Manual;
+
 namespace SemanaIA.ServiceInvoice.UnitTests.Manual.Nacional;
 
 public class NacionalXmlSerializerRetentionTypeTests
