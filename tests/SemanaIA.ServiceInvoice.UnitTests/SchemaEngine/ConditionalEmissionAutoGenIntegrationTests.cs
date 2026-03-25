@@ -211,8 +211,13 @@ public class ConditionalEmissionAutoGenIntegrationTests
 
         foreach (var rule in conditionalRules)
         {
-            wrapperTargets.ShouldNotContain(rule.Target,
-                $"ConditionalEmission rule target '{rule.Target}' should not duplicate a wrapper binding");
+            // Normalize rule target to full schema path, matching runtime behavior of TypedRuleResolver
+            var fullRuleTarget = string.IsNullOrEmpty(profile.BindingPathPrefix)
+                ? rule.Target
+                : $"{profile.BindingPathPrefix}.{rule.Target}";
+
+            wrapperTargets.ShouldNotContain(fullRuleTarget,
+                $"ConditionalEmission rule full target '{fullRuleTarget}' should not duplicate a wrapper binding");
         }
 
         // Verify no duplicate targets within conditional rules themselves
