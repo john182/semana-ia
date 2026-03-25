@@ -352,6 +352,14 @@ public class ProviderConfigGenerator
 
             // Try context-aware mapping first (resolves CNPJ in prest vs toma etc.)
             var contextMapping = ResolveContextualMapping(elementPath, element.Name);
+            // Infer formatting (maxLength, pattern, etc.) before any early-continue
+            // so HasValue conditional rules still respect XSD constraints.
+            var formattingRule = InferFormattingRule(element);
+            if (formattingRule is not null)
+            {
+                formatting[element.Name] = formattingRule;
+            }
+
             if (contextMapping is not null)
             {
                 if (contextMapping.Length > 0)  // Empty string means skip
@@ -389,12 +397,6 @@ public class ProviderConfigGenerator
             else if (element.IsRequired)
             {
                 bindings[bindingPath] = TodoManualMappingRequired;
-            }
-
-            var formattingRule = InferFormattingRule(element);
-            if (formattingRule is not null)
-            {
-                formatting[element.Name] = formattingRule;
             }
         }
     }
