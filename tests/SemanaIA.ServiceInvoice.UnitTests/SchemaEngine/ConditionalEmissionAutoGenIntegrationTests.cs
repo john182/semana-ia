@@ -357,22 +357,11 @@ public class ConditionalEmissionAutoGenIntegrationTests
             .ToList();
 
         // The prest (provider) context also has a CNPJ/CPF choice in the Nacional schema.
-        // Check that at least the prest context has a CNPJ rule with Provider.Cnpj source
-        // (the prest CPF/CNPJ elements are in contextual mappings, handled differently)
-        var prestCnpjRule = conditionalRules.FirstOrDefault(r =>
-            r.Target.Contains("prest", StringComparison.OrdinalIgnoreCase) &&
-            r.Target.EndsWith("CNPJ", StringComparison.OrdinalIgnoreCase));
-
-        // Note: prest.CNPJ may be handled as a regular binding (since CNPJ mapping
-        // exists in ContextualMappings["prest"]) rather than a conditional rule.
-        // This test verifies the overall rule set covers the prest context.
-        var prestBindingOrConditional = rules.Any(r =>
-            r.Target.Contains("prest", StringComparison.OrdinalIgnoreCase) &&
-            r.Target.EndsWith("CNPJ", StringComparison.OrdinalIgnoreCase));
-
-        prestBindingOrConditional.ShouldBeTrue(
-            "Nacional should have a binding or conditional rule covering prest.CNPJ. " +
-            $"All rule targets: {string.Join(", ", rules.Select(r => r.Target))}");
+        // prest.CNPJ may be a binding (via ContextualMappings) or a conditional rule.
+        rules.ShouldContain(
+            r => r.Target.Contains("prest", StringComparison.OrdinalIgnoreCase) &&
+                 r.Target.EndsWith("CNPJ", StringComparison.OrdinalIgnoreCase),
+            "Nacional should have a binding or conditional rule covering prest.CNPJ");
     }
 
     // ==========================================================

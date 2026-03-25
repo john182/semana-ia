@@ -9,8 +9,6 @@ public class ConditionalEmissionInferrer
 {
     private const string BorrowerFederalTaxNumberField = "Borrower.FederalTaxNumber";
     private const string ProviderFederalTaxNumberField = "Provider.FederalTaxNumber";
-    private const string ProviderCnpjField = "Provider.Cnpj";
-
     private const string CpfMaxValueThreshold = "99999999999";
     private const int CnpjPadLength = 14;
     private const int CpfPadLength = 11;
@@ -55,7 +53,8 @@ public class ConditionalEmissionInferrer
 
     /// <summary>
     /// Detects whether a choice group contains a CPF/CNPJ pattern.
-    /// Returns true when the group has exactly one CPF element and one CNPJ element.
+    /// Returns true when the group contains at least one CPF and one CNPJ element,
+    /// even if additional options (e.g., NIF, cNaoNIF) are present.
     /// </summary>
     public static bool IsCpfCnpjChoiceGroup(List<SchemaElement> choiceElements)
     {
@@ -79,7 +78,6 @@ public class ConditionalEmissionInferrer
         var handledNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
         var sourceField = ResolveFederalTaxNumberSource(parentPath);
-        var cnpjSourceField = ResolveCnpjSource(parentPath);
 
         var cnpjElement = choiceElements.First(element => CnpjElementNames.Contains(element.Name));
         var cpfElement = choiceElements.First(element => CpfElementNames.Contains(element.Name));
@@ -95,7 +93,7 @@ public class ConditionalEmissionInferrer
         {
             Type = RuleType.ConditionalEmission,
             Target = cnpjTargetPath,
-            Source = cnpjSourceField,
+            Source = sourceField,
             Action = RuleAction.Emit,
             Condition = new RuleCondition
             {
@@ -201,15 +199,6 @@ public class ConditionalEmissionInferrer
             return ProviderFederalTaxNumberField;
 
         // Default to borrower context (toma and any other consumer context)
-        return BorrowerFederalTaxNumberField;
-    }
-
-    private static string ResolveCnpjSource(string parentPath)
-    {
-        if (IsInContext(parentPath, ProviderContextPrefixes))
-            return ProviderCnpjField;
-
-        // Borrower does not have a separate Cnpj property -- uses FederalTaxNumber
         return BorrowerFederalTaxNumberField;
     }
 

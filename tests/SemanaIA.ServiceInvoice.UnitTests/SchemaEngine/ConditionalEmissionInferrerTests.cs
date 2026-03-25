@@ -196,7 +196,7 @@ public class ConditionalEmissionInferrerTests
 
         var cnpjRule = rules.First(r => r.Target.Contains("Cnpj"));
         cnpjRule.Condition!.Field.ShouldBe("Provider.FederalTaxNumber");
-        cnpjRule.Source.ShouldBe("Provider.Cnpj");
+        cnpjRule.Source.ShouldBe("Provider.FederalTaxNumber");
 
         var cpfRule = rules.First(r => r.Target.Contains("Cpf"));
         cpfRule.Condition!.Conditions.ShouldAllBe(c => c.Field == "Provider.FederalTaxNumber");
