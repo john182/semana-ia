@@ -34,9 +34,12 @@ public class ProviderConfigGeneratorTests
         tpAmbRule.ShouldNotBeNull("Should have a binding rule for tpAmb");
         tpAmbRule!.Source.ShouldBe("Environment");
 
-        var cnpjRule = bindingRules.FirstOrDefault(rule => rule.Target.EndsWith("CNPJ"));
-        cnpjRule.ShouldNotBeNull("Should have a binding rule for CNPJ");
-        cnpjRule!.Source.ShouldBe("Provider.Cnpj");
+        // CNPJ in prest context is now auto-generated as ConditionalEmission (choice CPF/CNPJ)
+        var cnpjRule = generatedProfile.Rules.FirstOrDefault(rule =>
+            rule.Target.EndsWith("CNPJ", StringComparison.OrdinalIgnoreCase) &&
+            rule.Target.Contains("prest", StringComparison.OrdinalIgnoreCase));
+        cnpjRule.ShouldNotBeNull("Should have a rule for prest CNPJ");
+        cnpjRule!.Type.ShouldBe(RuleType.ConditionalEmission);
     }
 
     [Fact]
@@ -172,11 +175,10 @@ public class ProviderConfigGeneratorTests
         bindingRules.ShouldNotBeEmpty("ABRASF should have binding rules for fields inside the data node");
 
         var hasDeepFieldBindings = bindingRules.Any(rule =>
-            rule.Source == "Provider.Cnpj" ||
             rule.Source == "Service.Description" ||
             rule.Source == "Values.ServicesAmount");
         hasDeepFieldBindings.ShouldBeTrue(
-            "Binding rules should include fields from inside the deep data node (CNPJ, Discriminacao, ValorServicos)");
+            "Binding rules should include fields from inside the deep data node (Discriminacao, ValorServicos)");
     }
 
     [Fact]
