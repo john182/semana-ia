@@ -21,7 +21,8 @@ public class NacionalXmlSerializerDeductionTests
         // Assert
         result.Xml.ShouldBeValidAgainstDpsSchema();
 
-        var vDedRed = ParseValores(result.Xml).Element(Ns + "vDedRed")!;
+        var vDedRed = ParseValores(result.Xml).Element(Ns + "vDedRed");
+        vDedRed.ShouldNotBeNull();
         vDedRed.Element(Ns + "pDR")?.Value.ShouldBe("10.50");
         vDedRed.Element(Ns + "vDR").ShouldBeNull();
         vDedRed.Element(Ns + "documentos").ShouldBeNull();
@@ -58,7 +59,7 @@ public class NacionalXmlSerializerDeductionTests
         result.Xml.ShouldBeValidAgainstDpsSchema();
 
         var docDedRed = ParseFirstDocDedRed(result.Xml);
-        var nfseMun = docDedRed.Element(Ns + "NFSeMun")!;
+        var nfseMun = docDedRed.Element(Ns + "NFSeMun");
         nfseMun.ShouldNotBeNull();
         nfseMun.Element(Ns + "cMunNFSeMun")?.Value.ShouldBe("3550308");
         nfseMun.Element(Ns + "nNFSeMun")?.Value.ShouldBe("123456789012345");
@@ -78,7 +79,7 @@ public class NacionalXmlSerializerDeductionTests
         result.Xml.ShouldBeValidAgainstDpsSchema();
 
         var docDedRed = ParseFirstDocDedRed(result.Xml);
-        var nfnfs = docDedRed.Element(Ns + "NFNFS")!;
+        var nfnfs = docDedRed.Element(Ns + "NFNFS");
         nfnfs.ShouldNotBeNull();
         nfnfs.Element(Ns + "nNFS")?.Value.ShouldBe("1234567");
         nfnfs.Element(Ns + "modNFS")?.Value.ShouldBe("123456789012345");
@@ -123,16 +124,29 @@ public class NacionalXmlSerializerDeductionTests
 
     private static XElement ParseValores(string xml)
     {
-        return XDocument.Parse(xml).Root!
-            .Element(Ns + "infDPS")!
-            .Element(Ns + "valores")!;
+        var root = XDocument.Parse(xml).Root;
+        root.ShouldNotBeNull();
+
+        var infDps = root.Element(Ns + "infDPS");
+        infDps.ShouldNotBeNull();
+
+        var valores = infDps.Element(Ns + "valores");
+        valores.ShouldNotBeNull();
+
+        return valores;
     }
 
     private static XElement ParseFirstDocDedRed(string xml)
     {
-        return ParseValores(xml)
-            .Element(Ns + "vDedRed")!
-            .Element(Ns + "documentos")!
-            .Element(Ns + "docDedRed")!;
+        var vDedRed = ParseValores(xml).Element(Ns + "vDedRed");
+        vDedRed.ShouldNotBeNull();
+
+        var documentos = vDedRed.Element(Ns + "documentos");
+        documentos.ShouldNotBeNull();
+
+        var docDedRed = documentos.Element(Ns + "docDedRed");
+        docDedRed.ShouldNotBeNull();
+
+        return docDedRed;
     }
 }

@@ -69,10 +69,21 @@ public class NacionalXmlSerializerRetentionTypeTests
 
     private static XElement ParseTribMun(string xml)
     {
-        return XDocument.Parse(xml).Root!
-            .Element(Ns + "infDPS")!
-            .Element(Ns + "valores")!
-            .Element(Ns + "trib")!
-            .Element(Ns + "tribMun")!;
+        var root = XDocument.Parse(xml).Root;
+        root.ShouldNotBeNull();
+
+        var infDps = root.Element(Ns + "infDPS");
+        infDps.ShouldNotBeNull();
+
+        var valores = infDps.Element(Ns + "valores");
+        valores.ShouldNotBeNull();
+
+        var trib = valores.Element(Ns + "trib");
+        trib.ShouldNotBeNull();
+
+        var tribMun = trib.Element(Ns + "tribMun");
+        tribMun.ShouldNotBeNull();
+
+        return tribMun;
     }
 }
