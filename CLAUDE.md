@@ -49,6 +49,13 @@ Quando esse comando for usado:
 - Não considerar suficiente apenas um teste isolado de schema.
 - Todo teste relevante que gere XML deve validar conteúdo e estrutura.
 
+## Seleção de PBIs
+- Antes de executar múltiplas PBIs em paralelo, avaliar impacto, dependências e colisão entre elas.
+- Priorizar PBIs pequenas, claras e independentes.
+- Evitar paralelizar mudanças que toquem arquivos críticos compartilhados.
+- Se uma PBI for grande mas divisível, preferir quebrá-la em unidades internas.
+- Se houver dúvida, escolher menos PBIs.
+
 # Objetivo
 Executar PBIs do GitHub com múltiplos agentes de forma segura, previsível e com baixo conflito entre mudanças.
 
