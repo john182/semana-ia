@@ -42,8 +42,7 @@ public class NacionalXmlSerializerDeductionTests
         // Assert
         result.Xml.ShouldBeValidAgainstDpsSchema();
 
-        var docDedRed = ParseFirstDocDedRed(result.Xml)
-;
+        var docDedRed = ParseFirstDocDedRed(result.Xml);
         docDedRed.Element(Ns + "chNFe").ShouldNotBeNull();
         docDedRed.Element(Ns + "chNFSe").ShouldBeNull();
         docDedRed.Element(Ns + "tpDedRed")?.Value.ShouldBe("2");
@@ -61,8 +60,7 @@ public class NacionalXmlSerializerDeductionTests
         // Assert
         result.Xml.ShouldBeValidAgainstDpsSchema();
 
-        var docDedRed = ParseFirstDocDedRed(result.Xml)
-;
+        var docDedRed = ParseFirstDocDedRed(result.Xml);
         var nfseMun = docDedRed.Element(Ns + "NFSeMun");
         nfseMun.ShouldNotBeNull();
         nfseMun.Element(Ns + "cMunNFSeMun")?.Value.ShouldBe("3550308");
@@ -82,8 +80,7 @@ public class NacionalXmlSerializerDeductionTests
         // Assert
         result.Xml.ShouldBeValidAgainstDpsSchema();
 
-        var docDedRed = ParseFirstDocDedRed(result.Xml)
-;
+        var docDedRed = ParseFirstDocDedRed(result.Xml);
         var nfnfs = docDedRed.Element(Ns + "NFNFS");
         nfnfs.ShouldNotBeNull();
         nfnfs.Element(Ns + "nNFS")?.Value.ShouldBe("1234567");
@@ -103,8 +100,7 @@ public class NacionalXmlSerializerDeductionTests
         // Assert
         result.Xml.ShouldBeValidAgainstDpsSchema();
 
-        var docDedRed = ParseFirstDocDedRed(result.Xml)
-;
+        var docDedRed = ParseFirstDocDedRed(result.Xml);
         docDedRed.Element(Ns + "nDoc")?.Value.ShouldBe("DOC-001");
         docDedRed.Element(Ns + "tpDedRed")?.Value.ShouldBe("99");
         docDedRed.Element(Ns + "xDescOutDed")?.Value.ShouldBe("Desconto especial por contrato");
