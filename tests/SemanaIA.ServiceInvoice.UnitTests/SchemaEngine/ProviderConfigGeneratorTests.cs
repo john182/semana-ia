@@ -36,7 +36,8 @@ public class ProviderConfigGeneratorTests
 
         // CNPJ in prest context is now auto-generated as ConditionalEmission (choice CPF/CNPJ)
         var cnpjRule = generatedProfile.Rules.FirstOrDefault(rule =>
-            rule.Target.EndsWith("CNPJ") && rule.Target.Contains("prest"));
+            rule.Target.EndsWith("CNPJ", StringComparison.OrdinalIgnoreCase) &&
+            rule.Target.Contains("prest", StringComparison.OrdinalIgnoreCase));
         cnpjRule.ShouldNotBeNull("Should have a rule for prest CNPJ");
         cnpjRule!.Type.ShouldBe(RuleType.ConditionalEmission);
     }

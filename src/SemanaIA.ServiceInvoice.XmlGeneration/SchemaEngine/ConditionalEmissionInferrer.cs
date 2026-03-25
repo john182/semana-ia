@@ -5,7 +5,7 @@ namespace SemanaIA.ServiceInvoice.XmlGeneration.SchemaEngine;
 /// Detects CPF/CNPJ choice groups and optional elements with known mappings,
 /// generating the same rule format as hand-crafted rules.json files.
 /// </summary>
-public class ConditionalEmissionInferrer
+public static class ConditionalEmissionInferrer
 {
     private const string BorrowerFederalTaxNumberField = "Borrower.FederalTaxNumber";
     private const string ProviderFederalTaxNumberField = "Provider.FederalTaxNumber";

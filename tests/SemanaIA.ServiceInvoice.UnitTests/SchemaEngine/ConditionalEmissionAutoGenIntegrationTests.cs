@@ -300,14 +300,15 @@ public class ConditionalEmissionAutoGenIntegrationTests
             // Only check toma CPF/CNPJ rules (the ones the inferrer produces)
             if (!manualRule.Target.Contains("toma", StringComparison.OrdinalIgnoreCase))
                 continue;
-            if (!manualRule.Target.EndsWith("CNPJ") && !manualRule.Target.EndsWith("CPF"))
+            if (!manualRule.Target.EndsWith("CNPJ", StringComparison.OrdinalIgnoreCase) &&
+                !manualRule.Target.EndsWith("CPF", StringComparison.OrdinalIgnoreCase))
                 continue;
 
             // Find the matching auto-gen rule by target suffix
-            var targetSuffix = manualRule.Target.EndsWith("CNPJ") ? "CNPJ" : "CPF";
+            var targetSuffix = manualRule.Target.EndsWith("CNPJ", StringComparison.OrdinalIgnoreCase) ? "CNPJ" : "CPF";
             var autoGenMatch = autoGenConditionalRules.FirstOrDefault(r =>
                 r.Target.Contains("toma", StringComparison.OrdinalIgnoreCase) &&
-                r.Target.EndsWith(targetSuffix));
+                r.Target.EndsWith(targetSuffix, StringComparison.OrdinalIgnoreCase));
 
             autoGenMatch.ShouldNotBeNull(
                 $"Auto-gen should produce a rule matching manual target pattern '{manualRule.Target}'. " +
