@@ -17,10 +17,10 @@ public class ConditionalEmissionInferrer
     private static readonly HashSet<string> CpfElementNames = new(StringComparer.OrdinalIgnoreCase) { "Cpf", "CPF" };
     private static readonly HashSet<string> CnpjElementNames = new(StringComparer.OrdinalIgnoreCase) { "Cnpj", "CNPJ" };
 
-    // Contexts that map to the provider (prest, Prestador, etc.)
+    // Contexts that map to the provider (prest, Prestador, PrestadorServico, etc.)
     private static readonly HashSet<string> ProviderContextPrefixes = new(StringComparer.OrdinalIgnoreCase)
     {
-        "prest", "Prestador"
+        "prest", "Prestador", "PrestadorServico"
     };
 
     /// <summary>
