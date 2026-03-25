@@ -9,13 +9,13 @@ public static class ConditionalEmissionInferrer
 {
     private const string BorrowerFederalTaxNumberField = "Borrower.FederalTaxNumber";
     private const string ProviderFederalTaxNumberField = "Provider.FederalTaxNumber";
-    private const string CpfMaxValueThreshold = "99999999999";
+    private const string CpfUpperBound = "99999999999"; // 11-digit max (CPF range ceiling / CNPJ threshold)
     private const int CnpjPadLength = 14;
     private const int CpfPadLength = 11;
     private const string DefaultPadChar = "0";
 
-    private static readonly HashSet<string> CpfElementNames = new(StringComparer.OrdinalIgnoreCase) { "Cpf", "CPF" };
-    private static readonly HashSet<string> CnpjElementNames = new(StringComparer.OrdinalIgnoreCase) { "Cnpj", "CNPJ" };
+    private static readonly HashSet<string> CpfElementNames = new(StringComparer.OrdinalIgnoreCase) { "Cpf" };
+    private static readonly HashSet<string> CnpjElementNames = new(StringComparer.OrdinalIgnoreCase) { "Cnpj" };
 
     // Contexts that map to the provider (prest, Prestador, PrestadorServico, etc.)
     private static readonly HashSet<string> ProviderContextPrefixes = new(StringComparer.OrdinalIgnoreCase)
@@ -99,7 +99,7 @@ public static class ConditionalEmissionInferrer
             {
                 Field = sourceField,
                 Operator = ComparisonOperator.GreaterThan,
-                Value = CpfMaxValueThreshold
+                Value = CpfUpperBound
             },
             PadLeft = CnpjPadLength,
             PadChar = DefaultPadChar
@@ -127,7 +127,7 @@ public static class ConditionalEmissionInferrer
                     {
                         Field = sourceField,
                         Operator = ComparisonOperator.LessThanOrEqual,
-                        Value = CpfMaxValueThreshold
+                        Value = CpfUpperBound
                     }
                 ]
             },
