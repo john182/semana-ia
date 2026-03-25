@@ -40,7 +40,7 @@ jobs:
 
       - name: Install SonarScanner
         if: env.SONAR_TOKEN != ''
-        run: dotnet tool install --global dotnet-sonarscanner
+        run: dotnet tool install --global dotnet-sonarscanner --version 9.0.2
 
       - name: Restore
         run: dotnet restore
@@ -54,7 +54,8 @@ jobs:
             /d:sonar.host.url="https://sonarcloud.io" \
             /d:sonar.token="$SONAR_TOKEN" \
             /d:sonar.cs.opencover.reportsPaths="**/TestResults/**/coverage.opencover.xml" \
-            /d:sonar.qualitygate.wait="true"
+            /d:sonar.qualitygate.wait="true" \
+            /d:sonar.exclusions="providers/**,docs/**,openspec/**,ia/**,.github/**,.claude/**,.codex/**,.cursor/**"
 
       - name: Build
         run: dotnet build --no-restore
