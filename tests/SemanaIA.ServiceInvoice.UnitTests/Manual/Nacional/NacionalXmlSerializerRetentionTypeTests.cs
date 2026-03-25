@@ -26,7 +26,7 @@ public class NacionalXmlSerializerRetentionTypeTests
         // Assert
         result.Xml.ShouldBeValidAgainstDpsSchema();
 
-        var tribMun = ParseTribMun(result.Xml);
+        var tribMun = NacionalXmlParseHelpers.ParseTribMun(result.Xml);
         tribMun.Element(Ns + "tpRetISSQN")?.Value.ShouldBe(expectedValue);
     }
 
@@ -42,7 +42,7 @@ public class NacionalXmlSerializerRetentionTypeTests
         // Assert
         result.Xml.ShouldBeValidAgainstDpsSchema();
 
-        var tribMun = ParseTribMun(result.Xml);
+        var tribMun = NacionalXmlParseHelpers.ParseTribMun(result.Xml);
         tribMun.Element(Ns + "tpRetISSQN")?.Value.ShouldBe("1");
     }
 
@@ -61,31 +61,8 @@ public class NacionalXmlSerializerRetentionTypeTests
         // Assert
         result.Xml.ShouldBeValidAgainstDpsSchema();
 
-        var tribMun = ParseTribMun(result.Xml);
+        var tribMun = NacionalXmlParseHelpers.ParseTribMun(result.Xml);
         tribMun.Element(Ns + "tpRetISSQN")?.Value.ShouldBe("3");
     }
 
-    // ==========================================================
-    // Helpers privados (final da classe)
-    // ==========================================================
-
-    private static XElement ParseTribMun(string xml)
-    {
-        var root = XDocument.Parse(xml).Root;
-        root.ShouldNotBeNull();
-
-        var infDps = root.Element(Ns + "infDPS");
-        infDps.ShouldNotBeNull();
-
-        var valores = infDps.Element(Ns + "valores");
-        valores.ShouldNotBeNull();
-
-        var trib = valores.Element(Ns + "trib");
-        trib.ShouldNotBeNull();
-
-        var tribMun = trib.Element(Ns + "tribMun");
-        tribMun.ShouldNotBeNull();
-
-        return tribMun;
-    }
 }

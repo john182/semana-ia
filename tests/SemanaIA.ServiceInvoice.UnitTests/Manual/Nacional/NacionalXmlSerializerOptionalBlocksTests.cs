@@ -27,7 +27,7 @@ public class NacionalXmlSerializerOptionalBlocksTests
         // Assert
         result.Xml.ShouldBeValidAgainstDpsSchema();
 
-        var lsadppu = ParseServ(result.Xml).Element(Ns + "lsadppu");
+        var lsadppu = NacionalXmlParseHelpers.ParseServ(result.Xml).Element(Ns + "lsadppu");
         lsadppu.ShouldNotBeNull();
         lsadppu.Element(Ns + "categ")?.Value.ShouldBe("2");
         lsadppu.Element(Ns + "objeto")?.Value.ShouldBe("3");
@@ -46,7 +46,7 @@ public class NacionalXmlSerializerOptionalBlocksTests
 
         // Assert
         result.Xml.ShouldBeValidAgainstDpsSchema();
-        ParseServ(result.Xml).Element(Ns + "lsadppu").ShouldBeNull();
+        NacionalXmlParseHelpers.ParseServ(result.Xml).Element(Ns + "lsadppu").ShouldBeNull();
     }
 
     // ==========================================================
@@ -65,7 +65,7 @@ public class NacionalXmlSerializerOptionalBlocksTests
         // Assert
         result.Xml.ShouldBeValidAgainstDpsSchema();
 
-        var obra = ParseServ(result.Xml).Element(Ns + "obra");
+        var obra = NacionalXmlParseHelpers.ParseServ(result.Xml).Element(Ns + "obra");
         obra.ShouldNotBeNull();
         obra.Element(Ns + "cObra")?.Value.ShouldBe("OBRA-2026-001");
         obra.Element(Ns + "cCIB").ShouldBeNull();
@@ -84,7 +84,7 @@ public class NacionalXmlSerializerOptionalBlocksTests
         // Assert
         result.Xml.ShouldBeValidAgainstDpsSchema();
 
-        var obra = ParseServ(result.Xml).Element(Ns + "obra");
+        var obra = NacionalXmlParseHelpers.ParseServ(result.Xml).Element(Ns + "obra");
         obra.ShouldNotBeNull();
         obra.Element(Ns + "cCIB")?.Value.ShouldBe("98765432");
         obra.Element(Ns + "cObra").ShouldBeNull();
@@ -103,7 +103,7 @@ public class NacionalXmlSerializerOptionalBlocksTests
         // Assert
         result.Xml.ShouldBeValidAgainstDpsSchema();
 
-        var obra = ParseServ(result.Xml).Element(Ns + "obra");
+        var obra = NacionalXmlParseHelpers.ParseServ(result.Xml).Element(Ns + "obra");
         obra.ShouldNotBeNull();
         obra.Element(Ns + "end").ShouldNotBeNull();
         obra.Element(Ns + "cObra").ShouldBeNull();
@@ -121,24 +121,7 @@ public class NacionalXmlSerializerOptionalBlocksTests
 
         // Assert
         result.Xml.ShouldBeValidAgainstDpsSchema();
-        ParseServ(result.Xml).Element(Ns + "obra").ShouldBeNull();
+        NacionalXmlParseHelpers.ParseServ(result.Xml).Element(Ns + "obra").ShouldBeNull();
     }
 
-    // ==========================================================
-    // Helpers privados (final da classe)
-    // ==========================================================
-
-    private static XElement ParseServ(string xml)
-    {
-        var root = XDocument.Parse(xml).Root;
-        root.ShouldNotBeNull();
-
-        var infDps = root.Element(Ns + "infDPS");
-        infDps.ShouldNotBeNull();
-
-        var serv = infDps.Element(Ns + "serv");
-        serv.ShouldNotBeNull();
-
-        return serv;
-    }
 }

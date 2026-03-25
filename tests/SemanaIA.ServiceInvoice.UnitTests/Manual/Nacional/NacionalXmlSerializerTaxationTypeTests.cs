@@ -24,7 +24,7 @@ public class NacionalXmlSerializerTaxationTypeTests
         // Assert
         result.Xml.ShouldBeValidAgainstDpsSchema();
 
-        var tribMun = ParseTribMun(result.Xml);
+        var tribMun = NacionalXmlParseHelpers.ParseTribMun(result.Xml);
         tribMun.Element(Ns + "tribISSQN")?.Value.ShouldBe("2");
         tribMun.Element(Ns + "tpImunidade")?.Value.ShouldBe("1");
     }
@@ -41,7 +41,7 @@ public class NacionalXmlSerializerTaxationTypeTests
         // Assert
         result.Xml.ShouldBeValidAgainstDpsSchema();
 
-        var tribMun = ParseTribMun(result.Xml);
+        var tribMun = NacionalXmlParseHelpers.ParseTribMun(result.Xml);
         tribMun.Element(Ns + "tribISSQN")?.Value.ShouldBe("4");
     }
 
@@ -59,7 +59,7 @@ public class NacionalXmlSerializerTaxationTypeTests
         // Assert
         result.Xml.ShouldBeValidAgainstDpsSchema();
 
-        var exigSusp = ParseTribMun(result.Xml).Element(Ns + "exigSusp");
+        var exigSusp = NacionalXmlParseHelpers.ParseTribMun(result.Xml).Element(Ns + "exigSusp");
         exigSusp.ShouldNotBeNull();
         exigSusp.Element(Ns + "tpSusp")?.Value.ShouldBe("2");
         exigSusp.Element(Ns + "nProcesso")?.Value.ShouldBe("987654321098765432109876543210");
@@ -79,7 +79,7 @@ public class NacionalXmlSerializerTaxationTypeTests
         // Assert
         result.Xml.ShouldBeValidAgainstDpsSchema();
 
-        var tribMun = ParseTribMun(result.Xml);
+        var tribMun = NacionalXmlParseHelpers.ParseTribMun(result.Xml);
         tribMun.Element(Ns + "pAliq")?.Value.ShouldBe("2.00");
     }
 
@@ -98,7 +98,7 @@ public class NacionalXmlSerializerTaxationTypeTests
         // Assert
         result.Xml.ShouldBeValidAgainstDpsSchema();
 
-        var tribMun = ParseTribMun(result.Xml);
+        var tribMun = NacionalXmlParseHelpers.ParseTribMun(result.Xml);
         tribMun.Element(Ns + "pAliq").ShouldBeNull();
     }
 
@@ -117,31 +117,8 @@ public class NacionalXmlSerializerTaxationTypeTests
         // Assert
         result.Xml.ShouldBeValidAgainstDpsSchema();
 
-        var tribMun = ParseTribMun(result.Xml);
+        var tribMun = NacionalXmlParseHelpers.ParseTribMun(result.Xml);
         tribMun.Element(Ns + "pAliq").ShouldBeNull();
     }
 
-    // ==========================================================
-    // Helpers privados (final da classe)
-    // ==========================================================
-
-    private static XElement ParseTribMun(string xml)
-    {
-        var root = XDocument.Parse(xml).Root;
-        root.ShouldNotBeNull();
-
-        var infDps = root.Element(Ns + "infDPS");
-        infDps.ShouldNotBeNull();
-
-        var valores = infDps.Element(Ns + "valores");
-        valores.ShouldNotBeNull();
-
-        var trib = valores.Element(Ns + "trib");
-        trib.ShouldNotBeNull();
-
-        var tribMun = trib.Element(Ns + "tribMun");
-        tribMun.ShouldNotBeNull();
-
-        return tribMun;
-    }
 }
