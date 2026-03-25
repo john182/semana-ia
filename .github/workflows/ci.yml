@@ -46,6 +46,7 @@ jobs:
         run: dotnet restore
 
       - name: SonarScanner Begin
+        id: sonar_begin
         if: env.SONAR_TOKEN != '' && vars.SONAR_ORGANIZATION != ''
         run: |
           dotnet sonarscanner begin \
@@ -61,13 +62,13 @@ jobs:
         run: dotnet build --no-restore
 
       - name: Unit Tests
-        run: dotnet test tests/SemanaIA.ServiceInvoice.UnitTests --no-build -v normal --collect:"XPlat Code Coverage" -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover
+        run: dotnet test tests/SemanaIA.ServiceInvoice.UnitTests --no-build --no-restore -v normal --collect:"XPlat Code Coverage" -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover
 
       - name: Integration Tests
-        run: dotnet test tests/SemanaIA.ServiceInvoice.IntegrationsTests --no-build -v normal --logger "console;verbosity=detailed" --collect:"XPlat Code Coverage" -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover
+        run: dotnet test tests/SemanaIA.ServiceInvoice.IntegrationsTests --no-build --no-restore -v normal --logger "console;verbosity=detailed" --collect:"XPlat Code Coverage" -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover
 
       - name: SonarScanner End
-        if: always() && env.SONAR_TOKEN != '' && vars.SONAR_ORGANIZATION != ''
+        if: always() && steps.sonar_begin.outcome == 'success'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: dotnet sonarscanner end /d:sonar.token="$SONAR_TOKEN"
