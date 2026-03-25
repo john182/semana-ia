@@ -46,13 +46,15 @@ jobs:
         run: dotnet restore
 
       - name: SonarScanner Begin
-        if: env.SONAR_TOKEN != ''
+        if: env.SONAR_TOKEN != '' && vars.SONAR_ORGANIZATION != ''
         run: |
           dotnet sonarscanner begin \
             /k:"${{ vars.SONAR_PROJECT_KEY || 'SemanaIA' }}" \
             /o:"${{ vars.SONAR_ORGANIZATION }}" \
             /d:sonar.host.url="https://sonarcloud.io" \
-            /d:sonar.token="$SONAR_TOKEN"
+            /d:sonar.token="$SONAR_TOKEN" \
+            /d:sonar.cs.opencover.reportsPaths="**/TestResults/**/coverage.opencover.xml" \
+            /d:sonar.qualitygate.wait="true"
 
       - name: Build
         run: dotnet build --no-restore
