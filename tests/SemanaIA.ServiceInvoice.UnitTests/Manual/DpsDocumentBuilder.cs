@@ -273,12 +273,14 @@ public class DpsDocumentBuilder
     public DpsDocumentBuilder WithFreeTaxation()
     {
         _doc.Values.TaxationType = TaxationType.Free;
+        _doc.Values.ImmunityType = null;
         return this;
     }
 
     public DpsDocumentBuilder WithSuspendedAdministrativeProcedure(string processNumber)
     {
         _doc.Values.TaxationType = TaxationType.SuspendedAdministrativeProcedure;
+        _doc.Values.ImmunityType = null;
         _doc.Suspension = new Suspension { ProcessNumber = processNumber };
         return this;
     }
