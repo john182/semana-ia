@@ -19,7 +19,6 @@ jobs:
     env:
       MongoDb__ConnectionString: mongodb://localhost:27017
       MongoDb__DatabaseName: semana_ia_test
-      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
     steps:
       - uses: actions/checkout@v4
@@ -32,22 +31,29 @@ jobs:
           dotnet-version: "10.0.x"
 
       - name: Setup Java
-        if: env.SONAR_TOKEN != '' && vars.SONAR_ORGANIZATION != ''
+        if: secrets.SONAR_TOKEN != '' && vars.SONAR_ORGANIZATION != ''
         uses: actions/setup-java@v4
         with:
           distribution: "temurin"
           java-version: "17"
 
       - name: Install SonarScanner
-        if: env.SONAR_TOKEN != '' && vars.SONAR_ORGANIZATION != ''
-        run: dotnet tool install --global dotnet-sonarscanner --version 9.0.2
+        if: secrets.SONAR_TOKEN != '' && vars.SONAR_ORGANIZATION != ''
+        run: |
+          if dotnet tool list -g | grep -q '^dotnet-sonarscanner '; then
+            dotnet tool update --global dotnet-sonarscanner --version 9.0.2
+          else
+            dotnet tool install --global dotnet-sonarscanner --version 9.0.2
+          fi
 
       - name: Restore
         run: dotnet restore
 
       - name: SonarScanner Begin
         id: sonar_begin
-        if: env.SONAR_TOKEN != '' && vars.SONAR_ORGANIZATION != ''
+        if: secrets.SONAR_TOKEN != '' && vars.SONAR_ORGANIZATION != ''
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
           dotnet sonarscanner begin \
             /k:"${{ vars.SONAR_PROJECT_KEY || 'SemanaIA' }}" \
@@ -70,5 +76,6 @@ jobs:
       - name: SonarScanner End
         if: always() && steps.sonar_begin.outcome == 'success'
         env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: dotnet sonarscanner end /d:sonar.token="$SONAR_TOKEN"
