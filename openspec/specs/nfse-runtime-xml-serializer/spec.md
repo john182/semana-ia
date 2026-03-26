@@ -26,6 +26,8 @@ Serializer XML runtime guiado por SchemaModel + ProviderRuleResolver, com valida
 
 O `SchemaBasedXmlSerializer` MUST receber `SchemaDocument`, dados de entrada (dicionário) e `IProviderRuleResolver`, e produzir XML real respeitando a estrutura do schema. Cada elemento MUST ser emitido no namespace correto conforme o `SchemaComplexType.Namespace` do tipo que o define. Se o tipo não possuir namespace explícito, MUST usar fallback para `SchemaDocument.TargetNamespace`. O root element MUST declarar todos os namespaces do `SchemaDocument.NamespaceMap` como `xmlns:prefix` attributes.
 
+Quando o provider utiliza padrão envelope (ABRASF ou similar com wrapperBindings), o pipeline MUST usar a configuração de envelope do profile (rootComplexTypeName, rootElementName, wrapperBindings, bindingPathPrefix) para gerar o XML com a estrutura correta. O root element de envelope profiles MUST NOT receber atributo `versao` — este pertence a inner elements como `LoteRps` via wrapperBindings.
+
 #### Scenario: Serialize minimal DPS for nacional provider
 - **WHEN** o serializer recebe SchemaModel do nacional + dados mínimos (tpAmb, dhEmi, serie, nDPS, etc.)
 - **THEN** produz XML com `<DPS>` contendo `<infDPS>` com elementos na ordem do schema
@@ -37,6 +39,18 @@ O `SchemaBasedXmlSerializer` MUST receber `SchemaDocument`, dados de entrada (di
 - **THEN** produz XML com elementos do envelope no namespace `enviar-lote-rps-envio` e elementos de tipos no namespace `tipos`
 - **AND** o root element declara ambos os namespaces
 - **AND** o XML é válido contra os XSDs do GISSOnline
+
+#### Scenario: ABRASF envelope generation for GISSOnline
+- **WHEN** o provider GISSOnline possui configuração de envelope no profile (rootComplexTypeName, wrapperBindings)
+- **THEN** o serializer gera XML com root `EnviarLoteRpsEnvio` contendo `LoteRps > ListaRps > Rps`
+- **AND** o root element NÃO contém atributo `versao`
+- **AND** o `LoteRps` contém `versao` via wrapperBindings
+- **AND** o XML resultante é válido contra o XSD do provider
+
+#### Scenario: Non-envelope provider ignores envelope config
+- **WHEN** o provider não possui wrapperBindings (ex: nacional)
+- **THEN** o serializer mantém comportamento atual sem envelope adicional
+- **AND** o root element recebe atributo `versao` normalmente
 
 #### Scenario: Serialize with choice resolution
 - **WHEN** os dados contêm CNPJ para o prestador (choice CNPJ/CPF/NIF/cNaoNIF)
