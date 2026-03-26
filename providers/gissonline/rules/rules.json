@@ -3,7 +3,7 @@
   "version": "2.04",
   "rootComplexTypeName": "_anon_EnviarLoteRpsEnvio",
   "rootElementName": "EnviarLoteRpsEnvio",
-  "municipalityCodes": ["3550308"],
+  "municipalityCodes": ["3550308", "3523909"],
   "bindingPathPrefix": "LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico",
   "wrapperBindings": {
     "LoteRps.@Id": "const:lote1",

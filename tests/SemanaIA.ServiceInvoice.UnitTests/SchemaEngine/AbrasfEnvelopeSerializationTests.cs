@@ -20,8 +20,12 @@ public class AbrasfEnvelopeSerializationTests
 
         // Assert
         result.Xml.ShouldNotBeNull($"Errors: {FormatErrors(result)}");
+        result.ValidationErrors.ShouldBeEmpty(
+            $"XSD errors:\n{string.Join("\n", result.ValidationErrors)}\nXML:\n{result.Xml}");
+
         var root = XDocument.Parse(result.Xml!).Root!;
         root.Name.LocalName.ShouldBe("EnviarLoteRpsEnvio");
+        root.Attribute("versao").ShouldBeNull("Envelope root must not have versao — it belongs on inner LoteRps");
     }
 
     [Fact]
@@ -35,6 +39,9 @@ public class AbrasfEnvelopeSerializationTests
 
         // Assert
         result.Xml.ShouldNotBeNull($"Errors: {FormatErrors(result)}");
+        result.ValidationErrors.ShouldBeEmpty(
+            $"XSD errors:\n{string.Join("\n", result.ValidationErrors)}\nXML:\n{result.Xml}");
+
         var root = XDocument.Parse(result.Xml!).Root!;
         var loteRps = root.Descendants().FirstOrDefault(e => e.Name.LocalName == "LoteRps");
         loteRps.ShouldNotBeNull("LoteRps element should be present in envelope");
@@ -57,6 +64,9 @@ public class AbrasfEnvelopeSerializationTests
 
         // Assert
         result.Xml.ShouldNotBeNull($"Errors: {FormatErrors(result)}");
+        result.ValidationErrors.ShouldBeEmpty(
+            $"XSD errors:\n{string.Join("\n", result.ValidationErrors)}\nXML:\n{result.Xml}");
+
         var root = XDocument.Parse(result.Xml!).Root!;
         var loteRps = root.Descendants().First(e => e.Name.LocalName == "LoteRps");
 
@@ -76,6 +86,8 @@ public class AbrasfEnvelopeSerializationTests
 
         // Assert
         result.Xml.ShouldNotBeNull($"Errors: {FormatErrors(result)}");
+        result.ValidationErrors.ShouldBeEmpty(
+            $"XSD errors:\n{string.Join("\n", result.ValidationErrors)}\nXML:\n{result.Xml}");
         result.Xml.ShouldContain("1000.00");  // ValorServicos
         result.Xml.ShouldContain("01.01");     // ItemListaServico
         result.Xml.ShouldContain("Servico de teste ABRASF"); // Discriminacao
@@ -107,8 +119,12 @@ public class AbrasfEnvelopeSerializationTests
 
         // Assert
         result.Xml.ShouldNotBeNull($"Errors: {FormatErrors(result)}");
+        result.ValidationErrors.ShouldBeEmpty(
+            $"XSD errors:\n{string.Join("\n", result.ValidationErrors)}\nXML:\n{result.Xml}");
+
         var root = XDocument.Parse(result.Xml!).Root!;
         root.Name.LocalName.ShouldBe("EnviarLoteRpsEnvio");
+        root.Attribute("versao").ShouldBeNull("Envelope root must not have versao");
 
         var loteRps = root.Descendants().First(e => e.Name.LocalName == "LoteRps");
         loteRps.Attribute("versao")?.Value.ShouldBe("2.03");

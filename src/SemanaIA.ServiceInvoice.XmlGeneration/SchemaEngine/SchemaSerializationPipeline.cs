@@ -65,7 +65,7 @@ public class SchemaSerializationPipeline
 
         var resolver = CreateResolver(profile);
 
-        // Envelope profiles (ABRASF) don't declare versao on root element — it belongs on inner elements via wrapperBindings
+        // Envelope-style profiles using wrapperBindings don't declare versao on the root element — it belongs on inner elements
         var isEnvelopeProfile = profile.WrapperBindings is { Count: > 0 };
         var resolvedVersion = isEnvelopeProfile ? null
             : !string.IsNullOrEmpty(version) ? version
