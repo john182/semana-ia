@@ -3,7 +3,7 @@
   "version": "2.04",
   "rootComplexTypeName": "_anon_EnviarLoteRpsEnvio",
   "rootElementName": "EnviarLoteRpsEnvio",
-  "municipalityCodes": ["3550308", "3523909"],
+  "municipalityCodes": ["3523909"],
   "bindingPathPrefix": "LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico",
   "wrapperBindings": {
     "LoteRps.@Id": "const:lote1",
@@ -24,7 +24,7 @@
     { "type": "Binding", "target": "Servico.ExigibilidadeISS", "sourceType": "constant", "constantValue": "1" },
     { "type": "Binding", "target": "Prestador.CpfCnpj.Cnpj", "source": "Provider.Cnpj", "padLeft": 14, "padChar": "0" },
     { "type": "Binding", "target": "Prestador.InscricaoMunicipal", "source": "Provider.MunicipalTaxNumber" },
-    { "type": "Default", "target": "OptanteSimplesNacional", "source": "Provider.TaxRegime", "fallbackValue": "1" },
+    { "type": "EnumMapping", "target": "OptanteSimplesNacional", "source": "Provider.TaxRegime", "mappings": { "MicroempreendedorIndividual": "1", "SimplesNacional": "1" }, "defaultMapping": "2" },
     { "type": "Binding", "target": "IncentivoFiscal", "sourceType": "constant", "constantValue": "2" },
     { "type": "Binding", "target": "Servico.Valores.trib.totTrib.pTotTribSN", "sourceType": "constant", "constantValue": "0.00" },
     { "type": "Binding", "target": "Servico.Valores.IBSCBS.finNFSe", "sourceType": "constant", "constantValue": "0" },
