@@ -126,7 +126,7 @@ public class MongoProviderRepository : IProviderRepository
             {
                 Unique = true,
                 Name = "idx_municipality_unique_active",
-                PartialFilterExpression = Builders<ProviderDocument>.Filter.In(doc => doc.Status, new[] { "Ready", "Draft" }),
+                PartialFilterExpression = Builders<ProviderDocument>.Filter.In(doc => doc.Status, new[] { nameof(ProviderStatus.Ready), nameof(ProviderStatus.Draft) }),
             });
 
         var updatedAtIndex = new CreateIndexModel<ProviderDocument>(
