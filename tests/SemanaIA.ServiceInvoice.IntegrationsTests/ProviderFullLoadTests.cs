@@ -43,6 +43,7 @@ public class ProviderFullLoadTests : IClassFixture<WebApplicationFactory<Program
     {
         _providersDir = FindDirectoryWalkingUp("providers");
         _testDataDir = FindTestDataDir();
+        await CleanupTestProvidersFromPreviousRuns();
 
         var municipalityCounter = MunicipalityCodeBase;
 
@@ -454,6 +455,30 @@ public class ProviderFullLoadTests : IClassFixture<WebApplicationFactory<Program
     // ==========================================================
     // Private helpers
     // ==========================================================
+
+    private async Task CleanupTestProvidersFromPreviousRuns()
+    {
+        try
+        {
+            var response = await _client.GetAsync(OnboardEndpoint);
+            if (!response.IsSuccessStatusCode) return;
+
+            var providers = await response.Content.ReadFromJsonAsync<JsonElement>();
+            foreach (var provider in providers.EnumerateArray())
+            {
+                var name = provider.GetProperty("name").GetString() ?? "";
+                if (!name.StartsWith(TestProviderPrefix, StringComparison.OrdinalIgnoreCase)) continue;
+
+                var id = provider.GetProperty("id").GetString();
+                if (id is not null)
+                    await _client.DeleteAsync($"{OnboardEndpoint}/{id}");
+            }
+        }
+        catch
+        {
+            // MongoDB may not be available
+        }
+    }
 
     private static string FindTestDataDir()
     {

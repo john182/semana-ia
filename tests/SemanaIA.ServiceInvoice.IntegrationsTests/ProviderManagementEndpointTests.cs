@@ -51,6 +51,9 @@ public class ProviderManagementEndpointTests : IClassFixture<WebApplicationFacto
         {
             var response = await _client.GetAsync(ProvidersEndpoint);
             _mongoAvailable = response.StatusCode != HttpStatusCode.InternalServerError;
+
+            if (_mongoAvailable)
+                await CleanupTestProvidersFromPreviousRuns();
         }
         catch
         {
@@ -278,6 +281,27 @@ public class ProviderManagementEndpointTests : IClassFixture<WebApplicationFacto
         }
 
         return content;
+    }
+
+    private async Task CleanupTestProvidersFromPreviousRuns()
+    {
+        try
+        {
+            var response = await _client.GetAsync(ProvidersEndpoint);
+            if (!response.IsSuccessStatusCode) return;
+
+            var providers = await response.Content.ReadFromJsonAsync<JsonElement>();
+            foreach (var provider in providers.EnumerateArray())
+            {
+                var name = provider.GetProperty("name").GetString() ?? "";
+                if (!name.StartsWith("test-", StringComparison.OrdinalIgnoreCase)) continue;
+
+                var id = provider.GetProperty("id").GetString();
+                if (id is not null)
+                    await _client.DeleteAsync($"{ProvidersEndpoint}/{id}");
+            }
+        }
+        catch { }
     }
 
     private static string FindProvidersDir()

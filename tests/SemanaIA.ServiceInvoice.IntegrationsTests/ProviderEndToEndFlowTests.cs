@@ -43,10 +43,10 @@ public class ProviderEndToEndFlowTests : IClassFixture<WebApplicationFactory<Pro
         _output = output;
     }
 
-    public Task InitializeAsync()
+    public async Task InitializeAsync()
     {
         _testDataDir = FindTestDataDir();
-        return Task.CompletedTask;
+        await CleanupTestProvidersFromPreviousRuns();
     }
 
     public async Task DisposeAsync()
@@ -352,6 +352,30 @@ public class ProviderEndToEndFlowTests : IClassFixture<WebApplicationFactory<Pro
         error.Contains("incomplete content") ||
         error.Contains("invalid child element") ||
         error.Contains("Pattern constraint failed");
+
+    private async Task CleanupTestProvidersFromPreviousRuns()
+    {
+        try
+        {
+            var response = await _client.GetAsync(ProvidersEndpoint);
+            if (!response.IsSuccessStatusCode) return;
+
+            var providers = await response.Content.ReadFromJsonAsync<JsonElement>();
+            foreach (var provider in providers.EnumerateArray())
+            {
+                var name = provider.GetProperty("name").GetString() ?? "";
+                if (!name.StartsWith(TestProviderPrefix, StringComparison.OrdinalIgnoreCase)) continue;
+
+                var id = provider.GetProperty("id").GetString();
+                if (id is not null)
+                    await _client.DeleteAsync($"{ProvidersEndpoint}/{id}");
+            }
+        }
+        catch
+        {
+            // MongoDB may not be available — ignore cleanup errors
+        }
+    }
 
     private static string FindTestDataDir()
     {

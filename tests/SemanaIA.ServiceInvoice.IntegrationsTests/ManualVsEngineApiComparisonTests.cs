@@ -32,10 +32,10 @@ public class ManualVsEngineApiComparisonTests : IClassFixture<WebApplicationFact
         _output = output;
     }
 
-    public Task InitializeAsync()
+    public async Task InitializeAsync()
     {
         _testDataDir = FindTestDataDir();
-        return Task.CompletedTask;
+        await CleanupTestProvidersFromPreviousRuns();
     }
 
     public async Task DisposeAsync()
@@ -194,6 +194,25 @@ public class ManualVsEngineApiComparisonTests : IClassFixture<WebApplicationFact
         if (!root.HasElements) paths.Add(path);
         else foreach (var child in root.Elements()) paths.AddRange(CollectPaths(child, path));
         return paths;
+    }
+
+    private async Task CleanupTestProvidersFromPreviousRuns()
+    {
+        try
+        {
+            var response = await _client.GetAsync(ProvidersEndpoint);
+            if (!response.IsSuccessStatusCode) return;
+
+            var providers = await response.Content.ReadFromJsonAsync<JsonElement>();
+            foreach (var provider in providers.EnumerateArray())
+            {
+                var id = provider.GetProperty("id").GetString();
+                var name = provider.GetProperty("name").GetString() ?? "";
+                if (id is not null && name.StartsWith("compare-", StringComparison.OrdinalIgnoreCase))
+                    await _client.DeleteAsync($"{ProvidersEndpoint}/{id}");
+            }
+        }
+        catch { }
     }
 
     private static string FindTestDataDir()
