@@ -15,7 +15,7 @@ namespace SemanaIA.ServiceInvoice.Api.Controllers;
 [ApiController]
 [Route("api/v1/nfse")]
 [Tags("Emissao de NFS-e")]
-public class ServiceIncoiceController : ControllerBase
+public class ServiceInvoiceController : ControllerBase
 {
     /// <summary>
     /// Gerar XML de NFS-e (DPS) a partir dos dados do documento.
