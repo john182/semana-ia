@@ -1,0 +1,30 @@
+/opsx:propose selecionar e executar PBIs em paralelo com baixo conflito
+
+Contexto:
+Quero avaliar as PBIs e escolher apenas 2, as mais seguras para execução paralela.
+
+Objetivo:
+- selecionar as PBIs com menor impacto e menor colisão
+- executar apenas as escolhidas
+- manter rastreabilidade e documentação da decisão
+
+Regras obrigatórias:
+- máximo de 2 PBIs paralelas, salvo colisão muito baixa
+- uma worktree por PBI
+- não permitir edição concorrente no mesmo arquivo
+- passar por spec-agent antes de implementação
+- executar testes obrigatórios
+- review cruzado no final
+
+O proposal deve produzir:
+1. proposal.md explicando por que a seleção foi feita
+2. design.md descrevendo a estratégia de orquestração com team agents
+3. tasks.md separando:
+   - análise das PBIs
+   - seleção das PBIs
+   - preparação das worktrees
+   - execução por PBI
+   - testes
+   - review cruzado
+4. delta spec com a regra operacional de seleção paralela
+5. indicação clara das PBIs escolhidas e das não escolhidas

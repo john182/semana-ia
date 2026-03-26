@@ -1,0 +1,12 @@
+/opsx:apply
+
+Implemente apenas o que estiver definido no change atual.
+Respeite as tasks e o design aprovados.
+Execute somente as PBIs selecionadas.
+Use team agents com uma worktree por PBI.
+Não permita edição concorrente no mesmo arquivo.
+Faça testes de unidade e end2end obrigatórios e review cruzado ao final.
+obedecer o editor config do projeto para formatação e estilo.
+obeder as regras do sonar para qualidade de código.
+garantir que o CLI do repositório esteja passando sem erros antes de cada commit.
+
