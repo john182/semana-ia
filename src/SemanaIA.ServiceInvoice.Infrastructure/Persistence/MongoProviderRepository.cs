@@ -114,7 +114,33 @@ public class MongoProviderRepository : IProviderRepository
             Builders<ProviderDocument>.IndexKeys.Ascending(doc => doc.Status),
             new CreateIndexOptions { Name = "idx_status" });
 
-        _collection.Indexes.CreateMany([nameIndex, municipalityCodesIndex, statusIndex]);
+        var statusMunicipalityIndex = new CreateIndexModel<ProviderDocument>(
+            Builders<ProviderDocument>.IndexKeys
+                .Ascending(doc => doc.Status)
+                .Ascending(doc => doc.MunicipalityCodes),
+            new CreateIndexOptions { Name = "idx_status_municipality" });
+
+        var municipalityUniqueActiveIndex = new CreateIndexModel<ProviderDocument>(
+            Builders<ProviderDocument>.IndexKeys.Ascending(doc => doc.MunicipalityCodes),
+            new CreateIndexOptions<ProviderDocument>
+            {
+                Unique = true,
+                Name = "idx_municipality_unique_active",
+                PartialFilterExpression = Builders<ProviderDocument>.Filter.In(doc => doc.Status, new[] { "Ready", "Draft" }),
+            });
+
+        var updatedAtIndex = new CreateIndexModel<ProviderDocument>(
+            Builders<ProviderDocument>.IndexKeys.Descending(doc => doc.UpdatedAt),
+            new CreateIndexOptions { Name = "idx_updated_at" });
+
+        _collection.Indexes.CreateMany([
+            nameIndex,
+            municipalityCodesIndex,
+            statusIndex,
+            statusMunicipalityIndex,
+            municipalityUniqueActiveIndex,
+            updatedAtIndex,
+        ]);
     }
 
     private static ProviderDocument ToDocument(ManagedProvider provider)
