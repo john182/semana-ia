@@ -1,5 +1,6 @@
 using System.Xml.Linq;
 using SemanaIA.ServiceInvoice.Domain.Models;
+using SemanaIA.ServiceInvoice.UnitTests.Manual;
 using SemanaIA.ServiceInvoice.XmlGeneration.SchemaEngine;
 using Shouldly;
 
@@ -20,8 +21,7 @@ public class AbrasfEnvelopeSerializationTests
 
         // Assert
         result.Xml.ShouldNotBeNull($"Errors: {FormatErrors(result)}");
-        result.ValidationErrors.ShouldBeEmpty(
-            $"XSD errors:\n{string.Join("\n", result.ValidationErrors)}\nXML:\n{result.Xml}");
+        result.Xml.ShouldBeValidAgainstProviderSchema(TestProviderPaths.FindXsdDir("gissonline"));
 
         var root = XDocument.Parse(result.Xml!).Root!;
         root.Name.LocalName.ShouldBe("EnviarLoteRpsEnvio");
@@ -39,8 +39,7 @@ public class AbrasfEnvelopeSerializationTests
 
         // Assert
         result.Xml.ShouldNotBeNull($"Errors: {FormatErrors(result)}");
-        result.ValidationErrors.ShouldBeEmpty(
-            $"XSD errors:\n{string.Join("\n", result.ValidationErrors)}\nXML:\n{result.Xml}");
+        result.Xml.ShouldBeValidAgainstProviderSchema(TestProviderPaths.FindXsdDir("gissonline"));
 
         var root = XDocument.Parse(result.Xml!).Root!;
         var loteRps = root.Descendants().FirstOrDefault(e => e.Name.LocalName == "LoteRps");
@@ -64,8 +63,7 @@ public class AbrasfEnvelopeSerializationTests
 
         // Assert
         result.Xml.ShouldNotBeNull($"Errors: {FormatErrors(result)}");
-        result.ValidationErrors.ShouldBeEmpty(
-            $"XSD errors:\n{string.Join("\n", result.ValidationErrors)}\nXML:\n{result.Xml}");
+        result.Xml.ShouldBeValidAgainstProviderSchema(TestProviderPaths.FindXsdDir("gissonline"));
 
         var root = XDocument.Parse(result.Xml!).Root!;
         var loteRps = root.Descendants().First(e => e.Name.LocalName == "LoteRps");
@@ -86,8 +84,7 @@ public class AbrasfEnvelopeSerializationTests
 
         // Assert
         result.Xml.ShouldNotBeNull($"Errors: {FormatErrors(result)}");
-        result.ValidationErrors.ShouldBeEmpty(
-            $"XSD errors:\n{string.Join("\n", result.ValidationErrors)}\nXML:\n{result.Xml}");
+        result.Xml.ShouldBeValidAgainstProviderSchema(TestProviderPaths.FindXsdDir("gissonline"));
         result.Xml.ShouldContain("1000.00");  // ValorServicos
         result.Xml.ShouldContain("01.01");     // ItemListaServico
         result.Xml.ShouldContain("Servico de teste ABRASF"); // Discriminacao
@@ -104,8 +101,7 @@ public class AbrasfEnvelopeSerializationTests
 
         // Assert
         result.Xml.ShouldNotBeNull($"Errors: {FormatErrors(result)}");
-        result.ValidationErrors.ShouldBeEmpty(
-            $"XSD validation errors:\n{string.Join("\n", result.ValidationErrors)}\nXML:\n{result.Xml}");
+        result.Xml.ShouldBeValidAgainstProviderSchema(TestProviderPaths.FindXsdDir("gissonline"));
     }
 
     [Fact]
@@ -119,8 +115,7 @@ public class AbrasfEnvelopeSerializationTests
 
         // Assert
         result.Xml.ShouldNotBeNull($"Errors: {FormatErrors(result)}");
-        result.ValidationErrors.ShouldBeEmpty(
-            $"XSD errors:\n{string.Join("\n", result.ValidationErrors)}\nXML:\n{result.Xml}");
+        result.Xml.ShouldBeValidAgainstProviderSchema(TestProviderPaths.FindXsdDir("simpliss"));
 
         var root = XDocument.Parse(result.Xml!).Root!;
         root.Name.LocalName.ShouldBe("EnviarLoteRpsEnvio");
@@ -141,8 +136,7 @@ public class AbrasfEnvelopeSerializationTests
 
         // Assert
         result.Xml.ShouldNotBeNull($"Errors: {FormatErrors(result)}");
-        result.ValidationErrors.ShouldBeEmpty(
-            $"XSD validation errors:\n{string.Join("\n", result.ValidationErrors)}\nXML:\n{result.Xml}");
+        result.Xml.ShouldBeValidAgainstProviderSchema(TestProviderPaths.FindXsdDir("simpliss"));
     }
 
     [Fact]
@@ -156,6 +150,8 @@ public class AbrasfEnvelopeSerializationTests
 
         // Assert
         result.Xml.ShouldNotBeNull($"Errors: {FormatErrors(result)}");
+        result.Xml.ShouldBeValidAgainstDpsSchema();
+
         var root = XDocument.Parse(result.Xml!).Root!;
         root.Name.LocalName.ShouldBe("DPS");
         root.Descendants().Any(e => e.Name.LocalName == "LoteRps").ShouldBeFalse();
@@ -173,8 +169,7 @@ public class AbrasfEnvelopeSerializationTests
 
         // Assert
         result.Xml.ShouldNotBeNull($"Errors: {FormatErrors(result)}");
-        result.ValidationErrors.ShouldBeEmpty(
-            $"XSD validation errors:\n{string.Join("\n", result.ValidationErrors)}\nXML:\n{result.Xml}");
+        result.Xml.ShouldBeValidAgainstDpsSchema();
     }
 
     // --- Private methods ---
