@@ -16,6 +16,32 @@ public class NfseEndpointIntegrationTests : IClassFixture<WebApplicationFactory<
         _client = factory.CreateClient();
     }
 
+    // ==========================================================
+    // E2E: Health check endpoint
+    // ==========================================================
+
+    [Fact]
+    public async Task Given_HealthEndpoint_Should_Return200WithProviderSummary()
+    {
+        // Act
+        var response = await _client.GetAsync("/health");
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+
+        var body = await response.Content.ReadFromJsonAsync<JsonElement>();
+        var status = body.GetProperty("status").GetString();
+        status.ShouldNotBeNullOrEmpty();
+
+        body.TryGetProperty("providers", out var providers).ShouldBeTrue();
+        body.TryGetProperty("checks", out var checks).ShouldBeTrue();
+        checks.TryGetProperty("mongodb", out _).ShouldBeTrue();
+    }
+
+    // ==========================================================
+    // E2E: NFS-e XML generation
+    // ==========================================================
+
     [Fact]
     public async Task Given_MinimalRequest_Should_Return200WithDpsXml()
     {

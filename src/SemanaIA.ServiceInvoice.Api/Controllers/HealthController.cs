@@ -39,10 +39,10 @@ public class HealthController : ControllerBase
     [HttpGet]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
-    public async Task<IActionResult> GetHealth()
+    public async Task<IActionResult> GetHealth(CancellationToken cancellationToken)
     {
         var providerSummaries = _providerOnboardingService.ListProviders();
-        var mongoStatus = await EvaluateMongoHealthAsync();
+        var mongoStatus = await EvaluateMongoHealthAsync(cancellationToken);
 
         var overallStatus = DetermineOverallStatus(providerSummaries, mongoStatus);
 
@@ -69,12 +69,12 @@ public class HealthController : ControllerBase
 
     // --- Private methods ---
 
-    private async Task<string> EvaluateMongoHealthAsync()
+    private async Task<string> EvaluateMongoHealthAsync(CancellationToken cancellationToken)
     {
         if (!_mongoHealthCheck.IsConfigured)
             return MongoNotConfigured;
 
-        var isHealthy = await _mongoHealthCheck.IsHealthyAsync();
+        var isHealthy = await _mongoHealthCheck.IsHealthyAsync(cancellationToken);
         return isHealthy ? MongoHealthy : MongoUnhealthy;
     }
 

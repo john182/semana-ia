@@ -50,7 +50,7 @@ public static class ServiceCollectionExtensions
         {
             // Filesystem-only mode: no MongoDB, legacy behavior
             services.AddScoped(_ => new ProviderResolver(providersBaseDir));
-            services.AddSingleton<IMongoHealthCheck, NotConfiguredMongoHealthCheck>();
+            services.AddScoped<IMongoHealthCheck, NotConfiguredMongoHealthCheck>();
         }
 
         services.AddScoped(sp => new ProviderSerializerFactory(sp.GetRequiredService<ProviderResolver>()));

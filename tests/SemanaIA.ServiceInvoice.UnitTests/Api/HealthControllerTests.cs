@@ -41,7 +41,7 @@ public class HealthControllerTests
         var controller = CreateController();
 
         // Act
-        var actionResult = await controller.GetHealth();
+        var actionResult = await controller.GetHealth(CancellationToken.None);
 
         // Assert
         var okResult = actionResult.ShouldBeOfType<OkObjectResult>();
@@ -74,7 +74,7 @@ public class HealthControllerTests
         var controller = CreateController();
 
         // Act
-        var actionResult = await controller.GetHealth();
+        var actionResult = await controller.GetHealth(CancellationToken.None);
 
         // Assert
         var okResult = actionResult.ShouldBeOfType<OkObjectResult>();
@@ -99,12 +99,12 @@ public class HealthControllerTests
             .Returns(providerSummaries);
 
         _mongoHealthCheckMock.Setup(check => check.IsConfigured).Returns(true);
-        _mongoHealthCheckMock.Setup(check => check.IsHealthyAsync()).ReturnsAsync(false);
+        _mongoHealthCheckMock.Setup(check => check.IsHealthyAsync(It.IsAny<CancellationToken>())).ReturnsAsync(false);
 
         var controller = CreateController();
 
         // Act
-        var actionResult = await controller.GetHealth();
+        var actionResult = await controller.GetHealth(CancellationToken.None);
 
         // Assert
         var objectResult = actionResult.ShouldBeOfType<ObjectResult>();
@@ -128,7 +128,7 @@ public class HealthControllerTests
         var controller = CreateController();
 
         // Act
-        var actionResult = await controller.GetHealth();
+        var actionResult = await controller.GetHealth(CancellationToken.None);
 
         // Assert
         var okResult = actionResult.ShouldBeOfType<OkObjectResult>();
@@ -157,7 +157,7 @@ public class HealthControllerTests
         var controller = CreateController();
 
         // Act
-        var actionResult = await controller.GetHealth();
+        var actionResult = await controller.GetHealth(CancellationToken.None);
 
         // Assert
         var okResult = actionResult.ShouldBeOfType<OkObjectResult>();
@@ -180,13 +180,13 @@ public class HealthControllerTests
     private void SetupMongoHealthy()
     {
         _mongoHealthCheckMock.Setup(check => check.IsConfigured).Returns(true);
-        _mongoHealthCheckMock.Setup(check => check.IsHealthyAsync()).ReturnsAsync(true);
+        _mongoHealthCheckMock.Setup(check => check.IsHealthyAsync(It.IsAny<CancellationToken>())).ReturnsAsync(true);
     }
 
     private static HealthResponseSnapshot DeserializeAnonymousResponse(object responseValue)
     {
         var json = System.Text.Json.JsonSerializer.Serialize(responseValue);
-        var document = System.Text.Json.JsonDocument.Parse(json);
+        using var document = System.Text.Json.JsonDocument.Parse(json);
         var root = document.RootElement;
 
         var providers = new List<ProviderSnapshot>();

@@ -10,5 +10,5 @@ public class NotConfiguredMongoHealthCheck : IMongoHealthCheck
 {
     public bool IsConfigured => false;
 
-    public Task<bool> IsHealthyAsync() => Task.FromResult(false);
+    public Task<bool> IsHealthyAsync(CancellationToken cancellationToken = default) => Task.FromResult(false);
 }
