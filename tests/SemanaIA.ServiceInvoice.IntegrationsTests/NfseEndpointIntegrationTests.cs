@@ -30,13 +30,29 @@ public class NfseEndpointIntegrationTests : IClassFixture<WebApplicationFactory<
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
         var body = await response.Content.ReadFromJsonAsync<JsonElement>();
-        body.GetProperty("status").GetInt32().ShouldBe((int)Microsoft.Extensions.Diagnostics.HealthChecks.HealthStatus.Healthy);
+        body.GetProperty("status").GetString().ShouldBe("Healthy");
     }
 
     [Fact]
-    public async Task Given_HealthEndpoint_Should_Return200WithStatusAndEntries()
+    public async Task Given_HealthEndpoint_Should_Return200WithStatusEntriesAndDuration()
     {
         // Act
+        var response = await _client.GetAsync("/health");
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+
+        var body = await response.Content.ReadFromJsonAsync<JsonElement>();
+        body.GetProperty("status").GetString().ShouldNotBeNullOrEmpty();
+        body.TryGetProperty("totalDuration", out _).ShouldBeTrue();
+        body.TryGetProperty("entries", out var entries).ShouldBeTrue();
+        entries.ValueKind.ShouldBe(JsonValueKind.Object);
+    }
+
+    [Fact]
+    public async Task Given_HealthEndpoint_Should_ReturnValidJsonEvenWhenDegraded()
+    {
+        // Act — without MongoDB configured, health should still return valid JSON
         var response = await _client.GetAsync("/health");
 
         // Assert
@@ -45,9 +61,10 @@ public class NfseEndpointIntegrationTests : IClassFixture<WebApplicationFactory<
         var json = await response.Content.ReadAsStringAsync();
         json.ShouldNotBeNullOrEmpty();
 
-        var body = await response.Content.ReadFromJsonAsync<JsonElement>();
+        // Ensure WriteHealthResponse DTO serializes correctly (no Exception serialization issues)
+        var body = JsonSerializer.Deserialize<JsonElement>(json);
         body.TryGetProperty("status", out _).ShouldBeTrue();
-        body.TryGetProperty("totalDuration", out _).ShouldBeTrue();
+        body.TryGetProperty("entries", out _).ShouldBeTrue();
     }
 
     // ==========================================================

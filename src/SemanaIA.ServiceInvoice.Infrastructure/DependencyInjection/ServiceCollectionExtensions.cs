@@ -41,7 +41,6 @@ public static class ServiceCollectionExtensions
         {
             AddMongoDb(services, configuration);
 
-            var connectionString = configuration.GetSection(MongoDbSettings.SectionName)["ConnectionString"]!;
             services
                 .AddHealthChecks()
                 .AddMongoDb(

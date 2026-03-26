@@ -59,7 +59,24 @@ app.Run();
 static Task WriteHealthResponse(HttpContext context, HealthReport report)
 {
     context.Response.ContentType = "application/json";
-    return context.Response.WriteAsync(JsonSerializer.Serialize(report, new JsonSerializerOptions
+
+    var response = new
+    {
+        status = report.Status.ToString(),
+        totalDuration = report.TotalDuration.ToString(),
+        entries = report.Entries.ToDictionary(
+            e => e.Key,
+            e => new
+            {
+                status = e.Value.Status.ToString(),
+                duration = e.Value.Duration.ToString(),
+                description = e.Value.Description,
+                tags = e.Value.Tags,
+                exception = e.Value.Exception?.Message
+            })
+    };
+
+    return context.Response.WriteAsync(JsonSerializer.Serialize(response, new JsonSerializerOptions
     {
         WriteIndented = true,
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase
