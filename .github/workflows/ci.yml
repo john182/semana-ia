@@ -2,9 +2,12 @@ name: CI
 
 on:
   push:
-    branches: [master, main, "feature/**", "chore/**"]
+    branches: [master, main, "feature/**", "feat/**", "fix/**", "chore/**"]
   pull_request:
     branches: [master, main]
+
+env:
+  SONAR_ENABLED: ${{ secrets.SONAR_TOKEN != '' && vars.SONAR_ORGANIZATION != '' }}
 
 jobs:
   build-and-test:
@@ -31,27 +34,22 @@ jobs:
           dotnet-version: "10.0.x"
 
       - name: Setup Java
-        if: secrets.SONAR_TOKEN != '' && vars.SONAR_ORGANIZATION != ''
+        if: ${{ env.SONAR_ENABLED == 'true' }}
         uses: actions/setup-java@v4
         with:
           distribution: "temurin"
           java-version: "17"
 
       - name: Install SonarScanner
-        if: secrets.SONAR_TOKEN != '' && vars.SONAR_ORGANIZATION != ''
-        run: |
-          if dotnet tool list -g | grep -q '^dotnet-sonarscanner '; then
-            dotnet tool update --global dotnet-sonarscanner --version 9.0.2
-          else
-            dotnet tool install --global dotnet-sonarscanner --version 9.0.2
-          fi
+        if: ${{ env.SONAR_ENABLED == 'true' }}
+        run: dotnet tool install --global dotnet-sonarscanner --version 9.0.2 || dotnet tool update --global dotnet-sonarscanner --version 9.0.2
 
       - name: Restore
         run: dotnet restore
 
       - name: SonarScanner Begin
         id: sonar_begin
-        if: secrets.SONAR_TOKEN != '' && vars.SONAR_ORGANIZATION != ''
+        if: ${{ env.SONAR_ENABLED == 'true' }}
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
@@ -74,7 +72,7 @@ jobs:
         run: dotnet test tests/SemanaIA.ServiceInvoice.IntegrationsTests --no-build --no-restore -v normal --logger "console;verbosity=detailed" --collect:"XPlat Code Coverage" -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover
 
       - name: SonarScanner End
-        if: always() && steps.sonar_begin.outcome == 'success'
+        if: ${{ always() && steps.sonar_begin.outcome == 'success' }}
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
