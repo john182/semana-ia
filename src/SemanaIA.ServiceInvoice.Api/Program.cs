@@ -60,6 +60,17 @@ static Task WriteHealthResponse(HttpContext context, HealthReport report)
 {
     context.Response.ContentType = "application/json";
 
+    if (report.Status != HealthStatus.Healthy)
+    {
+        var logger = context.RequestServices.GetRequiredService<ILoggerFactory>().CreateLogger("HealthCheck");
+        foreach (var entry in report.Entries.Where(e => e.Value.Status != HealthStatus.Healthy))
+        {
+            logger.LogError(entry.Value.Exception,
+                "Health check {Name} is {Status}: {Description}",
+                entry.Key, entry.Value.Status, entry.Value.Description ?? entry.Value.Exception?.Message);
+        }
+    }
+
     var response = new
     {
         status = report.Status.ToString(),
