@@ -13,7 +13,6 @@ public class MongoProviderRepository : IProviderRepository
     public MongoProviderRepository(IMongoDatabase database)
     {
         _collection = database.GetCollection<ProviderDocument>(CollectionName);
-        EnsureIndexes();
     }
 
     public async Task<ManagedProvider> Save(ManagedProvider provider)
@@ -99,49 +98,6 @@ public class MongoProviderRepository : IProviderRepository
     }
 
     // --- Private methods ---
-
-    private void EnsureIndexes()
-    {
-        var nameIndex = new CreateIndexModel<ProviderDocument>(
-            Builders<ProviderDocument>.IndexKeys.Ascending(doc => doc.Name),
-            new CreateIndexOptions { Unique = true, Name = "idx_name_unique" });
-
-        var municipalityCodesIndex = new CreateIndexModel<ProviderDocument>(
-            Builders<ProviderDocument>.IndexKeys.Ascending(doc => doc.MunicipalityCodes),
-            new CreateIndexOptions { Name = "idx_municipality_codes" });
-
-        var statusIndex = new CreateIndexModel<ProviderDocument>(
-            Builders<ProviderDocument>.IndexKeys.Ascending(doc => doc.Status),
-            new CreateIndexOptions { Name = "idx_status" });
-
-        var statusMunicipalityIndex = new CreateIndexModel<ProviderDocument>(
-            Builders<ProviderDocument>.IndexKeys
-                .Ascending(doc => doc.Status)
-                .Ascending(doc => doc.MunicipalityCodes),
-            new CreateIndexOptions { Name = "idx_status_municipality" });
-
-        var municipalityUniqueActiveIndex = new CreateIndexModel<ProviderDocument>(
-            Builders<ProviderDocument>.IndexKeys.Ascending(doc => doc.MunicipalityCodes),
-            new CreateIndexOptions<ProviderDocument>
-            {
-                Unique = true,
-                Name = "idx_municipality_unique_active",
-                PartialFilterExpression = Builders<ProviderDocument>.Filter.In(doc => doc.Status, new[] { nameof(ProviderStatus.Ready), nameof(ProviderStatus.Draft) }),
-            });
-
-        var updatedAtIndex = new CreateIndexModel<ProviderDocument>(
-            Builders<ProviderDocument>.IndexKeys.Descending(doc => doc.UpdatedAt),
-            new CreateIndexOptions { Name = "idx_updated_at" });
-
-        _collection.Indexes.CreateMany([
-            nameIndex,
-            municipalityCodesIndex,
-            statusIndex,
-            statusMunicipalityIndex,
-            municipalityUniqueActiveIndex,
-            updatedAtIndex,
-        ]);
-    }
 
     private static ProviderDocument ToDocument(ManagedProvider provider)
     {
