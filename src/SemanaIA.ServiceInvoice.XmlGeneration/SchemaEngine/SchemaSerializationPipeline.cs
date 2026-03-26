@@ -63,10 +63,14 @@ public class SchemaSerializationPipeline
                 "Data binding failed", ex.Message)]);
         }
 
-        var resolvedVersion = !string.IsNullOrEmpty(version) ? version
+        var resolver = CreateResolver(profile);
+
+        // Envelope-style profiles using wrapperBindings don't declare versao on the root element — it belongs on inner elements
+        var isEnvelopeProfile = profile.WrapperBindings is { Count: > 0 };
+        var resolvedVersion = isEnvelopeProfile ? null
+            : !string.IsNullOrEmpty(version) ? version
             : !string.IsNullOrEmpty(profile.Version) ? profile.Version
             : schema.RootVersionAttribute ?? "1.01";
-        var resolver = CreateResolver(profile);
         var resolvedRootComplexTypeName = profile.RootComplexTypeName ?? rootComplexTypeName;
         var resolvedRootElementName = profile.RootElementName ?? rootElementName;
 
