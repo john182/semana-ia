@@ -1,6 +1,46 @@
 {
   "provider": "gissonline",
   "version": "2.04",
+  "rootComplexTypeName": "_anon_EnviarLoteRpsEnvio",
+  "rootElementName": "EnviarLoteRpsEnvio",
   "municipalityCodes": ["3550308"],
-  "rules": []
+  "bindingPathPrefix": "LoteRps.ListaRps.Rps.InfDeclaracaoPrestacaoServico",
+  "wrapperBindings": {
+    "LoteRps.@Id": "const:lote1",
+    "LoteRps.@versao": "const:2.04",
+    "LoteRps.NumeroLote": "const:1",
+    "LoteRps.Prestador.CpfCnpj.Cnpj": "Provider.Cnpj | padLeft:14:0",
+    "LoteRps.Prestador.InscricaoMunicipal": "Provider.MunicipalTaxNumber",
+    "LoteRps.QuantidadeRps": "const:1"
+  },
+  "rules": [
+    { "type": "Binding", "target": "Competencia", "source": "CompetenceDate", "format": "yyyy-MM-dd" },
+    { "type": "Binding", "target": "Servico.Valores.ValorServicos", "source": "Values.ServicesAmount", "format": "F2" },
+    { "type": "Binding", "target": "Servico.IssRetido", "sourceType": "constant", "constantValue": "2" },
+    { "type": "Binding", "target": "Servico.ItemListaServico", "source": "Service.FederalServiceCode" },
+    { "type": "Binding", "target": "Servico.CodigoNbs", "source": "Service.NbsCode" },
+    { "type": "Binding", "target": "Servico.Discriminacao", "source": "Service.Description" },
+    { "type": "Binding", "target": "Servico.CodigoMunicipio", "source": "Service.MunicipalityCode" },
+    { "type": "Binding", "target": "Servico.ExigibilidadeISS", "sourceType": "constant", "constantValue": "1" },
+    { "type": "Binding", "target": "Prestador.CpfCnpj.Cnpj", "source": "Provider.Cnpj", "padLeft": 14, "padChar": "0" },
+    { "type": "Binding", "target": "Prestador.InscricaoMunicipal", "source": "Provider.MunicipalTaxNumber" },
+    { "type": "Default", "target": "OptanteSimplesNacional", "source": "Provider.TaxRegime", "fallbackValue": "1" },
+    { "type": "Binding", "target": "IncentivoFiscal", "sourceType": "constant", "constantValue": "2" },
+    { "type": "Binding", "target": "Servico.Valores.trib.totTrib.pTotTribSN", "sourceType": "constant", "constantValue": "0.00" },
+    { "type": "Binding", "target": "Servico.Valores.IBSCBS.finNFSe", "sourceType": "constant", "constantValue": "0" },
+    { "type": "Binding", "target": "Servico.Valores.IBSCBS.indFinal", "sourceType": "constant", "constantValue": "0" },
+    { "type": "Binding", "target": "Servico.Valores.IBSCBS.cIndOp", "sourceType": "constant", "constantValue": "100301" },
+    { "type": "Binding", "target": "Servico.Valores.IBSCBS.indDest", "sourceType": "constant", "constantValue": "1" },
+    { "type": "Binding", "target": "Servico.Valores.IBSCBS.valores.trib.gIBSCBS.CST", "sourceType": "constant", "constantValue": "000" },
+    { "type": "Binding", "target": "Servico.Valores.IBSCBS.valores.trib.gIBSCBS.cClassTrib", "sourceType": "constant", "constantValue": "000001" },
+    { "type": "Binding", "target": "Servico.Valores.IBSCBS.valores.cLocalidadeIncid", "source": "Service.MunicipalityCode" },
+    { "type": "Binding", "target": "Servico.Valores.IBSCBS.valores.pRedutor", "sourceType": "constant", "constantValue": "0.00" },
+    { "type": "Formatting", "target": "Cnpj", "padLeft": 14, "padChar": "0", "maxLength": 14 },
+    { "type": "Formatting", "target": "InscricaoMunicipal", "maxLength": 15 },
+    { "type": "Formatting", "target": "NumeroLote", "maxLength": 15 },
+    { "type": "Formatting", "target": "ValorServicos", "maxLength": 15 },
+    { "type": "Formatting", "target": "Discriminacao", "maxLength": 2000 },
+    { "type": "Formatting", "target": "CodigoMunicipio", "maxLength": 7 },
+    { "type": "Formatting", "target": "CodigoNbs", "maxLength": 9 }
+  ]
 }

@@ -31,8 +31,10 @@ public class SchemaSerializationPipeline
                 SerializationErrorKind.SchemaError, providerName,
                 $"No XSD files found in {xsdDir}")]);
 
+        var sendXsdPath = ResolveSendXsd(xsdDir) ?? xsdFiles[0];
+
         SchemaDocument schema;
-        try { schema = _analyzer.Analyze(xsdFiles[0]); }
+        try { schema = _analyzer.Analyze(sendXsdPath); }
         catch (Exception ex)
         {
             return SerializationResult.Failure([new SerializationError(
@@ -58,10 +60,13 @@ public class SchemaSerializationPipeline
                 "Data binding failed", ex.Message)]);
         }
 
-        var resolvedVersion = version ?? profile.Version;
         var resolver = CreateResolver(profile);
         var resolvedRootComplexTypeName = profile.RootComplexTypeName ?? rootComplexTypeName;
         var resolvedRootElementName = profile.RootElementName ?? rootElementName;
+
+        // Envelope profiles (ABRASF) don't declare versao on root element — it belongs on inner elements via wrapperBindings
+        var isEnvelopeProfile = profile.WrapperBindings is { Count: > 0 };
+        var resolvedVersion = isEnvelopeProfile ? null : (version ?? profile.Version);
 
         return _serializer.SerializeAndValidate(
             schema, data, resolver,
@@ -87,5 +92,12 @@ public class SchemaSerializationPipeline
     private static IProviderRuleResolver CreateResolver(ProviderProfile profile)
     {
         return new TypedRuleResolver(profile.Rules ?? []);
+    }
+
+    private static string? ResolveSendXsd(string xsdDir)
+    {
+        var selector = new SendXsdSelector();
+        var selection = selector.Select(xsdDir);
+        return selection.SelectedFile;
     }
 }
