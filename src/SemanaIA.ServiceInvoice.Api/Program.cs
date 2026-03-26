@@ -2,6 +2,7 @@ using System.Reflection;
 using SemanaIA.ServiceInvoice.Api.Swagger.Filters;
 using SemanaIA.ServiceInvoice.Application;
 using SemanaIA.ServiceInvoice.Infrastructure.DependencyInjection;
+using SemanaIA.ServiceInvoice.Infrastructure.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -27,6 +28,13 @@ if (mongoConfigured)
     builder.Services.AddScoped<ProviderManagementService>();
 
 var app = builder.Build();
+
+if (mongoConfigured)
+{
+    using var scope = app.Services.CreateScope();
+    var database = scope.ServiceProvider.GetRequiredService<MongoDB.Driver.IMongoDatabase>();
+    await new MongoProviderIndexSetup(database).ApplyAsync();
+}
 
 app.UseSwagger();
 app.UseSwaggerUI();

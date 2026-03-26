@@ -6,14 +6,13 @@ namespace SemanaIA.ServiceInvoice.Infrastructure.Persistence;
 
 public class MongoProviderRepository : IProviderRepository
 {
-    private const string CollectionName = "providers";
+    internal const string CollectionName = "providers";
 
     private readonly IMongoCollection<ProviderDocument> _collection;
 
     public MongoProviderRepository(IMongoDatabase database)
     {
         _collection = database.GetCollection<ProviderDocument>(CollectionName);
-        EnsureIndexes();
     }
 
     public async Task<ManagedProvider> Save(ManagedProvider provider)
@@ -99,23 +98,6 @@ public class MongoProviderRepository : IProviderRepository
     }
 
     // --- Private methods ---
-
-    private void EnsureIndexes()
-    {
-        var nameIndex = new CreateIndexModel<ProviderDocument>(
-            Builders<ProviderDocument>.IndexKeys.Ascending(doc => doc.Name),
-            new CreateIndexOptions { Unique = true, Name = "idx_name_unique" });
-
-        var municipalityCodesIndex = new CreateIndexModel<ProviderDocument>(
-            Builders<ProviderDocument>.IndexKeys.Ascending(doc => doc.MunicipalityCodes),
-            new CreateIndexOptions { Name = "idx_municipality_codes" });
-
-        var statusIndex = new CreateIndexModel<ProviderDocument>(
-            Builders<ProviderDocument>.IndexKeys.Ascending(doc => doc.Status),
-            new CreateIndexOptions { Name = "idx_status" });
-
-        _collection.Indexes.CreateMany([nameIndex, municipalityCodesIndex, statusIndex]);
-    }
 
     private static ProviderDocument ToDocument(ManagedProvider provider)
     {
