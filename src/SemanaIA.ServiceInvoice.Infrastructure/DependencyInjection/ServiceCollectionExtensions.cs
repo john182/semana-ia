@@ -1,9 +1,9 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using MongoDB.Driver;
 using SemanaIA.ServiceInvoice.Domain.Repositories;
 using SemanaIA.ServiceInvoice.Domain.Services;
-using SemanaIA.ServiceInvoice.Infrastructure.HealthChecks;
 using SemanaIA.ServiceInvoice.Infrastructure.Onboarding;
 using SemanaIA.ServiceInvoice.Infrastructure.Persistence;
 using SemanaIA.ServiceInvoice.Infrastructure.Resolution;
@@ -40,7 +40,15 @@ public static class ServiceCollectionExtensions
         if (mongoEnabled)
         {
             AddMongoDb(services, configuration);
-            services.AddScoped<IMongoHealthCheck, MongoHealthCheck>();
+
+            var connectionString = configuration.GetSection(MongoDbSettings.SectionName)["ConnectionString"]!;
+            services
+                .AddHealthChecks()
+                .AddMongoDb(
+                    sp => sp.GetRequiredService<IMongoClient>(),
+                    name: "MongoDB",
+                    failureStatus: HealthStatus.Unhealthy,
+                    tags: ["healthcheck", "database"]);
 
             // MongoProviderResolver: checks MongoDB first, falls back to filesystem
             services.AddScoped<ProviderResolver>(sp =>
@@ -50,7 +58,7 @@ public static class ServiceCollectionExtensions
         {
             // Filesystem-only mode: no MongoDB, legacy behavior
             services.AddScoped(_ => new ProviderResolver(providersBaseDir));
-            services.AddScoped<IMongoHealthCheck, NotConfiguredMongoHealthCheck>();
+            services.AddHealthChecks();
         }
 
         services.AddScoped(sp => new ProviderSerializerFactory(sp.GetRequiredService<ProviderResolver>()));

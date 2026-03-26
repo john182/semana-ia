@@ -17,11 +17,24 @@ public class NfseEndpointIntegrationTests : IClassFixture<WebApplicationFactory<
     }
 
     // ==========================================================
-    // E2E: Health check endpoint
+    // E2E: Health check endpoints (heartbeat + health)
     // ==========================================================
 
     [Fact]
-    public async Task Given_HealthEndpoint_Should_Return200WithProviderSummary()
+    public async Task Given_HeartbeatEndpoint_Should_Return200WithHealthyStatus()
+    {
+        // Act
+        var response = await _client.GetAsync("/heartbeat");
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+
+        var body = await response.Content.ReadFromJsonAsync<JsonElement>();
+        body.GetProperty("status").GetInt32().ShouldBe((int)Microsoft.Extensions.Diagnostics.HealthChecks.HealthStatus.Healthy);
+    }
+
+    [Fact]
+    public async Task Given_HealthEndpoint_Should_Return200WithStatusAndEntries()
     {
         // Act
         var response = await _client.GetAsync("/health");
@@ -29,13 +42,12 @@ public class NfseEndpointIntegrationTests : IClassFixture<WebApplicationFactory<
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
 
-        var body = await response.Content.ReadFromJsonAsync<JsonElement>();
-        var status = body.GetProperty("status").GetString();
-        status.ShouldNotBeNullOrEmpty();
+        var json = await response.Content.ReadAsStringAsync();
+        json.ShouldNotBeNullOrEmpty();
 
-        body.TryGetProperty("providers", out var providers).ShouldBeTrue();
-        body.TryGetProperty("checks", out var checks).ShouldBeTrue();
-        checks.TryGetProperty("mongodb", out _).ShouldBeTrue();
+        var body = await response.Content.ReadFromJsonAsync<JsonElement>();
+        body.TryGetProperty("status", out _).ShouldBeTrue();
+        body.TryGetProperty("totalDuration", out _).ShouldBeTrue();
     }
 
     // ==========================================================

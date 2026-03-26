@@ -1,4 +1,7 @@
 using System.Reflection;
+using System.Text.Json;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using SemanaIA.ServiceInvoice.Api.Swagger.Filters;
 using SemanaIA.ServiceInvoice.Application;
 using SemanaIA.ServiceInvoice.Infrastructure.DependencyInjection;
@@ -36,7 +39,29 @@ if (mongoConfigured)
     await new MongoProviderIndexSetup(database).ApplyAsync();
 }
 
+app.UseHealthChecks("/heartbeat", new HealthCheckOptions
+{
+    Predicate = _ => false,
+    ResponseWriter = WriteHealthResponse
+});
+
+app.UseHealthChecks("/health", new HealthCheckOptions
+{
+    Predicate = _ => true,
+    ResponseWriter = WriteHealthResponse
+});
+
 app.UseSwagger();
 app.UseSwaggerUI();
 app.MapControllers();
 app.Run();
+
+static Task WriteHealthResponse(HttpContext context, HealthReport report)
+{
+    context.Response.ContentType = "application/json";
+    return context.Response.WriteAsync(JsonSerializer.Serialize(report, new JsonSerializerOptions
+    {
+        WriteIndented = true,
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+    }));
+}
