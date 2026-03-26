@@ -6,7 +6,7 @@ namespace SemanaIA.ServiceInvoice.Infrastructure.Persistence;
 
 public class MongoProviderRepository : IProviderRepository
 {
-    private const string CollectionName = "providers";
+    internal const string CollectionName = "providers";
 
     private readonly IMongoCollection<ProviderDocument> _collection;
 

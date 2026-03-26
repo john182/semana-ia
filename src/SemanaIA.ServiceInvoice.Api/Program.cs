@@ -33,7 +33,7 @@ if (mongoConfigured)
 {
     using var scope = app.Services.CreateScope();
     var database = scope.ServiceProvider.GetRequiredService<MongoDB.Driver.IMongoDatabase>();
-    new MongoProviderIndexSetup(database).Apply();
+    await new MongoProviderIndexSetup(database).ApplyAsync();
 }
 
 app.UseSwagger();

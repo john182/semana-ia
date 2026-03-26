@@ -12,19 +12,15 @@ public class MongoProviderIndexSetup
         _database = database;
     }
 
-    public void Apply()
+    public async Task ApplyAsync()
     {
-        var collection = _database.GetCollection<ProviderDocument>("providers");
+        var collection = _database.GetCollection<ProviderDocument>(MongoProviderRepository.CollectionName);
 
         var indexes = new[]
         {
             new CreateIndexModel<ProviderDocument>(
                 Builders<ProviderDocument>.IndexKeys.Ascending(doc => doc.Name),
                 new CreateIndexOptions { Unique = true, Name = "idx_name_unique" }),
-
-            new CreateIndexModel<ProviderDocument>(
-                Builders<ProviderDocument>.IndexKeys.Ascending(doc => doc.MunicipalityCodes),
-                new CreateIndexOptions { Name = "idx_municipality_codes" }),
 
             new CreateIndexModel<ProviderDocument>(
                 Builders<ProviderDocument>.IndexKeys.Ascending(doc => doc.Status),
@@ -52,6 +48,6 @@ public class MongoProviderIndexSetup
                 new CreateIndexOptions { Name = "idx_updated_at" }),
         };
 
-        collection.Indexes.CreateMany(indexes);
+        await collection.Indexes.CreateManyAsync(indexes);
     }
 }
