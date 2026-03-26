@@ -16,6 +16,61 @@ public class NfseEndpointIntegrationTests : IClassFixture<WebApplicationFactory<
         _client = factory.CreateClient();
     }
 
+    // ==========================================================
+    // E2E: Health check endpoints (heartbeat + health)
+    // ==========================================================
+
+    [Fact]
+    public async Task Given_HeartbeatEndpoint_Should_Return200WithHealthyStatus()
+    {
+        // Act
+        var response = await _client.GetAsync("/heartbeat");
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+
+        var body = await response.Content.ReadFromJsonAsync<JsonElement>();
+        body.GetProperty("status").GetString().ShouldBe("Healthy");
+    }
+
+    [Fact]
+    public async Task Given_HealthEndpoint_Should_Return200WithStatusEntriesAndDuration()
+    {
+        // Act
+        var response = await _client.GetAsync("/health");
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+
+        var body = await response.Content.ReadFromJsonAsync<JsonElement>();
+        body.GetProperty("status").GetString().ShouldNotBeNullOrEmpty();
+        body.TryGetProperty("totalDuration", out _).ShouldBeTrue();
+        body.TryGetProperty("entries", out var entries).ShouldBeTrue();
+        entries.ValueKind.ShouldBe(JsonValueKind.Object);
+    }
+
+    [Fact]
+    public async Task Given_HealthEndpoint_Should_ReturnValidJsonEvenWhenDegraded()
+    {
+        // Act — without MongoDB configured, health should still return valid JSON
+        var response = await _client.GetAsync("/health");
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+
+        var json = await response.Content.ReadAsStringAsync();
+        json.ShouldNotBeNullOrEmpty();
+
+        // Ensure WriteHealthResponse DTO serializes correctly (no Exception serialization issues)
+        var body = JsonSerializer.Deserialize<JsonElement>(json);
+        body.TryGetProperty("status", out _).ShouldBeTrue();
+        body.TryGetProperty("entries", out _).ShouldBeTrue();
+    }
+
+    // ==========================================================
+    // E2E: NFS-e XML generation
+    // ==========================================================
+
     [Fact]
     public async Task Given_MinimalRequest_Should_Return200WithDpsXml()
     {

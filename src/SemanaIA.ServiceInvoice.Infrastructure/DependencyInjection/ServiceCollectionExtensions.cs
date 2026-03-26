@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using MongoDB.Driver;
 using SemanaIA.ServiceInvoice.Domain.Repositories;
 using SemanaIA.ServiceInvoice.Domain.Services;
@@ -40,6 +41,14 @@ public static class ServiceCollectionExtensions
         {
             AddMongoDb(services, configuration);
 
+            services
+                .AddHealthChecks()
+                .AddMongoDb(
+                    sp => sp.GetRequiredService<IMongoClient>(),
+                    name: "MongoDB",
+                    failureStatus: HealthStatus.Unhealthy,
+                    tags: ["healthcheck", "database"]);
+
             // MongoProviderResolver: checks MongoDB first, falls back to filesystem
             services.AddScoped<ProviderResolver>(sp =>
                 new MongoProviderResolver(providersBaseDir, sp.GetRequiredService<IProviderRepository>()));
@@ -48,6 +57,7 @@ public static class ServiceCollectionExtensions
         {
             // Filesystem-only mode: no MongoDB, legacy behavior
             services.AddScoped(_ => new ProviderResolver(providersBaseDir));
+            services.AddHealthChecks();
         }
 
         services.AddScoped(sp => new ProviderSerializerFactory(sp.GetRequiredService<ProviderResolver>()));
