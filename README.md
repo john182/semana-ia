@@ -4,6 +4,8 @@
 ![MongoDB](https://img.shields.io/badge/MongoDB-7-47A248)
 ![Tests](https://img.shields.io/badge/tests-727%20passing-brightgreen)
 ![MVP](https://img.shields.io/badge/status-MVP-blue)
+[![Quality Gate](https://sonarcloud.io/api/project_badges/measure?project=SemanaIA&metric=alert_status)](https://sonarcloud.io/dashboard?id=SemanaIA)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=SemanaIA&metric=coverage)](https://sonarcloud.io/dashboard?id=SemanaIA)
 
 ## O que é
 

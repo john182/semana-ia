@@ -46,3 +46,6 @@ providers/load-test-*
 tests/**/data/*/generated/
 tests/**/data/*-report.md
 providers/onboarding-report.md
+
+# SONAR
+.sonarqube/
