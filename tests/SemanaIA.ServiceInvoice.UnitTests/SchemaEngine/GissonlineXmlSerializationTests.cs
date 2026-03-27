@@ -28,6 +28,7 @@ public class GissonlineXmlSerializationTests
 
         // Assert
         serializationResult.Xml.ShouldNotBeNull($"Errors: {FormatErrors(serializationResult)}");
+        serializationResult.Errors.ShouldBeEmpty(FormatErrors(serializationResult));
         serializationResult.Xml.ShouldBeValidAgainstProviderSchema(TestProviderPaths.FindXsdDir("gissonline"));
 
         var root = XDocument.Parse(serializationResult.Xml!).Root!;
@@ -44,7 +45,7 @@ public class GissonlineXmlSerializationTests
         ElementWithLocalName(allDescendants, "OptanteSimplesNacional").ShouldNotBeNull("OptanteSimplesNacional binding must be present");
         ElementWithLocalName(allDescendants, "IncentivoFiscal").ShouldNotBeNull("IncentivoFiscal binding must be present");
 
-        // Verify bound values match the document data
+        // Verify bound values match the document data (subset of rules.json bindings)
         ElementWithLocalName(allDescendants, "Competencia")!.Value.ShouldBe("2026-01-20");
         ElementWithLocalName(allDescendants, "ValorServicos")!.Value.ShouldBe("1500.50");
         ElementWithLocalName(allDescendants, "ItemListaServico")!.Value.ShouldBe("01.01");
@@ -73,6 +74,7 @@ public class GissonlineXmlSerializationTests
 
         // Assert
         serializationResult.Xml.ShouldNotBeNull($"Errors: {FormatErrors(serializationResult)}");
+        serializationResult.Errors.ShouldBeEmpty(FormatErrors(serializationResult));
         serializationResult.Xml.ShouldBeValidAgainstProviderSchema(TestProviderPaths.FindXsdDir("gissonline"));
 
         var root = XDocument.Parse(serializationResult.Xml!).Root!;
@@ -107,6 +109,7 @@ public class GissonlineXmlSerializationTests
 
         // Assert
         serializationResult.Xml.ShouldNotBeNull($"Errors: {FormatErrors(serializationResult)}");
+        serializationResult.Errors.ShouldBeEmpty(FormatErrors(serializationResult));
         serializationResult.Xml.ShouldBeValidAgainstProviderSchema(TestProviderPaths.FindXsdDir("gissonline"));
 
         var root = XDocument.Parse(serializationResult.Xml!).Root!;
@@ -160,6 +163,7 @@ public class GissonlineXmlSerializationTests
 
         // Assert
         serializationResult.Xml.ShouldNotBeNull($"Errors: {FormatErrors(serializationResult)}");
+        serializationResult.Errors.ShouldBeEmpty(FormatErrors(serializationResult));
         serializationResult.Xml.ShouldBeValidAgainstProviderSchema(TestProviderPaths.FindXsdDir("gissonline"));
 
         var root = XDocument.Parse(serializationResult.Xml!).Root!;
@@ -193,6 +197,7 @@ public class GissonlineXmlSerializationTests
 
         // Assert
         serializationResult.Xml.ShouldNotBeNull($"Errors: {FormatErrors(serializationResult)}");
+        serializationResult.Errors.ShouldBeEmpty(FormatErrors(serializationResult));
         serializationResult.Xml.ShouldBeValidAgainstProviderSchema(TestProviderPaths.FindXsdDir("gissonline"));
 
         var root = XDocument.Parse(serializationResult.Xml!).Root!;
@@ -268,6 +273,7 @@ public class GissonlineXmlSerializationTests
 
         // Assert
         serializationResult.Xml.ShouldNotBeNull($"Errors: {FormatErrors(serializationResult)}");
+        serializationResult.Errors.ShouldBeEmpty(FormatErrors(serializationResult));
         serializationResult.Xml.ShouldBeValidAgainstProviderSchema(TestProviderPaths.FindXsdDir("gissonline"));
 
         var root = XDocument.Parse(serializationResult.Xml!).Root!;
