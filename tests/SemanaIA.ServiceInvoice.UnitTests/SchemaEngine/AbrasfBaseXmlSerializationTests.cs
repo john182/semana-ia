@@ -1,51 +1,34 @@
 using SemanaIA.ServiceInvoice.Domain.Models;
-using SemanaIA.ServiceInvoice.UnitTests.Manual;
 using SemanaIA.ServiceInvoice.XmlGeneration.SchemaEngine;
 using Shouldly;
 
 namespace SemanaIA.ServiceInvoice.UnitTests.SchemaEngine;
 
 /// <summary>
-/// Tests for the ABRASF base provider (v2.04 template).
-/// ABRASF has no typed rules configured (rules: []), so tests focus on
-/// schema analysis, XSD selection, and pipeline resilience with empty rules.
+/// Comprehensive tests for the ABRASF base provider (v2.04 template).
+/// ABRASF has no typed rules configured (rules: []), so pipeline produces XML
+/// with defaults only. Tests cover schema analysis, envelope detection,
+/// and multiple NFS-e filling variations documenting known gaps.
 /// </summary>
 public class AbrasfBaseXmlSerializationTests
 {
     private readonly SchemaSerializationPipeline _sut = new();
 
-    [Fact]
-    public void Given_AbrasfProvider_Should_ProduceXmlFromPipeline()
-    {
-        // Arrange
-        var document = CreateMinimalDocument();
-
-        // Act
-        var result = _sut.Execute(document, "abrasf", TestProviderPaths.FindProvidersDir());
-
-        // Assert — ABRASF has rules: [] and no rootComplexTypeName configured,
-        // so pipeline uses default DPS root which doesn't match ABRASF XSD.
-        // This is a known configuration gap (issue #38).
-        // Schema validation will fail with "DPS element is not declared" until rules are configured.
-        result.Xml.ShouldNotBeNull($"Pipeline crashed: {FormatErrors(result)}");
-
-        var xsdErrors = XmlGeneration.SchemaEngine.XsdValidator.ValidateAgainstDirectory(
-            result.Xml, TestProviderPaths.FindXsdDir("abrasf"));
-        xsdErrors.ShouldNotBeEmpty("ABRASF without rules should have XSD errors (known gap #38)");
-    }
+    // ==========================================================
+    // Schema analysis and detection
+    // ==========================================================
 
     [Fact]
-    public void Given_AbrasfProvider_Should_AnalyzeSchemaSuccessfully()
+    public void Given_AbrasfProvider_Should_AnalyzeSchemaWithComplexTypes()
     {
         // Arrange
-        var analyzer = new XsdSchemaAnalyzer();
         var xsdDir = TestProviderPaths.FindXsdDir("abrasf");
         var selector = new SendXsdSelector();
         var selectedFile = selector.Select(xsdDir).SelectedFile;
         selectedFile.ShouldNotBeNull("SendXsdSelector must find an XSD for ABRASF");
 
         // Act
-        var schema = analyzer.Analyze(selectedFile);
+        var schema = new XsdSchemaAnalyzer().Analyze(selectedFile);
 
         // Assert
         schema.ShouldNotBeNull();
@@ -54,7 +37,7 @@ public class AbrasfBaseXmlSerializationTests
     }
 
     [Fact]
-    public void Given_AbrasfProvider_Should_GenerateConfigWithEnvelopeDetection()
+    public void Given_AbrasfProvider_Should_DetectEnvelopeAndRootElement()
     {
         // Arrange
         var generator = new ProviderConfigGenerator(TestProviderPaths.FindProvidersDir());
@@ -70,35 +53,159 @@ public class AbrasfBaseXmlSerializationTests
     }
 
     [Fact]
-    public void Given_AbrasfProvider_Should_SelectCorrectSendXsd()
+    public void Given_AbrasfProvider_Should_SelectSendXsd()
     {
         // Arrange
         var xsdDir = TestProviderPaths.FindXsdDir("abrasf");
-        var selector = new SendXsdSelector();
 
         // Act
-        var selection = selector.Select(xsdDir);
+        var selection = new SendXsdSelector().Select(xsdDir);
 
         // Assert
-        selection.SelectedFile.ShouldNotBeNull("SendXsdSelector should find a send XSD for ABRASF");
+        selection.SelectedFile.ShouldNotBeNull("ABRASF should have a send XSD");
+    }
+
+    // ==========================================================
+    // Pipeline with default config — known gap #38 (no rules)
+    // ==========================================================
+
+    [Fact]
+    public void Given_AbrasfMinimalDocument_Should_ProduceXmlWithKnownXsdGaps()
+    {
+        // Arrange
+        var document = CreateDocument();
+
+        // Act
+        var result = _sut.Execute(document, "abrasf", TestProviderPaths.FindProvidersDir());
+
+        // Assert — ABRASF has rules: [] → uses default DPS root → XSD mismatch
+        result.Xml.ShouldNotBeNull($"Pipeline crashed: {FormatErrors(result)}");
+        var xsdErrors = XsdValidator.ValidateAgainstDirectory(
+            result.Xml, TestProviderPaths.FindXsdDir("abrasf"));
+        xsdErrors.ShouldNotBeEmpty("ABRASF without rules should have XSD errors (known gap #38)");
+    }
+
+    // ==========================================================
+    // Multiple NFS-e filling variations — pipeline resilience
+    // ==========================================================
+
+    [Theory]
+    [InlineData(TaxationType.WithinCity)]
+    [InlineData(TaxationType.OutsideCity)]
+    [InlineData(TaxationType.Export)]
+    [InlineData(TaxationType.Free)]
+    [InlineData(TaxationType.Immune)]
+    public void Given_AbrasfDifferentTaxationType_Should_NotCrashPipeline(TaxationType taxationType)
+    {
+        // Arrange
+        var document = CreateDocument(taxationType: taxationType);
+
+        // Act
+        var result = _sut.Execute(document, "abrasf", TestProviderPaths.FindProvidersDir());
+
+        // Assert — pipeline must not crash regardless of input variation
+        result.Xml.ShouldNotBeNull($"TaxationType={taxationType} crashed: {FormatErrors(result)}");
     }
 
     [Fact]
-    public void Given_AbrasfXsdDirectory_Should_ContainExpectedFiles()
+    public void Given_AbrasfWithBorrowerPJ_Should_NotCrashPipeline()
     {
         // Arrange
-        var xsdDir = TestProviderPaths.FindXsdDir("abrasf");
+        var document = CreateDocument();
+        document.Borrower = new Borrower
+        {
+            Name = "EMPRESA TOMADORA LTDA",
+            FederalTaxNumber = 99888777000166
+        };
 
         // Act
-        var xsdFiles = Directory.GetFiles(xsdDir, "*.xsd");
+        var result = _sut.Execute(document, "abrasf", TestProviderPaths.FindProvidersDir());
 
         // Assert
-        xsdFiles.Length.ShouldBeGreaterThanOrEqualTo(1, "ABRASF should have at least one XSD file");
+        result.Xml.ShouldNotBeNull($"Errors: {FormatErrors(result)}");
+    }
+
+    [Fact]
+    public void Given_AbrasfWithBorrowerPF_Should_NotCrashPipeline()
+    {
+        // Arrange
+        var document = CreateDocument();
+        document.Borrower = new Borrower
+        {
+            Name = "PESSOA FISICA",
+            FederalTaxNumber = 12345678901
+        };
+
+        // Act
+        var result = _sut.Execute(document, "abrasf", TestProviderPaths.FindProvidersDir());
+
+        // Assert
+        result.Xml.ShouldNotBeNull($"Errors: {FormatErrors(result)}");
+    }
+
+    [Fact]
+    public void Given_AbrasfWithNoBorrower_Should_NotCrashPipeline()
+    {
+        // Arrange
+        var document = CreateDocument();
+        document.Borrower = null;
+
+        // Act
+        var result = _sut.Execute(document, "abrasf", TestProviderPaths.FindProvidersDir());
+
+        // Assert
+        result.Xml.ShouldNotBeNull($"Errors: {FormatErrors(result)}");
+    }
+
+    [Theory]
+    [InlineData(TaxRegime.SimplesNacional)]
+    [InlineData(TaxRegime.LucroReal)]
+    [InlineData(TaxRegime.LucroPresumido)]
+    [InlineData(TaxRegime.MicroempreendedorIndividual)]
+    public void Given_AbrasfDifferentTaxRegime_Should_NotCrashPipeline(TaxRegime taxRegime)
+    {
+        // Arrange
+        var document = CreateDocument();
+        document.Provider.TaxRegime = taxRegime;
+
+        // Act
+        var result = _sut.Execute(document, "abrasf", TestProviderPaths.FindProvidersDir());
+
+        // Assert
+        result.Xml.ShouldNotBeNull($"TaxRegime={taxRegime} crashed: {FormatErrors(result)}");
+    }
+
+    [Fact]
+    public void Given_AbrasfWithHighServiceAmount_Should_NotCrashPipeline()
+    {
+        // Arrange
+        var document = CreateDocument(servicesAmount: 999999.99m);
+
+        // Act
+        var result = _sut.Execute(document, "abrasf", TestProviderPaths.FindProvidersDir());
+
+        // Assert
+        result.Xml.ShouldNotBeNull($"Errors: {FormatErrors(result)}");
+    }
+
+    [Fact]
+    public void Given_AbrasfWithZeroAmount_Should_NotCrashPipeline()
+    {
+        // Arrange
+        var document = CreateDocument(servicesAmount: 0.01m);
+
+        // Act
+        var result = _sut.Execute(document, "abrasf", TestProviderPaths.FindProvidersDir());
+
+        // Assert
+        result.Xml.ShouldNotBeNull($"Errors: {FormatErrors(result)}");
     }
 
     // --- Private methods ---
 
-    private static DpsDocument CreateMinimalDocument() => new()
+    private static DpsDocument CreateDocument(
+        TaxationType taxationType = TaxationType.WithinCity,
+        decimal servicesAmount = 1000.00m) => new()
     {
         Environment = 2,
         Version = "V_1.00.02",
@@ -121,8 +228,8 @@ public class AbrasfBaseXmlSerializationTests
         },
         Values = new Values
         {
-            ServicesAmount = 1000.00m,
-            TaxationType = TaxationType.WithinCity
+            ServicesAmount = servicesAmount,
+            TaxationType = taxationType
         }
     };
 
