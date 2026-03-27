@@ -1,6 +1,4 @@
-using System.Xml.Linq;
 using SemanaIA.ServiceInvoice.Domain.Models;
-using SemanaIA.ServiceInvoice.UnitTests.Manual;
 using SemanaIA.ServiceInvoice.XmlGeneration.SchemaEngine;
 using Shouldly;
 
@@ -9,14 +7,14 @@ namespace SemanaIA.ServiceInvoice.UnitTests.SchemaEngine;
 /// <summary>
 /// Tests for the ABRASF base provider (v2.04 template).
 /// ABRASF has no typed rules configured (rules: []), so tests focus on
-/// schema analysis, envelope detection, and pipeline behavior with defaults.
+/// schema analysis, XSD selection, and pipeline resilience with empty rules.
 /// </summary>
 public class AbrasfBaseXmlSerializationTests
 {
     private readonly SchemaSerializationPipeline _sut = new();
 
     [Fact]
-    public void Given_AbrasfProvider_Should_ProduceXmlWithoutErrors()
+    public void Given_AbrasfProvider_Should_ProduceXmlFromPipeline()
     {
         // Arrange
         var document = CreateMinimalDocument();
@@ -24,8 +22,9 @@ public class AbrasfBaseXmlSerializationTests
         // Act
         var result = _sut.Execute(document, "abrasf", TestProviderPaths.FindProvidersDir());
 
-        // Assert — ABRASF has no rules, so XML is generated but may be minimal
-        result.Xml.ShouldNotBeNull($"Errors: {FormatErrors(result)}");
+        // Assert — ABRASF has rules: [], so XML is generated but minimal.
+        // Pipeline should not crash; XML may have serialization errors due to missing bindings.
+        result.Xml.ShouldNotBeNull($"Pipeline crashed: {FormatErrors(result)}");
     }
 
     [Fact]
@@ -35,11 +34,11 @@ public class AbrasfBaseXmlSerializationTests
         var analyzer = new XsdSchemaAnalyzer();
         var xsdDir = TestProviderPaths.FindXsdDir("abrasf");
         var selector = new SendXsdSelector();
-        var selection = selector.Select(xsdDir);
+        var selectedFile = selector.Select(xsdDir).SelectedFile;
+        selectedFile.ShouldNotBeNull("SendXsdSelector must find an XSD for ABRASF");
 
         // Act
-        var xsdPath = selection.SelectedFile ?? Directory.GetFiles(xsdDir, "*.xsd")[0];
-        var schema = analyzer.Analyze(xsdPath);
+        var schema = analyzer.Analyze(selectedFile);
 
         // Assert
         schema.ShouldNotBeNull();
@@ -48,7 +47,7 @@ public class AbrasfBaseXmlSerializationTests
     }
 
     [Fact]
-    public void Given_AbrasfProvider_Should_DetectEnvelopePattern()
+    public void Given_AbrasfProvider_Should_GenerateConfigWithEnvelopeDetection()
     {
         // Arrange
         var generator = new ProviderConfigGenerator(TestProviderPaths.FindProvidersDir());
@@ -59,6 +58,8 @@ public class AbrasfBaseXmlSerializationTests
         // Assert
         config.ShouldNotBeNull();
         config.Provider.ShouldBe("abrasf");
+        config.RootElementName.ShouldNotBeNullOrEmpty("Envelope root element should be detected");
+        config.RootComplexTypeName.ShouldNotBeNullOrEmpty("Envelope complex type should be detected");
     }
 
     [Fact]
@@ -73,19 +74,6 @@ public class AbrasfBaseXmlSerializationTests
 
         // Assert
         selection.SelectedFile.ShouldNotBeNull("SendXsdSelector should find a send XSD for ABRASF");
-    }
-
-    [Fact]
-    public void Given_AbrasfProviderWithNoRules_Should_NotCrashPipeline()
-    {
-        // Arrange — ABRASF has rules: [], pipeline should handle gracefully
-        var document = CreateMinimalDocument();
-
-        // Act
-        var result = _sut.Execute(document, "abrasf", TestProviderPaths.FindProvidersDir());
-
-        // Assert — should produce XML (possibly with missing fields) but not crash
-        result.Xml.ShouldNotBeNull("Pipeline should produce XML even with empty rules");
     }
 
     [Fact]
