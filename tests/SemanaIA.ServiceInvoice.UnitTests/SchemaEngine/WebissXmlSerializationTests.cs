@@ -9,12 +9,13 @@ namespace SemanaIA.ServiceInvoice.UnitTests.SchemaEngine;
 /// Comprehensive tests for WebISS provider.
 /// Uses DpsDocumentBuilder for N filling variations.
 /// Known gap: rootComplexTypeName points to response type (ListaMensagemRetornoLote)
-/// instead of send type — XSD validation will fail until config is corrected.
+/// instead of send type — every test validates XSD and asserts errors are present.
 /// </summary>
 public class WebissXmlSerializationTests
 {
     private const string ProviderName = "webiss";
     private readonly SchemaSerializationPipeline _sut = new();
+    private readonly string _xsdDir = TestProviderPaths.FindXsdDir(ProviderName);
 
     // ==========================================================
     // Schema analysis
@@ -23,8 +24,7 @@ public class WebissXmlSerializationTests
     [Fact]
     public void Given_WebissXsd_Should_AnalyzeWithComplexTypes()
     {
-        var xsdDir = TestProviderPaths.FindXsdDir(ProviderName);
-        var selectedFile = new SendXsdSelector().Select(xsdDir).SelectedFile;
+        var selectedFile = new SendXsdSelector().Select(_xsdDir).SelectedFile;
         selectedFile.ShouldNotBeNull();
         var schema = new XsdSchemaAnalyzer().Analyze(selectedFile);
         schema.ComplexTypes.Count.ShouldBeGreaterThan(0);
@@ -40,30 +40,15 @@ public class WebissXmlSerializationTests
     }
 
     // ==========================================================
-    // Pipeline — known gap (wrong root element in config)
+    // N filling variations — each validates XSD (known gap documented)
     // ==========================================================
 
     [Fact]
-    public void Given_MinimalDocument_Should_ProduceXml()
+    public void Given_MinimalDocument_Should_ProduceXmlAndValidateXsd()
     {
         var result = Execute(new DpsDocumentBuilder().Build());
-        result.Xml.ShouldNotBeNull(Errors(result));
+        AssertXmlProducedWithKnownXsdGap(result);
     }
-
-    [Fact]
-    public void Given_MinimalDocument_Should_DocumentKnownXsdGap()
-    {
-        var result = Execute(new DpsDocumentBuilder().Build());
-        result.Xml.ShouldNotBeNull(Errors(result));
-        var xsdErrors = XsdValidator.ValidateAgainstDirectory(
-            result.Xml, TestProviderPaths.FindXsdDir(ProviderName));
-        // WebISS config has wrong rootComplexTypeName (response type) — XSD errors expected
-        xsdErrors.ShouldNotBeEmpty("WebISS has known config gap (wrong root element)");
-    }
-
-    // ==========================================================
-    // N filling variations via DpsDocumentBuilder
-    // ==========================================================
 
     [Theory]
     [InlineData(TaxationType.WithinCity)]
@@ -71,10 +56,10 @@ public class WebissXmlSerializationTests
     [InlineData(TaxationType.Export)]
     [InlineData(TaxationType.Free)]
     [InlineData(TaxationType.Immune)]
-    public void Given_DifferentTaxationType_Should_NotCrash(TaxationType type)
+    public void Given_DifferentTaxationType_Should_ProduceXmlAndValidateXsd(TaxationType type)
     {
         var result = Execute(new DpsDocumentBuilder().WithTaxationType(type).Build());
-        result.Xml.ShouldNotBeNull($"TaxationType={type}: {Errors(result)}");
+        AssertXmlProducedWithKnownXsdGap(result, $"TaxationType={type}");
     }
 
     [Theory]
@@ -82,109 +67,109 @@ public class WebissXmlSerializationTests
     [InlineData(TaxRegime.LucroReal)]
     [InlineData(TaxRegime.LucroPresumido)]
     [InlineData(TaxRegime.MicroempreendedorIndividual)]
-    public void Given_DifferentTaxRegime_Should_NotCrash(TaxRegime regime)
+    public void Given_DifferentTaxRegime_Should_ProduceXmlAndValidateXsd(TaxRegime regime)
     {
         var doc = new DpsDocumentBuilder().Build();
         doc.Provider.TaxRegime = regime;
         var result = Execute(doc);
-        result.Xml.ShouldNotBeNull($"TaxRegime={regime}: {Errors(result)}");
+        AssertXmlProducedWithKnownXsdGap(result, $"TaxRegime={regime}");
     }
 
     [Fact]
-    public void Given_CnpjBorrower_Should_NotCrash()
+    public void Given_CnpjBorrower_Should_ProduceXmlAndValidateXsd()
     {
         var result = Execute(new DpsDocumentBuilder().WithCnpjBorrower().Build());
-        result.Xml.ShouldNotBeNull(Errors(result));
+        AssertXmlProducedWithKnownXsdGap(result);
     }
 
     [Fact]
-    public void Given_CpfBorrower_Should_NotCrash()
+    public void Given_CpfBorrower_Should_ProduceXmlAndValidateXsd()
     {
         var result = Execute(new DpsDocumentBuilder().WithCpfBorrower().Build());
-        result.Xml.ShouldNotBeNull(Errors(result));
+        AssertXmlProducedWithKnownXsdGap(result);
     }
 
     [Fact]
-    public void Given_NoBorrower_Should_NotCrash()
+    public void Given_NoBorrower_Should_ProduceXmlAndValidateXsd()
     {
         var doc = new DpsDocumentBuilder().Build();
         doc.Borrower = null;
         var result = Execute(doc);
-        result.Xml.ShouldNotBeNull(Errors(result));
+        AssertXmlProducedWithKnownXsdGap(result);
     }
 
     [Fact]
-    public void Given_WithIntermediary_Should_NotCrash()
+    public void Given_WithIntermediary_Should_ProduceXmlAndValidateXsd()
     {
         var result = Execute(new DpsDocumentBuilder().WithIntermediary().Build());
-        result.Xml.ShouldNotBeNull(Errors(result));
+        AssertXmlProducedWithKnownXsdGap(result);
     }
 
     [Fact]
-    public void Given_WithIbsCbs_Should_NotCrash()
+    public void Given_WithIbsCbs_Should_ProduceXmlAndValidateXsd()
     {
         var result = Execute(new DpsDocumentBuilder().WithIbsCbs().Build());
-        result.Xml.ShouldNotBeNull(Errors(result));
+        AssertXmlProducedWithKnownXsdGap(result);
     }
 
     [Fact]
-    public void Given_WithFederalTaxes_Should_NotCrash()
+    public void Given_WithFederalTaxes_Should_ProduceXmlAndValidateXsd()
     {
         var result = Execute(new DpsDocumentBuilder().WithFederalTaxes().Build());
-        result.Xml.ShouldNotBeNull(Errors(result));
+        AssertXmlProducedWithKnownXsdGap(result);
     }
 
     [Fact]
-    public void Given_WithDeduction_Should_NotCrash()
+    public void Given_WithDeduction_Should_ProduceXmlAndValidateXsd()
     {
         var result = Execute(new DpsDocumentBuilder().WithDeductionByAmount(500).Build());
-        result.Xml.ShouldNotBeNull(Errors(result));
+        AssertXmlProducedWithKnownXsdGap(result);
     }
 
     [Fact]
-    public void Given_WithConstruction_Should_NotCrash()
+    public void Given_WithConstruction_Should_ProduceXmlAndValidateXsd()
     {
         var result = Execute(new DpsDocumentBuilder().WithConstructionByCibCode().Build());
-        result.Xml.ShouldNotBeNull(Errors(result));
+        AssertXmlProducedWithKnownXsdGap(result);
     }
 
     [Fact]
-    public void Given_WithForeignTrade_Should_NotCrash()
+    public void Given_WithForeignTrade_Should_ProduceXmlAndValidateXsd()
     {
         var result = Execute(new DpsDocumentBuilder().WithForeignTrade().Build());
-        result.Xml.ShouldNotBeNull(Errors(result));
+        AssertXmlProducedWithKnownXsdGap(result);
     }
 
     [Fact]
-    public void Given_WithBenefit_Should_NotCrash()
+    public void Given_WithBenefit_Should_ProduceXmlAndValidateXsd()
     {
         var result = Execute(new DpsDocumentBuilder().WithBenefit().Build());
-        result.Xml.ShouldNotBeNull(Errors(result));
+        AssertXmlProducedWithKnownXsdGap(result);
     }
 
     [Fact]
-    public void Given_WithSuspension_Should_NotCrash()
+    public void Given_WithSuspension_Should_ProduceXmlAndValidateXsd()
     {
         var result = Execute(new DpsDocumentBuilder().WithSuspendedCourtDecision("12345").Build());
-        result.Xml.ShouldNotBeNull(Errors(result));
+        AssertXmlProducedWithKnownXsdGap(result);
     }
 
     [Fact]
-    public void Given_WithDiscounts_Should_NotCrash()
+    public void Given_WithDiscounts_Should_ProduceXmlAndValidateXsd()
     {
         var result = Execute(new DpsDocumentBuilder().WithDiscounts().Build());
-        result.Xml.ShouldNotBeNull(Errors(result));
+        AssertXmlProducedWithKnownXsdGap(result);
     }
 
     [Fact]
-    public void Given_CompleteDocument_Should_NotCrash()
+    public void Given_CompleteDocument_Should_ProduceXmlAndValidateXsd()
     {
         var result = Execute(DpsDocumentTestFixture.CreateComplete());
-        result.Xml.ShouldNotBeNull(Errors(result));
+        AssertXmlProducedWithKnownXsdGap(result);
     }
 
     [Fact]
-    public void Given_AllOptionalBlocks_Should_NotCrash()
+    public void Given_AllOptionalBlocks_Should_ProduceXmlAndValidateXsd()
     {
         var doc = new DpsDocumentBuilder()
             .WithCnpjBorrower()
@@ -200,13 +185,24 @@ public class WebissXmlSerializationTests
             .WithApproximateTotalsByAmount()
             .Build();
         var result = Execute(doc);
-        result.Xml.ShouldNotBeNull(Errors(result));
+        AssertXmlProducedWithKnownXsdGap(result);
     }
 
     // --- Private methods ---
 
     private SerializationResult Execute(DpsDocument document) =>
         _sut.Execute(document, ProviderName, TestProviderPaths.FindProvidersDir());
+
+    private void AssertXmlProducedWithKnownXsdGap(SerializationResult result, string? context = null)
+    {
+        var prefix = context is not null ? $"{context}: " : "";
+        result.Xml.ShouldNotBeNull($"{prefix}{Errors(result)}");
+
+        // WebISS config has wrong rootComplexTypeName (ListaMensagemRetornoLote = response type).
+        // XSD validation is executed but errors are expected until config is corrected.
+        var xsdErrors = XsdValidator.ValidateAgainstDirectory(result.Xml, _xsdDir);
+        xsdErrors.ShouldNotBeEmpty($"{prefix}WebISS has known config gap (wrong root element)");
+    }
 
     private static string Errors(SerializationResult result) =>
         string.Join("\n", result.Errors.Select(e => $"{e.Kind}: {e.Field} - {e.Message} {e.Details ?? ""}"));
