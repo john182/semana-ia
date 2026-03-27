@@ -1,4 +1,5 @@
 using SemanaIA.ServiceInvoice.Domain.Models;
+using SemanaIA.ServiceInvoice.UnitTests.Manual;
 using SemanaIA.ServiceInvoice.XmlGeneration.SchemaEngine;
 using Shouldly;
 
@@ -6,12 +7,12 @@ namespace SemanaIA.ServiceInvoice.UnitTests.SchemaEngine;
 
 /// <summary>
 /// Comprehensive tests for the ABRASF base provider (v2.04 template).
-/// ABRASF has no typed rules configured (rules: []), so pipeline produces XML
-/// with defaults only. Tests cover schema analysis, envelope detection,
-/// and multiple NFS-e filling variations documenting known gaps.
+/// Uses DpsDocumentBuilder for N filling variations.
+/// ABRASF has rules: [] (known gap #38), so tests validate pipeline resilience.
 /// </summary>
 public class AbrasfBaseXmlSerializationTests
 {
+    private const string ProviderName = "abrasf";
     private readonly SchemaSerializationPipeline _sut = new();
 
     // ==========================================================
@@ -19,74 +20,47 @@ public class AbrasfBaseXmlSerializationTests
     // ==========================================================
 
     [Fact]
-    public void Given_AbrasfProvider_Should_AnalyzeSchemaWithComplexTypes()
+    public void Given_AbrasfXsd_Should_AnalyzeWithComplexTypes()
     {
-        // Arrange
-        var xsdDir = TestProviderPaths.FindXsdDir("abrasf");
-        var selector = new SendXsdSelector();
-        var selectedFile = selector.Select(xsdDir).SelectedFile;
-        selectedFile.ShouldNotBeNull("SendXsdSelector must find an XSD for ABRASF");
-
-        // Act
+        var xsdDir = TestProviderPaths.FindXsdDir(ProviderName);
+        var selectedFile = new SendXsdSelector().Select(xsdDir).SelectedFile;
+        selectedFile.ShouldNotBeNull();
         var schema = new XsdSchemaAnalyzer().Analyze(selectedFile);
-
-        // Assert
-        schema.ShouldNotBeNull();
-        schema.ComplexTypes.Count.ShouldBeGreaterThan(0, "ABRASF schema should have complex types");
+        schema.ComplexTypes.Count.ShouldBeGreaterThan(0);
         schema.TargetNamespace.ShouldNotBeNullOrEmpty();
     }
 
     [Fact]
     public void Given_AbrasfProvider_Should_DetectEnvelopeAndRootElement()
     {
-        // Arrange
-        var generator = new ProviderConfigGenerator(TestProviderPaths.FindProvidersDir());
-
-        // Act
-        var config = generator.GenerateConfig("abrasf");
-
-        // Assert
+        var config = new ProviderConfigGenerator(TestProviderPaths.FindProvidersDir()).GenerateConfig(ProviderName);
         config.ShouldNotBeNull();
-        config.Provider.ShouldBe("abrasf");
-        config.RootElementName.ShouldNotBeNullOrEmpty("Envelope root element should be detected");
-        config.RootComplexTypeName.ShouldNotBeNullOrEmpty("Envelope complex type should be detected");
+        config.RootElementName.ShouldNotBeNullOrEmpty();
+        config.RootComplexTypeName.ShouldNotBeNullOrEmpty();
     }
 
     [Fact]
-    public void Given_AbrasfProvider_Should_SelectSendXsd()
+    public void Given_AbrasfXsd_Should_SelectSendXsd()
     {
-        // Arrange
-        var xsdDir = TestProviderPaths.FindXsdDir("abrasf");
-
-        // Act
-        var selection = new SendXsdSelector().Select(xsdDir);
-
-        // Assert
-        selection.SelectedFile.ShouldNotBeNull("ABRASF should have a send XSD");
+        var selection = new SendXsdSelector().Select(TestProviderPaths.FindXsdDir(ProviderName));
+        selection.SelectedFile.ShouldNotBeNull();
     }
 
     // ==========================================================
-    // Pipeline with default config — known gap #38 (no rules)
+    // XSD validation — known gap #38 (no rules)
     // ==========================================================
 
     [Fact]
-    public void Given_AbrasfMinimalDocument_Should_ProduceXmlWithKnownXsdGaps()
+    public void Given_MinimalDocument_Should_HaveKnownXsdGaps()
     {
-        // Arrange
-        var document = CreateDocument();
-
-        // Act
-        var result = _sut.Execute(document, "abrasf", TestProviderPaths.FindProvidersDir());
-
-        // Assert — ABRASF has rules: [] → uses default DPS root → XSD mismatch
-        result.Xml.ShouldNotBeNull($"Pipeline crashed: {FormatErrors(result)}");
-        var xsdErrors = XsdValidator.ValidateAgainstDirectory(
-            result.Xml, TestProviderPaths.FindXsdDir("abrasf"));
-        xsdErrors.ShouldNotBeEmpty("ABRASF without rules should have XSD errors (known gap #38)");
+        var result = Execute(new DpsDocumentBuilder().Build());
+        result.Xml.ShouldNotBeNull(Errors(result));
+        var xsdErrors = XsdValidator.ValidateAgainstDirectory(result.Xml, TestProviderPaths.FindXsdDir(ProviderName));
+        xsdErrors.ShouldNotBeEmpty("Known gap #38: no rules configured");
     }
 
     // ==========================================================
-    // Multiple NFS-e filling variations — pipeline resilience
+    // N filling variations via DpsDocumentBuilder
     // ==========================================================
 
     [Theory]
@@ -95,66 +69,10 @@ public class AbrasfBaseXmlSerializationTests
     [InlineData(TaxationType.Export)]
     [InlineData(TaxationType.Free)]
     [InlineData(TaxationType.Immune)]
-    public void Given_AbrasfDifferentTaxationType_Should_NotCrashPipeline(TaxationType taxationType)
+    public void Given_DifferentTaxationType_Should_NotCrash(TaxationType type)
     {
-        // Arrange
-        var document = CreateDocument(taxationType: taxationType);
-
-        // Act
-        var result = _sut.Execute(document, "abrasf", TestProviderPaths.FindProvidersDir());
-
-        // Assert — pipeline must not crash regardless of input variation
-        result.Xml.ShouldNotBeNull($"TaxationType={taxationType} crashed: {FormatErrors(result)}");
-    }
-
-    [Fact]
-    public void Given_AbrasfWithBorrowerPJ_Should_NotCrashPipeline()
-    {
-        // Arrange
-        var document = CreateDocument();
-        document.Borrower = new Borrower
-        {
-            Name = "EMPRESA TOMADORA LTDA",
-            FederalTaxNumber = 99888777000166
-        };
-
-        // Act
-        var result = _sut.Execute(document, "abrasf", TestProviderPaths.FindProvidersDir());
-
-        // Assert
-        result.Xml.ShouldNotBeNull($"Errors: {FormatErrors(result)}");
-    }
-
-    [Fact]
-    public void Given_AbrasfWithBorrowerPF_Should_NotCrashPipeline()
-    {
-        // Arrange
-        var document = CreateDocument();
-        document.Borrower = new Borrower
-        {
-            Name = "PESSOA FISICA",
-            FederalTaxNumber = 12345678901
-        };
-
-        // Act
-        var result = _sut.Execute(document, "abrasf", TestProviderPaths.FindProvidersDir());
-
-        // Assert
-        result.Xml.ShouldNotBeNull($"Errors: {FormatErrors(result)}");
-    }
-
-    [Fact]
-    public void Given_AbrasfWithNoBorrower_Should_NotCrashPipeline()
-    {
-        // Arrange
-        var document = CreateDocument();
-        document.Borrower = null;
-
-        // Act
-        var result = _sut.Execute(document, "abrasf", TestProviderPaths.FindProvidersDir());
-
-        // Assert
-        result.Xml.ShouldNotBeNull($"Errors: {FormatErrors(result)}");
+        var result = Execute(new DpsDocumentBuilder().WithTaxationType(type).Build());
+        result.Xml.ShouldNotBeNull($"TaxationType={type}: {Errors(result)}");
     }
 
     [Theory]
@@ -162,228 +80,139 @@ public class AbrasfBaseXmlSerializationTests
     [InlineData(TaxRegime.LucroReal)]
     [InlineData(TaxRegime.LucroPresumido)]
     [InlineData(TaxRegime.MicroempreendedorIndividual)]
-    public void Given_AbrasfDifferentTaxRegime_Should_NotCrashPipeline(TaxRegime taxRegime)
+    public void Given_DifferentTaxRegime_Should_NotCrash(TaxRegime regime)
     {
-        // Arrange
-        var document = CreateDocument();
-        document.Provider.TaxRegime = taxRegime;
-
-        // Act
-        var result = _sut.Execute(document, "abrasf", TestProviderPaths.FindProvidersDir());
-
-        // Assert
-        result.Xml.ShouldNotBeNull($"TaxRegime={taxRegime} crashed: {FormatErrors(result)}");
+        var doc = new DpsDocumentBuilder().Build();
+        doc.Provider.TaxRegime = regime;
+        var result = Execute(doc);
+        result.Xml.ShouldNotBeNull($"TaxRegime={regime}: {Errors(result)}");
     }
 
     [Fact]
-    public void Given_AbrasfWithHighServiceAmount_Should_NotCrashPipeline()
+    public void Given_CnpjBorrower_Should_NotCrash()
     {
-        // Arrange
-        var document = CreateDocument(servicesAmount: 999999.99m);
-
-        // Act
-        var result = _sut.Execute(document, "abrasf", TestProviderPaths.FindProvidersDir());
-
-        // Assert
-        result.Xml.ShouldNotBeNull($"Errors: {FormatErrors(result)}");
+        var result = Execute(new DpsDocumentBuilder().WithCnpjBorrower().Build());
+        result.Xml.ShouldNotBeNull(Errors(result));
     }
 
     [Fact]
-    public void Given_AbrasfWithZeroAmount_Should_NotCrashPipeline()
+    public void Given_CpfBorrower_Should_NotCrash()
     {
-        // Arrange
-        var document = CreateDocument(servicesAmount: 0.01m);
-
-        // Act
-        var result = _sut.Execute(document, "abrasf", TestProviderPaths.FindProvidersDir());
-
-        // Assert
-        result.Xml.ShouldNotBeNull($"Errors: {FormatErrors(result)}");
-    }
-
-    // ==========================================================
-    // Complex filling variations — optional blocks
-    // ==========================================================
-
-    [Fact]
-    public void Given_AbrasfWithIntermediary_Should_NotCrashPipeline()
-    {
-        // Arrange
-        var document = CreateDocument();
-        document.Intermediary = new Person
-        {
-            Name = "INTERMEDIARIO ABRASF",
-            FederalTaxNumber = 55666777000188L,
-            MunicipalTaxNumber = "99999"
-        };
-
-        // Act
-        var result = _sut.Execute(document, "abrasf", TestProviderPaths.FindProvidersDir());
-
-        // Assert
-        result.Xml.ShouldNotBeNull($"Intermediary crashed: {FormatErrors(result)}");
+        var result = Execute(new DpsDocumentBuilder().WithCpfBorrower().Build());
+        result.Xml.ShouldNotBeNull(Errors(result));
     }
 
     [Fact]
-    public void Given_AbrasfWithIbsCbs_Should_NotCrashPipeline()
+    public void Given_NoBorrower_Should_NotCrash()
     {
-        // Arrange
-        var document = CreateDocument();
-        document.IbsCbs = new IbsCbs
-        {
-            Purpose = IbsCbsPurpose.Regular,
-            DestinationIndicator = IbsCbsDestinationIndicator.SameAsBuyer,
-            OperationIndicator = "100301",
-            ClassCode = "000001"
-        };
-
-        // Act
-        var result = _sut.Execute(document, "abrasf", TestProviderPaths.FindProvidersDir());
-
-        // Assert
-        result.Xml.ShouldNotBeNull($"IBS/CBS crashed: {FormatErrors(result)}");
+        var doc = new DpsDocumentBuilder().Build();
+        doc.Borrower = null;
+        var result = Execute(doc);
+        result.Xml.ShouldNotBeNull(Errors(result));
     }
 
     [Fact]
-    public void Given_AbrasfWithConstruction_Should_NotCrashPipeline()
+    public void Given_WithIntermediary_Should_NotCrash()
     {
-        // Arrange
-        var document = CreateDocument();
-        document.Construction = new Construction { PropertyFiscalRegistration = "OBRA-001", CibCode = "CIB-001" };
-
-        // Act
-        var result = _sut.Execute(document, "abrasf", TestProviderPaths.FindProvidersDir());
-
-        // Assert
-        result.Xml.ShouldNotBeNull($"Construction crashed: {FormatErrors(result)}");
+        var result = Execute(new DpsDocumentBuilder().WithIntermediary().Build());
+        result.Xml.ShouldNotBeNull(Errors(result));
     }
 
     [Fact]
-    public void Given_AbrasfWithDeduction_Should_NotCrashPipeline()
+    public void Given_WithIbsCbs_Should_NotCrash()
     {
-        // Arrange
-        var document = CreateDocument();
-        document.Deduction = new Deduction { Rate = 0.10m, Amount = 100.00m };
-
-        // Act
-        var result = _sut.Execute(document, "abrasf", TestProviderPaths.FindProvidersDir());
-
-        // Assert
-        result.Xml.ShouldNotBeNull($"Deduction crashed: {FormatErrors(result)}");
+        var result = Execute(new DpsDocumentBuilder().WithIbsCbs().Build());
+        result.Xml.ShouldNotBeNull(Errors(result));
     }
 
     [Fact]
-    public void Given_AbrasfWithForeignTrade_Should_NotCrashPipeline()
+    public void Given_WithFederalTaxes_Should_NotCrash()
     {
-        // Arrange
-        var document = CreateDocument();
-        document.ForeignTrade = new ForeignTrade { ServiceMode = 4, RelationShip = 3, Currency = "220", ServiceAmountInCurrency = 5000.00m };
-
-        // Act
-        var result = _sut.Execute(document, "abrasf", TestProviderPaths.FindProvidersDir());
-
-        // Assert
-        result.Xml.ShouldNotBeNull($"ForeignTrade crashed: {FormatErrors(result)}");
+        var result = Execute(new DpsDocumentBuilder().WithFederalTaxes().Build());
+        result.Xml.ShouldNotBeNull(Errors(result));
     }
 
     [Fact]
-    public void Given_AbrasfWithRetentionValues_Should_NotCrashPipeline()
+    public void Given_WithDeduction_Should_NotCrash()
     {
-        // Arrange
-        var document = CreateDocument();
-        document.Values.PisAmountWithheld = 10.00m;
-        document.Values.CofinsAmountWithheld = 30.00m;
-        document.Values.InssAmountWithheld = 110.00m;
-        document.Values.IrAmountWithheld = 15.00m;
-        document.Values.CsllAmountWithheld = 10.00m;
-
-        // Act
-        var result = _sut.Execute(document, "abrasf", TestProviderPaths.FindProvidersDir());
-
-        // Assert
-        result.Xml.ShouldNotBeNull($"RetentionValues crashed: {FormatErrors(result)}");
+        var result = Execute(new DpsDocumentBuilder().WithDeductionByAmount(500).Build());
+        result.Xml.ShouldNotBeNull(Errors(result));
     }
 
     [Fact]
-    public void Given_AbrasfWithBorrowerFullAddress_Should_NotCrashPipeline()
+    public void Given_WithConstruction_Should_NotCrash()
     {
-        // Arrange
-        var document = CreateDocument();
-        document.Borrower = new Borrower
-        {
-            Name = "TOMADOR COMPLETO",
-            FederalTaxNumber = 99888777000166,
-            Email = "tomador@test.com",
-            PhoneNumber = "11999998888",
-            Address = new Address
-            {
-                Country = "BRA", PostalCode = "01000-000", Street = "Av Paulista",
-                Number = "1000", AdditionalInformation = "10o andar", District = "Bela Vista",
-                City = new City { Code = "3550308", Name = "Sao Paulo" }, State = "SP"
-            }
-        };
-
-        // Act
-        var result = _sut.Execute(document, "abrasf", TestProviderPaths.FindProvidersDir());
-
-        // Assert
-        result.Xml.ShouldNotBeNull($"BorrowerFullAddress crashed: {FormatErrors(result)}");
+        var result = Execute(new DpsDocumentBuilder().WithConstructionByCibCode().Build());
+        result.Xml.ShouldNotBeNull(Errors(result));
     }
 
     [Fact]
-    public void Given_AbrasfWithAllOptionalBlocks_Should_NotCrashPipeline()
+    public void Given_WithForeignTrade_Should_NotCrash()
     {
-        // Arrange — maximum filling scenario
-        var document = CreateDocument();
-        document.Borrower = new Borrower { Name = "TOMADOR", FederalTaxNumber = 99888777000166 };
-        document.Intermediary = new Person { Name = "INTERMEDIARIO", FederalTaxNumber = 55666777000188L };
-        document.Construction = new Construction { PropertyFiscalRegistration = "OBRA-001", CibCode = "CIB-001" };
-        document.IbsCbs = new IbsCbs { Purpose = IbsCbsPurpose.Regular, DestinationIndicator = IbsCbsDestinationIndicator.SameAsBuyer, OperationIndicator = "100301", ClassCode = "000001" };
-        document.Location = new Location { State = "SP", City = new City { Code = "3550308" } };
-        document.Deduction = new Deduction { Rate = 0.05m, Amount = 50.00m };
-        document.Values.PisAmountWithheld = 10.00m;
-        document.Values.CofinsAmountWithheld = 30.00m;
-        document.Values.IrAmountWithheld = 15.00m;
+        var result = Execute(new DpsDocumentBuilder().WithForeignTrade().Build());
+        result.Xml.ShouldNotBeNull(Errors(result));
+    }
 
-        // Act
-        var result = _sut.Execute(document, "abrasf", TestProviderPaths.FindProvidersDir());
+    [Fact]
+    public void Given_WithBenefit_Should_NotCrash()
+    {
+        var result = Execute(new DpsDocumentBuilder().WithBenefit().Build());
+        result.Xml.ShouldNotBeNull(Errors(result));
+    }
 
-        // Assert
-        result.Xml.ShouldNotBeNull($"AllOptionalBlocks crashed: {FormatErrors(result)}");
+    [Fact]
+    public void Given_WithActivityEvent_Should_NotCrash()
+    {
+        var result = Execute(new DpsDocumentBuilder().WithActivityEvent().Build());
+        result.Xml.ShouldNotBeNull(Errors(result));
+    }
+
+    [Fact]
+    public void Given_WithSuspension_Should_NotCrash()
+    {
+        var result = Execute(new DpsDocumentBuilder().WithSuspendedCourtDecision("12345").Build());
+        result.Xml.ShouldNotBeNull(Errors(result));
+    }
+
+    [Fact]
+    public void Given_WithDiscounts_Should_NotCrash()
+    {
+        var result = Execute(new DpsDocumentBuilder().WithDiscounts().Build());
+        result.Xml.ShouldNotBeNull(Errors(result));
+    }
+
+    [Fact]
+    public void Given_CompleteDocument_Should_NotCrash()
+    {
+        var result = Execute(DpsDocumentTestFixture.CreateComplete());
+        result.Xml.ShouldNotBeNull(Errors(result));
+    }
+
+    [Fact]
+    public void Given_WithAllOptionalBlocks_Should_NotCrash()
+    {
+        var doc = new DpsDocumentBuilder()
+            .WithCnpjBorrower()
+            .WithIntermediary()
+            .WithFederalTaxes()
+            .WithDiscounts()
+            .WithDeductionByAmount(1500)
+            .WithBenefit()
+            .WithForeignTrade()
+            .WithActivityEvent()
+            .WithIbsCbs()
+            .WithConstructionByCibCode()
+            .WithApproximateTotalsByAmount()
+            .Build();
+        var result = Execute(doc);
+        result.Xml.ShouldNotBeNull(Errors(result));
     }
 
     // --- Private methods ---
 
-    private static DpsDocument CreateDocument(
-        TaxationType taxationType = TaxationType.WithinCity,
-        decimal servicesAmount = 1000.00m) => new()
-    {
-        Environment = 2,
-        Version = "V_1.00.02",
-        Series = "00001",
-        Number = 1,
-        IssuedOn = new DateTimeOffset(2026, 1, 20, 10, 0, 0, TimeSpan.FromHours(-3)),
-        CompetenceDate = new DateOnly(2026, 1, 20),
-        Provider = new Provider
-        {
-            Cnpj = "11222333000181",
-            MunicipalTaxNumber = "12345",
-            MunicipalityCode = "3550308"
-        },
-        Service = new Service
-        {
-            FederalServiceCode = "01.01",
-            Description = "Servico de teste ABRASF base",
-            NbsCode = "101010100",
-            MunicipalityCode = "3550308"
-        },
-        Values = new Values
-        {
-            ServicesAmount = servicesAmount,
-            TaxationType = taxationType
-        }
-    };
+    private SerializationResult Execute(DpsDocument document) =>
+        _sut.Execute(document, ProviderName, TestProviderPaths.FindProvidersDir());
 
-    private static string FormatErrors(SerializationResult result) =>
+    private static string Errors(SerializationResult result) =>
         string.Join("\n", result.Errors.Select(e => $"{e.Kind}: {e.Field} - {e.Message} {e.Details ?? ""}"));
 }
