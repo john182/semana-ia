@@ -45,6 +45,7 @@ public class IssnetXmlSerializationTests
 
         // Assert
         result.Xml.ShouldNotBeNull($"Errors: {FormatErrors(result)}");
+        result.Errors.ShouldBeEmpty(FormatErrors(result));
         result.Xml.ShouldBeValidAgainstProviderSchema(TestProviderPaths.FindXsdDir("issnet"));
 
         result.Xml.ShouldContain("11222333000181"); // Provider CNPJ
@@ -69,6 +70,7 @@ public class IssnetXmlSerializationTests
 
         // Assert
         result.Xml.ShouldNotBeNull($"Errors: {FormatErrors(result)}");
+        result.Errors.ShouldBeEmpty(FormatErrors(result));
         result.Xml.ShouldBeValidAgainstProviderSchema(TestProviderPaths.FindXsdDir("issnet"));
 
         var root = XDocument.Parse(result.Xml!).Root!;
@@ -102,6 +104,7 @@ public class IssnetXmlSerializationTests
 
         // Assert
         result.Xml.ShouldNotBeNull($"Errors: {FormatErrors(result)}");
+        result.Errors.ShouldBeEmpty(FormatErrors(result));
         result.Xml.ShouldBeValidAgainstProviderSchema(TestProviderPaths.FindXsdDir("issnet"));
 
         var root = XDocument.Parse(result.Xml!).Root!;
@@ -131,12 +134,14 @@ public class IssnetXmlSerializationTests
 
         // Assert
         result.Xml.ShouldNotBeNull($"Errors: {FormatErrors(result)}");
+        result.Errors.ShouldBeEmpty(FormatErrors(result));
         result.Xml.ShouldBeValidAgainstProviderSchema(TestProviderPaths.FindXsdDir("issnet"));
 
         var root = XDocument.Parse(result.Xml!).Root!;
 
         // Bindings are prefixed with LoteDps.ListaDps.DPS, so infDPS lives inside DPS
-        var dps = root.Descendants().First(e => e.Name.LocalName == "DPS");
+        var dps = root.Descendants().FirstOrDefault(e => e.Name.LocalName == "DPS");
+        dps.ShouldNotBeNull("DPS element should exist in envelope");
         var infDps = dps.Element(Ns + "infDPS");
         infDps.ShouldNotBeNull("infDPS should exist under DPS (bindingPathPrefix = LoteDps.ListaDps.DPS)");
 
@@ -184,7 +189,7 @@ public class IssnetXmlSerializationTests
         // Arrange - document without Borrower, Location, IssRate, SpecialTaxRegime, etc.
         // CityServiceCode is kept because cTribMun is required in the XSD (minOccurs=1).
         var document = CreateIssnetMinimalDocument();
-        document.Borrower = new Borrower();
+        document.Borrower = null;
         document.Location = null;
         document.Values.IssRate = null;
         document.Provider.SpecialTaxRegime = null;
@@ -194,6 +199,7 @@ public class IssnetXmlSerializationTests
 
         // Assert
         result.Xml.ShouldNotBeNull($"Errors: {FormatErrors(result)}");
+        result.Errors.ShouldBeEmpty(FormatErrors(result));
         result.Xml.ShouldBeValidAgainstProviderSchema(TestProviderPaths.FindXsdDir("issnet"));
     }
 
