@@ -220,6 +220,179 @@ public class PaulistanaXmlSerializationTests
         result.Xml.ShouldNotBeNull($"Errors: {FormatErrors(result)}");
     }
 
+    // ==========================================================
+    // Complex filling variations — optional blocks
+    // ==========================================================
+
+    [Fact]
+    public void Given_PaulistanaWithIntermediary_Should_ProduceValidXml()
+    {
+        // Arrange
+        var document = CreateDocument();
+        document.Intermediary = new Person
+        {
+            Name = "INTERMEDIARIO SP",
+            FederalTaxNumber = 55666777000188,
+            MunicipalTaxNumber = "99999"
+        };
+
+        // Act
+        var result = _sut.Execute(document, "paulistana", TestProviderPaths.FindProvidersDir());
+
+        // Assert
+        result.Xml.ShouldNotBeNull($"Intermediary crashed: {FormatErrors(result)}");
+    }
+
+    [Fact]
+    public void Given_PaulistanaWithIbsCbs_Should_ProduceValidXml()
+    {
+        // Arrange
+        var document = CreateDocument();
+        document.IbsCbs = new IbsCbs
+        {
+            Purpose = IbsCbsPurpose.Regular,
+            DestinationIndicator = IbsCbsDestinationIndicator.SameAsBuyer,
+            OperationIndicator = "100301",
+            ClassCode = "000001"
+        };
+
+        // Act
+        var result = _sut.Execute(document, "paulistana", TestProviderPaths.FindProvidersDir());
+
+        // Assert
+        result.Xml.ShouldNotBeNull($"IBS/CBS crashed: {FormatErrors(result)}");
+    }
+
+    [Fact]
+    public void Given_PaulistanaWithConstruction_Should_ProduceValidXml()
+    {
+        // Arrange
+        var document = CreateDocument();
+        document.Construction = new Construction
+        {
+            PropertyFiscalRegistration = "OBRA-001",
+            CibCode = "CIB-001"
+        };
+
+        // Act
+        var result = _sut.Execute(document, "paulistana", TestProviderPaths.FindProvidersDir());
+
+        // Assert
+        result.Xml.ShouldNotBeNull($"Construction crashed: {FormatErrors(result)}");
+    }
+
+    [Fact]
+    public void Given_PaulistanaWithDeduction_Should_ProduceValidXml()
+    {
+        // Arrange
+        var document = CreateDocument();
+        document.Deduction = new Deduction
+        {
+            Rate = 0.10m,
+            Amount = 100.00m
+        };
+
+        // Act
+        var result = _sut.Execute(document, "paulistana", TestProviderPaths.FindProvidersDir());
+
+        // Assert
+        result.Xml.ShouldNotBeNull($"Deduction crashed: {FormatErrors(result)}");
+    }
+
+    [Fact]
+    public void Given_PaulistanaWithForeignTrade_Should_ProduceValidXml()
+    {
+        // Arrange
+        var document = CreateDocument();
+        document.ForeignTrade = new ForeignTrade
+        {
+            ServiceMode = 4,
+            RelationShip = 3,
+            Currency = "220",
+            ServiceAmountInCurrency = 5000.00m
+        };
+
+        // Act
+        var result = _sut.Execute(document, "paulistana", TestProviderPaths.FindProvidersDir());
+
+        // Assert
+        result.Xml.ShouldNotBeNull($"ForeignTrade crashed: {FormatErrors(result)}");
+    }
+
+    [Fact]
+    public void Given_PaulistanaWithBorrowerFullAddress_Should_ProduceValidXml()
+    {
+        // Arrange
+        var document = CreateDocument();
+        document.Borrower = new Borrower
+        {
+            Name = "TOMADOR COMPLETO SP",
+            FederalTaxNumber = 99888777000166,
+            Email = "tomador@example.com",
+            PhoneNumber = "11999998888",
+            Address = new Address
+            {
+                Country = "BRA",
+                PostalCode = "01000-000",
+                Street = "Av Paulista",
+                Number = "1000",
+                AdditionalInformation = "10o andar",
+                District = "Bela Vista",
+                City = new City { Code = "3550308", Name = "Sao Paulo" },
+                State = "SP"
+            }
+        };
+
+        // Act
+        var result = _sut.Execute(document, "paulistana", TestProviderPaths.FindProvidersDir());
+
+        // Assert
+        result.Xml.ShouldNotBeNull($"BorrowerFullAddress crashed: {FormatErrors(result)}");
+    }
+
+    [Fact]
+    public void Given_PaulistanaWithRetentionValues_Should_ProduceValidXml()
+    {
+        // Arrange
+        var document = CreateDocument();
+        document.Values.PisAmountWithheld = 10.00m;
+        document.Values.CofinsAmountWithheld = 30.00m;
+        document.Values.InssAmountWithheld = 110.00m;
+        document.Values.IrAmountWithheld = 15.00m;
+        document.Values.CsllAmountWithheld = 10.00m;
+        
+        // Act
+        var result = _sut.Execute(document, "paulistana", TestProviderPaths.FindProvidersDir());
+
+        // Assert
+        result.Xml.ShouldNotBeNull($"RetentionValues crashed: {FormatErrors(result)}");
+    }
+
+    [Fact]
+    public void Given_PaulistanaWithAllOptionalBlocks_Should_ProduceValidXml()
+    {
+        // Arrange — maximum filling: all optional blocks present
+        var document = CreateDocument();
+        document.Borrower = new Borrower
+        {
+            Name = "TOMADOR COMPLETO",
+            FederalTaxNumber = 99888777000166,
+            Address = new Address { Country = "BRA", PostalCode = "01000-000", Street = "Rua", Number = "1", District = "Centro", City = new City { Code = "3550308" }, State = "SP" }
+        };
+        document.Intermediary = new Person { Name = "INTERMEDIARIO", FederalTaxNumber = 55666777000188 };
+        document.Construction = new Construction { PropertyFiscalRegistration = "OBRA-001", CibCode = "CIB-001" };
+        document.IbsCbs = new IbsCbs { Purpose = IbsCbsPurpose.Regular, DestinationIndicator = IbsCbsDestinationIndicator.SameAsBuyer, OperationIndicator = "100301", ClassCode = "000001" };
+        document.Location = new Location { State = "SP", City = new City { Code = "3550308", Name = "Sao Paulo" } };
+        document.Values.PisAmountWithheld = 10.00m;
+        document.Values.CofinsAmountWithheld = 30.00m;
+
+        // Act
+        var result = _sut.Execute(document, "paulistana", TestProviderPaths.FindProvidersDir());
+
+        // Assert
+        result.Xml.ShouldNotBeNull($"AllOptionalBlocks crashed: {FormatErrors(result)}");
+    }
+
     // --- Private methods ---
 
     private static DpsDocument CreateDocument(
