@@ -1,4 +1,5 @@
 using SemanaIA.ServiceInvoice.Domain.Models;
+using SemanaIA.ServiceInvoice.UnitTests.Manual;
 using SemanaIA.ServiceInvoice.XmlGeneration.SchemaEngine;
 using Shouldly;
 
@@ -22,9 +23,15 @@ public class AbrasfBaseXmlSerializationTests
         // Act
         var result = _sut.Execute(document, "abrasf", TestProviderPaths.FindProvidersDir());
 
-        // Assert — ABRASF has rules: [], so XML is generated but minimal.
-        // Pipeline should not crash; XML may have serialization errors due to missing bindings.
+        // Assert — ABRASF has rules: [] and no rootComplexTypeName configured,
+        // so pipeline uses default DPS root which doesn't match ABRASF XSD.
+        // This is a known configuration gap (issue #38).
+        // Schema validation will fail with "DPS element is not declared" until rules are configured.
         result.Xml.ShouldNotBeNull($"Pipeline crashed: {FormatErrors(result)}");
+
+        var xsdErrors = XmlGeneration.SchemaEngine.XsdValidator.ValidateAgainstDirectory(
+            result.Xml, TestProviderPaths.FindXsdDir("abrasf"));
+        xsdErrors.ShouldNotBeEmpty("ABRASF without rules should have XSD errors (known gap #38)");
     }
 
     [Fact]
