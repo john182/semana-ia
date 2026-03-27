@@ -190,6 +190,56 @@ public class NfseEndpointIntegrationTests : IClassFixture<WebApplicationFactory<
         xml.ShouldContain("versao=\"2.03\"");
     }
 
+    // ==========================================================
+    // E2E: Multiple filling variations via API
+    // ==========================================================
+
+    [Fact]
+    public async Task Given_RequestWithIntermediary_Should_Return200()
+    {
+        // Arrange
+        var payload = RequestWithIntermediary();
+
+        // Act
+        var response = await _client.PostAsJsonAsync("/api/v1/nfse/xml", payload);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        var body = await response.Content.ReadFromJsonAsync<JsonElement>();
+        body.GetProperty("xml").GetString().ShouldNotBeNullOrEmpty();
+    }
+
+    [Fact]
+    public async Task Given_RequestWithRetentionValues_Should_Return200()
+    {
+        // Arrange
+        var payload = RequestWithRetentionValues();
+
+        // Act
+        var response = await _client.PostAsJsonAsync("/api/v1/nfse/xml", payload);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        var body = await response.Content.ReadFromJsonAsync<JsonElement>();
+        var xml = body.GetProperty("xml").GetString()!;
+        xml.ShouldContain("vPIS"); // PIS retention element
+    }
+
+    [Fact]
+    public async Task Given_RequestWithForeignTrade_Should_Return200()
+    {
+        // Arrange
+        var payload = RequestWithForeignTrade();
+
+        // Act
+        var response = await _client.PostAsJsonAsync("/api/v1/nfse/xml", payload);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        var body = await response.Content.ReadFromJsonAsync<JsonElement>();
+        body.GetProperty("xml").GetString().ShouldNotBeNullOrEmpty();
+    }
+
     // --- Helpers privados ---
 
     private const string IntegTestMunicipalityCode = "0000099";
@@ -385,6 +435,61 @@ public class NfseEndpointIntegrationTests : IClassFixture<WebApplicationFactory<
             street = "RUA PRESTACAO", number = "50", district = "CENTRO",
             city = new { code = "3106200" }, state = "MG"
         }
+    };
+
+    private static object RequestWithIntermediary() => new
+    {
+        provider = DefaultProvider,
+        externalId = "INTEG-INTERM-001",
+        federalServiceCode = "01.01",
+        description = "Servico com intermediario",
+        servicesAmount = 2000.00,
+        issuedOn = "2026-01-20T10:00:00-03:00",
+        taxationType = "WithinCity",
+        nbsCode = "101010100",
+        borrower = new { name = "TOMADOR", federalTaxNumber = 191, address = new { country = "BRA", postalCode = "01000-000", street = "RUA", number = "1", district = "CENTRO", city = new { code = IntegTestMunicipalityCode }, state = "SP" } },
+        location = new { country = "BRA", postalCode = "01000-000", street = "RUA", number = "1", district = "CENTRO", city = new { code = IntegTestMunicipalityCode }, state = "SP" },
+        intermediary = new
+        {
+            name = "INTERMEDIARIO INTEG",
+            federalTaxNumber = 87654321000100L,
+            address = new { country = "BRA", postalCode = "20000-000", street = "AV INTERM", number = "123", district = "CENTRO", city = new { code = "3304557" }, state = "RJ" }
+        }
+    };
+
+    private static object RequestWithRetentionValues() => new
+    {
+        provider = DefaultProvider,
+        externalId = "INTEG-RET-001",
+        federalServiceCode = "01.01",
+        description = "Servico com retencoes",
+        servicesAmount = 10000.00,
+        issuedOn = "2026-01-20T10:00:00-03:00",
+        taxationType = "WithinCity",
+        nbsCode = "101010100",
+        issRate = 0.05,
+        pisAmountWithheld = 65.00,
+        cofinsAmountWithheld = 300.00,
+        inssAmountWithheld = 1100.00,
+        irAmountWithheld = 150.00,
+        csllAmountWithheld = 100.00,
+        borrower = new { name = "TOMADOR RETENCAO", federalTaxNumber = 99888777000166L, address = new { country = "BRA", postalCode = "01000-000", street = "RUA", number = "1", district = "CENTRO", city = new { code = IntegTestMunicipalityCode }, state = "SP" } },
+        location = new { country = "BRA", postalCode = "01000-000", street = "RUA", number = "1", district = "CENTRO", city = new { code = IntegTestMunicipalityCode }, state = "SP" }
+    };
+
+    private static object RequestWithForeignTrade() => new
+    {
+        provider = DefaultProvider,
+        externalId = "INTEG-COMEXT-001",
+        federalServiceCode = "17.01",
+        description = "Servico com comercio exterior",
+        servicesAmount = 25000.00,
+        issuedOn = "2026-01-20T10:00:00-03:00",
+        taxationType = "Export",
+        nbsCode = "117010000",
+        borrower = new { name = "TOMADOR EXPORT", federalTaxNumber = 191, address = new { country = "BRA", postalCode = "01000-000", street = "RUA", number = "1", district = "CENTRO", city = new { code = IntegTestMunicipalityCode }, state = "SP" } },
+        location = new { country = "BRA", postalCode = "01000-000", street = "RUA", number = "1", district = "CENTRO", city = new { code = IntegTestMunicipalityCode }, state = "SP" },
+        foreignTrade = new { serviceMode = "4", relationShip = "3", currency = "220", serviceAmountInCurrency = 20000 }
     };
 
     private static object MinimalRequestPayloadWithIbsCbs() => new
