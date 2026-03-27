@@ -208,7 +208,7 @@ public class ManualVsEngineApiComparisonTests : IClassFixture<WebApplicationFact
             {
                 var id = provider.GetProperty("id").GetString();
                 var name = provider.GetProperty("name").GetString() ?? "";
-                if (id is not null && name.StartsWith("compare-", StringComparison.OrdinalIgnoreCase))
+                if (id is not null && name.StartsWith("e2e-cmp-", StringComparison.OrdinalIgnoreCase))
                     await _client.DeleteAsync($"{ProvidersEndpoint}/{id}");
             }
         }
