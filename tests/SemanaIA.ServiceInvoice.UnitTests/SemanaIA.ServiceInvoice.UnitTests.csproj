@@ -24,6 +24,10 @@
     </ItemGroup>
 
     <ItemGroup>
+        <Compile Remove="**/generated/**" />
+    </ItemGroup>
+
+    <ItemGroup>
         <ProjectReference Include="..\..\src\SemanaIA.ServiceInvoice.XmlGeneration\SemanaIA.ServiceInvoice.XmlGeneration.csproj" />
         <ProjectReference Include="..\..\src\SemanaIA.ServiceInvoice.Api\SemanaIA.ServiceInvoice.Api.csproj" />
     </ItemGroup>
