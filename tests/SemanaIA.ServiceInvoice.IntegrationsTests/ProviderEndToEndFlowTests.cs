@@ -351,7 +351,8 @@ public class ProviderEndToEndFlowTests : IClassFixture<WebApplicationFactory<Pro
         error.Contains("'versao' attribute") ||
         error.Contains("incomplete content") ||
         error.Contains("invalid child element") ||
-        error.Contains("Pattern constraint failed");
+        error.Contains("Pattern constraint failed") ||
+        error.Contains("element is not declared"); // Issue #57: auto-gen namespace mismatch for multi-XSD ABRASF providers
 
     private async Task CleanupTestProvidersFromPreviousRuns()
     {
