@@ -37,6 +37,8 @@ public class WebissXmlSerializationTests
         var config = new ProviderConfigGenerator(TestProviderPaths.FindProvidersDir()).GenerateConfig(ProviderName);
         config.ShouldNotBeNull();
         config.Provider.ShouldBe(ProviderName);
+        config.RootElementName.ShouldNotBeNullOrEmpty("Root element should be detected");
+        config.RootComplexTypeName.ShouldNotBeNullOrEmpty("Root complex type should be detected");
     }
 
     // ==========================================================

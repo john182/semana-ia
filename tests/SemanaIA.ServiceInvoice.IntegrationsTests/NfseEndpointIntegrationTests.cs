@@ -191,6 +191,38 @@ public class NfseEndpointIntegrationTests : IClassFixture<WebApplicationFactory<
     }
 
     // ==========================================================
+    // E2E: Simpliss with IBS/CBS variation
+    // ==========================================================
+
+    [Fact]
+    public async Task Given_SimplissWithIbsCbs_Should_ReturnEnvelopeXml()
+    {
+        // Arrange
+        var payload = new
+        {
+            provider = new { federalTaxNumber = 11222333000181L, municipalTaxNumber = "12345", taxRegime = "SimplesNacional",
+                address = new { country = "BRA", postalCode = "30000-000", street = "RUA", number = "1", district = "CENTRO", city = new { code = "3106200" }, state = "MG" } },
+            externalId = "E2E-SIMPLISS-IBSCBS", federalServiceCode = "01.01", description = "Servico E2E Simpliss com IBSCBS",
+            servicesAmount = 2000.00, issuedOn = "2026-01-20T10:00:00-03:00", taxationType = "WithinCity", nbsCode = "101010100",
+            borrower = new { name = "TOMADOR IBSCBS", federalTaxNumber = 99888777000166L,
+                address = new { country = "BRA", postalCode = "30000-000", street = "RUA", number = "1", district = "CENTRO", city = new { code = "3106200" }, state = "MG" } },
+            location = new { country = "BRA", postalCode = "30000-000", street = "RUA", number = "1", district = "CENTRO", city = new { code = "3106200" }, state = "MG" },
+            ibsCbs = new { classCode = "000001", purpose = "Regular", personalUse = false, operationIndicator = "100501", destinationIndicator = "SameAsBuyer" }
+        };
+
+        // Act
+        var response = await _client.PostAsJsonAsync("/api/v1/nfse/xml", payload);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        var body = await response.Content.ReadFromJsonAsync<JsonElement>();
+        body.GetProperty("providerName").GetString().ShouldBe("simpliss");
+        var xml = body.GetProperty("xml").GetString()!;
+        xml.ShouldContain("EnviarLoteRpsEnvio");
+        xml.ShouldContain("LoteRps");
+    }
+
+    // ==========================================================
     // E2E: WebISS via API
     // ==========================================================
 
@@ -217,31 +249,6 @@ public class NfseEndpointIntegrationTests : IClassFixture<WebApplicationFactory<
         var body = await response.Content.ReadFromJsonAsync<JsonElement>();
         body.GetProperty("providerName").GetString().ShouldBe("webiss");
         body.GetProperty("xml").GetString().ShouldNotBeNullOrEmpty();
-    }
-
-    [Fact]
-    public async Task Given_SimplissWithIbsCbs_Should_Return200()
-    {
-        // Arrange — Simpliss with IBS/CBS data
-        var payload = new
-        {
-            provider = new { federalTaxNumber = 11222333000181L, municipalTaxNumber = "12345", taxRegime = "SimplesNacional",
-                address = new { country = "BRA", postalCode = "30000-000", street = "RUA", number = "1", district = "CENTRO", city = new { code = "3106200" }, state = "MG" } },
-            externalId = "E2E-SIMPLISS-IBSCBS", federalServiceCode = "01.01", description = "Servico E2E Simpliss com IBSCBS",
-            servicesAmount = 2000.00, issuedOn = "2026-01-20T10:00:00-03:00", taxationType = "WithinCity", nbsCode = "101010100",
-            borrower = new { name = "TOMADOR IBSCBS", federalTaxNumber = 99888777000166L,
-                address = new { country = "BRA", postalCode = "30000-000", street = "RUA", number = "1", district = "CENTRO", city = new { code = "3106200" }, state = "MG" } },
-            location = new { country = "BRA", postalCode = "30000-000", street = "RUA", number = "1", district = "CENTRO", city = new { code = "3106200" }, state = "MG" },
-            ibsCbs = new { classCode = "000001", purpose = "Regular", personalUse = false, operationIndicator = "100501", destinationIndicator = "SameAsBuyer" }
-        };
-
-        // Act
-        var response = await _client.PostAsJsonAsync("/api/v1/nfse/xml", payload);
-
-        // Assert
-        response.StatusCode.ShouldBe(HttpStatusCode.OK);
-        var body = await response.Content.ReadFromJsonAsync<JsonElement>();
-        body.GetProperty("providerName").GetString().ShouldBe("simpliss");
     }
 
     // --- Helpers privados ---
