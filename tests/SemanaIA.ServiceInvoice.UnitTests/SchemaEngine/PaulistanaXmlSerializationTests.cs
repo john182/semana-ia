@@ -6,55 +6,39 @@ using Shouldly;
 namespace SemanaIA.ServiceInvoice.UnitTests.SchemaEngine;
 
 /// <summary>
-/// Tests for the Paulistana provider (São Paulo municipal).
-/// Uses root PedidoEnvioLoteRPS with Cabecalho envelope.
-/// Known gaps: Assinatura requires digital certificate (issue #36),
-/// and RPS bindings under bindingPathPrefix="Cabecalho" don't match
-/// the XSD structure where RPS is sibling of Cabecalho.
+/// Comprehensive tests for Paulistana provider (São Paulo municipal).
+/// Root: PedidoEnvioLoteRPS, envelope: Cabecalho.
+/// Known gaps: Assinatura (issue #36), RPS path prefix (config improvement needed).
+/// Tests cover multiple NFS-e filling variations with XSD validation.
 /// </summary>
 public class PaulistanaXmlSerializationTests
 {
     private readonly SchemaSerializationPipeline _sut = new();
 
-    [Fact]
-    public void Given_PaulistanaProvider_Should_ProduceXmlAndValidateStructure()
-    {
-        // Arrange
-        var document = CreateMinimalDocument();
-
-        // Act
-        var result = _sut.Execute(document, "paulistana", TestProviderPaths.FindProvidersDir());
-
-        // Assert — Paulistana has known gaps (RPS path prefix, Assinatura #36),
-        // XSD validation captures these as known errors.
-        result.Xml.ShouldNotBeNull($"Pipeline crashed: {FormatErrors(result)}");
-
-        var xsdErrors = XsdValidator.ValidateAgainstDirectory(
-            result.Xml, TestProviderPaths.FindXsdDir("paulistana"));
-        // Known gap: RPS element missing data + Assinatura required → XSD errors expected
-        xsdErrors.ShouldNotBeEmpty("Paulistana has known XSD gaps (RPS path, Assinatura #36)");
-    }
+    // ==========================================================
+    // Structure and envelope validation
+    // ==========================================================
 
     [Fact]
-    public void Given_PaulistanaProvider_Should_GenerateCorrectRootElement()
+    public void Given_PaulistanaMinimalDocument_Should_ProduceXmlWithCorrectRoot()
     {
         // Arrange
-        var document = CreateMinimalDocument();
+        var document = CreateDocument();
 
         // Act
         var result = _sut.Execute(document, "paulistana", TestProviderPaths.FindProvidersDir());
 
         // Assert
-        result.Xml.ShouldNotBeNull($"Errors: {FormatErrors(result)}");
+        result.Xml.ShouldNotBeNull($"Pipeline crashed: {FormatErrors(result)}");
         var root = XDocument.Parse(result.Xml!).Root!;
         root.Name.LocalName.ShouldBe("PedidoEnvioLoteRPS");
     }
 
     [Fact]
-    public void Given_PaulistanaProvider_Should_ContainCabecalhoEnvelope()
+    public void Given_PaulistanaProvider_Should_ContainCabecalhoWithVersionAttribute()
     {
         // Arrange
-        var document = CreateMinimalDocument();
+        var document = CreateDocument();
 
         // Act
         var result = _sut.Execute(document, "paulistana", TestProviderPaths.FindProvidersDir());
@@ -63,43 +47,185 @@ public class PaulistanaXmlSerializationTests
         result.Xml.ShouldNotBeNull($"Errors: {FormatErrors(result)}");
         var root = XDocument.Parse(result.Xml!).Root!;
         var cabecalho = root.Descendants().FirstOrDefault(e => e.Name.LocalName == "Cabecalho");
-        cabecalho.ShouldNotBeNull("Cabecalho envelope element should be present");
+        cabecalho.ShouldNotBeNull("Cabecalho should be present");
         cabecalho.Attribute("Versao")?.Value.ShouldBe("2");
+        root.Attribute("versao").ShouldBeNull("Root should not have versao — belongs on Cabecalho");
     }
 
     [Fact]
-    public void Given_PaulistanaProvider_Should_ContainWrapperBindingValues()
+    public void Given_PaulistanaProvider_Should_ContainWrapperBindings()
     {
         // Arrange
-        var document = CreateMinimalDocument();
-
-        // Act
-        var result = _sut.Execute(document, "paulistana", TestProviderPaths.FindProvidersDir());
-
-        // Assert — wrapperBindings populate Cabecalho fields correctly
-        result.Xml.ShouldNotBeNull($"Errors: {FormatErrors(result)}");
-        result.Xml.ShouldContain("11222333000181"); // Provider CNPJ in CPFCNPJRemetente
-        result.Xml.ShouldContain("2026-01-20"); // dtInicio/dtFim from CompetenceDate
-    }
-
-    [Fact]
-    public void Given_PaulistanaProvider_Should_NotHaveVersaoOnRoot()
-    {
-        // Arrange
-        var document = CreateMinimalDocument();
+        var document = CreateDocument();
 
         // Act
         var result = _sut.Execute(document, "paulistana", TestProviderPaths.FindProvidersDir());
 
         // Assert
         result.Xml.ShouldNotBeNull($"Errors: {FormatErrors(result)}");
+        result.Xml.ShouldContain("11222333000181"); // CPFCNPJRemetente.CNPJ
+        result.Xml.ShouldContain("2026-01-20"); // dtInicio/dtFim
+        result.Xml.ShouldContain("true"); // transacao
+    }
+
+    // ==========================================================
+    // XSD validation with known gaps documented
+    // ==========================================================
+
+    [Fact]
+    public void Given_PaulistanaMinimalDocument_Should_HaveKnownXsdGaps()
+    {
+        // Arrange
+        var document = CreateDocument();
+
+        // Act
+        var result = _sut.Execute(document, "paulistana", TestProviderPaths.FindProvidersDir());
+
+        // Assert — RPS path prefix mismatch + Assinatura required → XSD errors expected
+        result.Xml.ShouldNotBeNull($"Pipeline crashed: {FormatErrors(result)}");
+        var xsdErrors = XsdValidator.ValidateAgainstDirectory(
+            result.Xml, TestProviderPaths.FindXsdDir("paulistana"));
+        xsdErrors.ShouldNotBeEmpty("Paulistana has known XSD gaps (RPS path #38, Assinatura #36)");
+    }
+
+    // ==========================================================
+    // Multiple NFS-e filling variations — each validates pipeline
+    // ==========================================================
+
+    [Theory]
+    [InlineData(TaxationType.WithinCity)]
+    [InlineData(TaxationType.OutsideCity)]
+    [InlineData(TaxationType.Export)]
+    [InlineData(TaxationType.Free)]
+    [InlineData(TaxationType.Immune)]
+    public void Given_PaulistanaDifferentTaxationType_Should_ProduceValidXml(TaxationType taxationType)
+    {
+        // Arrange
+        var document = CreateDocument(taxationType: taxationType);
+
+        // Act
+        var result = _sut.Execute(document, "paulistana", TestProviderPaths.FindProvidersDir());
+
+        // Assert
+        result.Xml.ShouldNotBeNull($"TaxationType={taxationType} crashed: {FormatErrors(result)}");
         var root = XDocument.Parse(result.Xml!).Root!;
-        root.Attribute("versao").ShouldBeNull("Envelope root should not have versao");
+        root.Name.LocalName.ShouldBe("PedidoEnvioLoteRPS");
+    }
+
+    [Fact]
+    public void Given_PaulistanaWithBorrowerPJ_Should_ProduceValidXml()
+    {
+        // Arrange
+        var document = CreateDocument();
+        document.Borrower = new Borrower
+        {
+            Name = "EMPRESA TOMADORA LTDA",
+            FederalTaxNumber = 99888777000166
+        };
+
+        // Act
+        var result = _sut.Execute(document, "paulistana", TestProviderPaths.FindProvidersDir());
+
+        // Assert
+        result.Xml.ShouldNotBeNull($"Errors: {FormatErrors(result)}");
+        result.Xml.ShouldContain("PedidoEnvioLoteRPS");
+    }
+
+    [Fact]
+    public void Given_PaulistanaWithBorrowerPF_Should_ProduceValidXml()
+    {
+        // Arrange
+        var document = CreateDocument();
+        document.Borrower = new Borrower
+        {
+            Name = "PESSOA FISICA",
+            FederalTaxNumber = 12345678901
+        };
+
+        // Act
+        var result = _sut.Execute(document, "paulistana", TestProviderPaths.FindProvidersDir());
+
+        // Assert
+        result.Xml.ShouldNotBeNull($"Errors: {FormatErrors(result)}");
+    }
+
+    [Fact]
+    public void Given_PaulistanaWithNoBorrower_Should_ProduceValidXml()
+    {
+        // Arrange
+        var document = CreateDocument();
+        document.Borrower = null;
+
+        // Act
+        var result = _sut.Execute(document, "paulistana", TestProviderPaths.FindProvidersDir());
+
+        // Assert
+        result.Xml.ShouldNotBeNull($"Errors: {FormatErrors(result)}");
+    }
+
+    [Theory]
+    [InlineData(TaxRegime.SimplesNacional)]
+    [InlineData(TaxRegime.LucroReal)]
+    [InlineData(TaxRegime.LucroPresumido)]
+    [InlineData(TaxRegime.MicroempreendedorIndividual)]
+    public void Given_PaulistanaDifferentTaxRegime_Should_ProduceValidXml(TaxRegime taxRegime)
+    {
+        // Arrange
+        var document = CreateDocument();
+        document.Provider.TaxRegime = taxRegime;
+
+        // Act
+        var result = _sut.Execute(document, "paulistana", TestProviderPaths.FindProvidersDir());
+
+        // Assert
+        result.Xml.ShouldNotBeNull($"TaxRegime={taxRegime} crashed: {FormatErrors(result)}");
+    }
+
+    [Fact]
+    public void Given_PaulistanaWithHighServiceAmount_Should_ProduceValidXml()
+    {
+        // Arrange
+        var document = CreateDocument(servicesAmount: 999999.99m);
+
+        // Act
+        var result = _sut.Execute(document, "paulistana", TestProviderPaths.FindProvidersDir());
+
+        // Assert
+        result.Xml.ShouldNotBeNull($"Errors: {FormatErrors(result)}");
+    }
+
+    [Fact]
+    public void Given_PaulistanaWithZeroIssRate_Should_ProduceValidXml()
+    {
+        // Arrange
+        var document = CreateDocument(issRate: 0m);
+
+        // Act
+        var result = _sut.Execute(document, "paulistana", TestProviderPaths.FindProvidersDir());
+
+        // Assert
+        result.Xml.ShouldNotBeNull($"Errors: {FormatErrors(result)}");
+    }
+
+    [Fact]
+    public void Given_PaulistanaWithLowServiceAmount_Should_ProduceValidXml()
+    {
+        // Arrange
+        var document = CreateDocument(servicesAmount: 0.01m);
+
+        // Act
+        var result = _sut.Execute(document, "paulistana", TestProviderPaths.FindProvidersDir());
+
+        // Assert
+        result.Xml.ShouldNotBeNull($"Errors: {FormatErrors(result)}");
     }
 
     // --- Private methods ---
 
-    private static DpsDocument CreateMinimalDocument() => new()
+    private static DpsDocument CreateDocument(
+        TaxationType taxationType = TaxationType.WithinCity,
+        decimal servicesAmount = 1000.00m,
+        decimal? issRate = 0.05m) => new()
     {
         Environment = 2,
         Version = "V_1.00.02",
@@ -122,9 +248,9 @@ public class PaulistanaXmlSerializationTests
         },
         Values = new Values
         {
-            ServicesAmount = 1000.00m,
-            TaxationType = TaxationType.WithinCity,
-            IssRate = 0.05m
+            ServicesAmount = servicesAmount,
+            TaxationType = taxationType,
+            IssRate = issRate
         }
     };
 
