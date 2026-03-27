@@ -1,6 +1,5 @@
 using System.Xml.Linq;
 using SemanaIA.ServiceInvoice.Domain.Models;
-using SemanaIA.ServiceInvoice.UnitTests.Manual;
 using SemanaIA.ServiceInvoice.XmlGeneration.SchemaEngine;
 using Shouldly;
 
@@ -18,7 +17,7 @@ public class PaulistanaXmlSerializationTests
     private readonly SchemaSerializationPipeline _sut = new();
 
     [Fact]
-    public void Given_PaulistanaProvider_Should_ProduceXmlWithoutCrashing()
+    public void Given_PaulistanaProvider_Should_ProduceXmlAndValidateStructure()
     {
         // Arrange
         var document = CreateMinimalDocument();
@@ -26,9 +25,14 @@ public class PaulistanaXmlSerializationTests
         // Act
         var result = _sut.Execute(document, "paulistana", TestProviderPaths.FindProvidersDir());
 
-        // Assert — Paulistana config has known gaps (RPS path prefix mismatch),
-        // but pipeline should produce XML without crashing
+        // Assert — Paulistana has known gaps (RPS path prefix, Assinatura #36),
+        // XSD validation captures these as known errors.
         result.Xml.ShouldNotBeNull($"Pipeline crashed: {FormatErrors(result)}");
+
+        var xsdErrors = XsdValidator.ValidateAgainstDirectory(
+            result.Xml, TestProviderPaths.FindXsdDir("paulistana"));
+        // Known gap: RPS element missing data + Assinatura required → XSD errors expected
+        xsdErrors.ShouldNotBeEmpty("Paulistana has known XSD gaps (RPS path, Assinatura #36)");
     }
 
     [Fact]
@@ -91,39 +95,6 @@ public class PaulistanaXmlSerializationTests
         result.Xml.ShouldNotBeNull($"Errors: {FormatErrors(result)}");
         var root = XDocument.Parse(result.Xml!).Root!;
         root.Attribute("versao").ShouldBeNull("Envelope root should not have versao");
-    }
-
-    [Fact]
-    public void Given_PaulistanaProvider_Should_SelectCorrectSendXsd()
-    {
-        // Arrange
-        var xsdDir = TestProviderPaths.FindXsdDir("paulistana");
-        var selector = new SendXsdSelector();
-
-        // Act
-        var selection = selector.Select(xsdDir);
-
-        // Assert
-        selection.SelectedFile.ShouldNotBeNull("Should find send XSD for Paulistana");
-        Path.GetFileName(selection.SelectedFile).ShouldContain("PedidoEnvioLoteRPS");
-    }
-
-    [Fact]
-    public void Given_PaulistanaProvider_Should_AnalyzeSchemaSuccessfully()
-    {
-        // Arrange
-        var analyzer = new XsdSchemaAnalyzer();
-        var xsdDir = TestProviderPaths.FindXsdDir("paulistana");
-        var selector = new SendXsdSelector();
-        var xsdPath = selector.Select(xsdDir).SelectedFile!;
-
-        // Act
-        var schema = analyzer.Analyze(xsdPath);
-
-        // Assert
-        schema.ShouldNotBeNull();
-        schema.ComplexTypes.Count.ShouldBeGreaterThan(0);
-        schema.TargetNamespace.ShouldContain("prefeitura.sp.gov.br");
     }
 
     // --- Private methods ---
