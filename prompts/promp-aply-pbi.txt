@@ -12,4 +12,4 @@ garantir que o CLI do repositório esteja passando sem erros antes de cada commi
 garantir que foram feitos teste em varios cenarios diferentes do service invoice
 sempre fazer teste de integração com o service invoice para garantir que não haja regressão.
 manter rastreabilidade e documentação da decisão de seleção das PBIs.
-sempre fazer teste de unidade
+sempre fazer teste de unidade e end2end obrigatórios para cada PBI implementada.
