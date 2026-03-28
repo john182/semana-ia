@@ -371,7 +371,7 @@ public class AllDataProvidersFillingVariationsTests
             foreach (var (wrapperPath, expression) in profile.WrapperBindings)
             {
                 var resolvedValue = ResolveMapping(expression, document);
-                if (resolvedValue is not null) data[wrapperPath] = resolvedValue;
+                data[wrapperPath] = resolvedValue ?? "1";
             }
         }
 
@@ -383,6 +383,23 @@ public class AllDataProvidersFillingVariationsTests
         Dictionary<string, SchemaComplexType> typeMap,
         Dictionary<string, object?> data, DpsDocument document)
     {
+        // Populate required attributes (e.g., @Id, @codMunicipio, @versao)
+        if (complexType.Attributes is { Count: > 0 })
+        {
+            foreach (var attr in complexType.Attributes.Where(a => a.IsRequired))
+            {
+                var attrPath = string.IsNullOrEmpty(prefix) ? $"@{attr.Name}" : $"{prefix}.@{attr.Name}";
+                if (!data.ContainsKey(attrPath))
+                    data[attrPath] = attr.Name.ToLowerInvariant() switch
+                    {
+                        "id" => $"id_{Guid.NewGuid():N}"[..20],
+                        "versao" => "1.00",
+                        "codmunicipio" => "3550308",
+                        _ => "1"
+                    };
+            }
+        }
+
         foreach (var element in complexType.Elements)
         {
             var path = string.IsNullOrEmpty(prefix) ? element.Name : $"{prefix}.{element.Name}";
@@ -393,13 +410,24 @@ public class AllDataProvidersFillingVariationsTests
             if (childType is not null)
             {
                 WalkAndBind(childType, path, typeMap, data, document);
+
+                // Ensure required complex elements have at least one child with data
+                // so the serializer emits them and preserves xs:sequence ordering (#88).
+                if (element.IsRequired && !data.Keys.Any(k => k.StartsWith(path + ".", StringComparison.Ordinal) || k.StartsWith(path + ".@", StringComparison.Ordinal)))
+                {
+                    EnsureMinimalChildren(childType, path, typeMap, data);
+                }
+
                 continue;
             }
 
             if (CommonFieldMappingDictionary.Mappings.TryGetValue(element.Name, out var mapping))
             {
                 var resolvedValue = ResolveMapping(mapping, document);
-                if (resolvedValue is not null) data[path] = resolvedValue;
+                if (resolvedValue is not null)
+                    data[path] = resolvedValue;
+                else if (element.IsRequired)
+                    data[path] = GetDummyValue(element);
             }
             else if (element.IsRequired)
             {
@@ -426,7 +454,7 @@ public class AllDataProvidersFillingVariationsTests
                 ? ((int)document.Provider.SpecialTaxRegime).ToString() : "1",
             "Provider.OpSimpNacCode" => document.Provider.TaxRegime == TaxRegime.SimplesNacional ? "1" : "2",
             "Provider.RegEspTribCode" => document.Provider.SpecialTaxRegime is not null
-                ? ((int)document.Provider.SpecialTaxRegime).ToString() : "0",
+                ? ((int)document.Provider.SpecialTaxRegime).ToString() : "1",
 
             // Borrower
             "Borrower.Name" => NullIfEmpty(document.Borrower?.Name),
@@ -437,7 +465,7 @@ public class AllDataProvidersFillingVariationsTests
             "Borrower.Address.Street" => NullIfEmpty(document.Borrower?.Address?.Street),
             "Borrower.Address.Number" => NullIfEmpty(document.Borrower?.Address?.Number),
             "Borrower.Address.District" => NullIfEmpty(document.Borrower?.Address?.District),
-            "Borrower.Address.PostalCode" => NullIfEmpty(document.Borrower?.Address?.PostalCode),
+            "Borrower.Address.PostalCode" => CleanDigits(document.Borrower?.Address?.PostalCode),
             "Borrower.Address.State" => NullIfEmpty(document.Borrower?.Address?.State),
             "Borrower.Address.City.Code" => NullIfEmpty(document.Borrower?.Address?.City?.Code),
 
@@ -531,17 +559,76 @@ public class AllDataProvidersFillingVariationsTests
 
     private static string GetDummyValue(SchemaElement element)
     {
-        if (element.Restriction?.Enumerations?.Count > 0)
-            return element.Restriction.Enumerations[0];
+        var restriction = element.Restriction;
 
-        return element.TypeName?.ToLowerInvariant() switch
+        // 1. Enumerations — use first valid value
+        if (restriction?.Enumerations is { Count: > 0 })
+            return restriction.Enumerations[0];
+
+        // 2. BaseType from restriction (most reliable for XSD-specific types)
+        var baseType = restriction?.BaseType?.ToLowerInvariant() ?? "";
+        if (baseType is "datetime" || baseType.EndsWith(":datetime"))
+            return "2026-01-20T10:00:00";
+        if (baseType is "date" || baseType.EndsWith(":date"))
+            return "2026-01-20";
+        if (baseType is "decimal" || baseType.EndsWith(":decimal"))
+            return "0.00";
+        if (baseType is "int" or "integer" || baseType.EndsWith(":int") || baseType.EndsWith(":integer"))
+            return "1";
+        if (baseType is "boolean" || baseType.EndsWith(":boolean"))
+            return "false";
+
+        // 3. TypeName heuristics (when no restriction or generic base)
+        var typeName = element.TypeName?.ToLowerInvariant() ?? "";
+
+        if (typeName.Contains("datetime") || typeName.Contains("datahora"))
+            return "2026-01-20T10:00:00";
+        if (typeName.Contains("date") || typeName.Contains("data"))
+            return "2026-01-20";
+        if (typeName is "decimal") return "0.00";
+        if (typeName is "boolean") return "false";
+
+        // 4. Pattern constraint — generate XSD-valid value
+        if (restriction?.Pattern is not null)
         {
-            "decimal" => "0.00",
-            "date" => "2026-01-20",
-            "datetime" => "2026-01-20T10:00:00-03:00",
-            "int" or "integer" => "1",
-            _ => "1"
-        };
+            var pattern = restriction.Pattern;
+            // Fixed-length numeric: [0-9]{N}
+            var fixedLen = System.Text.RegularExpressions.Regex.Match(pattern, @"\[0-9\]\{(\d+)\}");
+            if (fixedLen.Success)
+                return new string('1', int.Parse(fixedLen.Groups[1].Value));
+            // Variable-length numeric: [0-9]{M,N}
+            var varLen = System.Text.RegularExpressions.Regex.Match(pattern, @"\[0-9\]\{(\d+),(\d+)\}");
+            if (varLen.Success)
+                return new string('1', int.Parse(varLen.Groups[1].Value));
+            // Numeric pattern without length
+            if (pattern.Contains("[0-9]"))
+                return "1";
+            // Version-like pattern: [0-9]{1,2}\.[0-9]{2}
+            if (pattern.Contains(@"\."))
+                return "1.00";
+        }
+
+        // 5. MinLength — pad to required length
+        var minLen = restriction?.MinLength ?? 0;
+        if (minLen > 1)
+            return new string('0', minLen);
+
+        // 6. Element name / type name heuristics
+        var name = element.Name?.ToLowerInvariant() ?? "";
+        if (name.Contains("cpf") || typeName.Contains("cpf")) return "00000000000";
+        if (name.Contains("cnpj") || typeName.Contains("cnpj")) return "00000000000000";
+        if (name == "cep" || typeName.Contains("cep")) return "01000000";
+        if (name.Contains("codmunicipio") || typeName.Contains("codmun") || typeName.Contains("ibge")) return "3550308";
+        if (typeName.Contains("moeda")) return "986";
+        if (typeName.Contains("valor") || typeName.Contains("aliquota")) return "0.00";
+        if (typeName.Contains("versao")) return "1.00";
+        if (typeName.Contains("inscricao")) return "12345";
+        if (name.Contains("chaveacesso") || typeName.Contains("chaveacesso"))
+            return "NFSe12345678901234567890123456789012345678901234";
+        if (name == "serie") return "A";
+        if (name == "id") return "id1";
+
+        return "1";
     }
 
     // ==========================================================
@@ -595,8 +682,68 @@ public class AllDataProvidersFillingVariationsTests
     // Helpers
     // ==========================================================
 
+    /// <summary>
+    /// Recursively populates required children of a complex type with dummy values.
+    /// Handles choices by selecting the first option.
+    /// </summary>
+    private static void EnsureMinimalChildren(
+        SchemaComplexType complexType, string prefix,
+        Dictionary<string, SchemaComplexType> typeMap,
+        Dictionary<string, object?> data)
+    {
+        var processedChoices = new HashSet<string>();
+
+        foreach (var child in complexType.Elements)
+        {
+            var childPath = $"{prefix}.{child.Name}";
+
+            // For choice groups, select the first option
+            if (child.IsChoice && child.ChoiceGroup is not null)
+            {
+                if (processedChoices.Contains(child.ChoiceGroup))
+                    continue;
+                processedChoices.Add(child.ChoiceGroup);
+
+                // Pick the first choice element
+                var firstChoice = complexType.Elements.First(e => e.ChoiceGroup == child.ChoiceGroup);
+                var firstChoicePath = $"{prefix}.{firstChoice.Name}";
+
+                var choiceType = firstChoice.InlineType;
+                if (choiceType is null)
+                    typeMap.TryGetValue(firstChoice.TypeName, out choiceType);
+
+                if (choiceType is not null)
+                    EnsureMinimalChildren(choiceType, firstChoicePath, typeMap, data);
+                else
+                    data.TryAdd(firstChoicePath, GetDummyValue(firstChoice));
+
+                continue;
+            }
+
+            if (!child.IsRequired) continue;
+
+            var childType = child.InlineType;
+            if (childType is null)
+                typeMap.TryGetValue(child.TypeName, out childType);
+
+            if (childType is not null)
+            {
+                // Recurse into required complex children
+                if (!data.Keys.Any(k => k.StartsWith(childPath + ".", StringComparison.Ordinal)))
+                    EnsureMinimalChildren(childType, childPath, typeMap, data);
+            }
+            else
+            {
+                data.TryAdd(childPath, GetDummyValue(child));
+            }
+        }
+    }
+
     private static string? NullIfEmpty(string? value) =>
         string.IsNullOrEmpty(value) ? null : value;
+
+    private static string? CleanDigits(string? value) =>
+        string.IsNullOrEmpty(value) ? null : new string(value.Where(char.IsDigit).ToArray());
 
     private static string FindTestDataDir()
     {
