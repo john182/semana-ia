@@ -1,0 +1,62 @@
+using SemanaIA.ServiceInvoice.XmlGeneration.SchemaEngine;
+using Shouldly;
+
+using SemanaIA.ServiceInvoice.UnitTests.Providers.Shared;
+
+namespace SemanaIA.ServiceInvoice.UnitTests.Providers.Nacional;
+
+public class GenerateNacionalArtifactsTests
+{
+    [Fact]
+    public void Given_NacionalProvider_Should_GenerateAllArtifacts()
+    {
+        // Arrange
+        var xsdPath = FindPath("providers", "nacional", "xsd", "DPS_v1.01.xsd");
+        var rulesPath = FindPath("providers", "nacional", "rules", "rules.json");
+        var manualPath = FindPath("src", "SemanaIA.ServiceInvoice.XmlGeneration", "Manual", "NationalDpsManualSerializer.cs");
+
+        var generatedDir = Path.Combine(FindPath("providers", "nacional"), "generated");
+        var recordsDir = Path.Combine(generatedDir, "Records");
+        var buildersDir = Path.Combine(generatedDir, "Builders");
+        Directory.CreateDirectory(recordsDir);
+        Directory.CreateDirectory(buildersDir);
+
+        var schema = new XsdSchemaAnalyzer().Analyze(xsdPath);
+        var profile = ProviderProfile.LoadFromFile(rulesPath);
+        IProviderRuleResolver resolver = new TypedRuleResolver(profile?.Rules ?? []);
+        var generator = new SchemaCodeGenerator();
+
+        // Act
+        generator.GenerateRecords(schema, recordsDir);
+        generator.GenerateBuilderSkeleton(schema, resolver, buildersDir);
+        var report = generator.GenerateComparisonReport(schema, manualPath);
+
+        var reportPath = Path.Combine(generatedDir, "comparison-report.md");
+        File.WriteAllText(reportPath, report);
+
+        // Assert
+        Directory.GetFiles(recordsDir, "*.cs").Length.ShouldBeGreaterThan(10);
+        File.Exists(Path.Combine(buildersDir, "NacionalDpsBuilderSkeleton.cs")).ShouldBeTrue();
+        File.Exists(reportPath).ShouldBeTrue();
+
+        report.ShouldContain("TCInfDPS");
+        report.ShouldContain("BuildInfDps");
+    }
+
+    // ==========================================================
+    // Helpers privados (final da classe)
+    // ==========================================================
+
+    private static string FindPath(params string[] segments)
+    {
+        var dir = AppContext.BaseDirectory;
+        while (dir is not null)
+        {
+            var candidate = Path.Combine(new[] { dir }.Concat(segments).ToArray());
+            if (File.Exists(candidate) || Directory.Exists(candidate))
+                return candidate;
+            dir = Directory.GetParent(dir)?.FullName;
+        }
+        throw new FileNotFoundException($"Not found: {string.Join("/", segments)}");
+    }
+}

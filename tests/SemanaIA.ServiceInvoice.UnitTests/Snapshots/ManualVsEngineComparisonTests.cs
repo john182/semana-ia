@@ -1,7 +1,6 @@
 using System.Xml.Linq;
 using SemanaIA.ServiceInvoice.Domain.Models;
-using SemanaIA.ServiceInvoice.UnitTests.Manual;
-using SemanaIA.ServiceInvoice.UnitTests.SchemaEngine;
+using SemanaIA.ServiceInvoice.UnitTests.Providers.Shared;
 using SemanaIA.ServiceInvoice.XmlGeneration.Manual;
 using SemanaIA.ServiceInvoice.XmlGeneration.SchemaEngine;
 using Shouldly;
