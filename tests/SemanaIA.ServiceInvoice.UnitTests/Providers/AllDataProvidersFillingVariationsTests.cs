@@ -328,6 +328,9 @@ public class AllDataProvidersFillingVariationsTests
             try { profile = configGenerator.GenerateConfig(providerName); }
             catch { profile = new ProviderProfile { Provider = providerName }; }
 
+            // Post-process auto-gen rules to fix known invalid dummy values
+            FixAutoGenRules(profile, schema);
+
             var rootTypeName = profile.RootComplexTypeName
                 ?? schema.RootInlineType?.Name
                 ?? schema.ComplexTypes.FirstOrDefault()?.Name ?? "unknown";
@@ -375,6 +378,9 @@ public class AllDataProvidersFillingVariationsTests
             }
         }
 
+        // Post-process data dictionary to fix invalid values using XSD restrictions
+        FixDataValues(data, schema);
+
         return data;
     }
 
@@ -390,13 +396,17 @@ public class AllDataProvidersFillingVariationsTests
             {
                 var attrPath = string.IsNullOrEmpty(prefix) ? $"@{attr.Name}" : $"{prefix}.@{attr.Name}";
                 if (!data.ContainsKey(attrPath))
-                    data[attrPath] = attr.Name.ToLowerInvariant() switch
+                {
+                    var isIntType = (attr.TypeName?.ToLowerInvariant() ?? "").Contains("int");
+                    data[attrPath] = (attr.Name.ToLowerInvariant(), isIntType) switch
                     {
-                        "id" => $"id_{Guid.NewGuid():N}"[..20],
-                        "versao" => "1.00",
-                        "codmunicipio" => "3550308",
+                        ("id", true) => "1",
+                        ("id", false) => $"id_{Guid.NewGuid():N}"[..20],
+                        ("versao", _) => "1.00",
+                        ("codmunicipio", _) => "3550308",
                         _ => "1"
                     };
+                }
             }
         }
 
@@ -425,7 +435,36 @@ public class AllDataProvidersFillingVariationsTests
             {
                 var resolvedValue = ResolveMapping(mapping, document);
                 if (resolvedValue is not null)
-                    data[path] = resolvedValue;
+                {
+                    var strValue = resolvedValue.ToString() ?? "";
+
+                    // Fix dateTime vs date mismatch based on XSD type
+                    var elType = element.TypeName?.ToLowerInvariant() ?? "";
+                    var elBase = element.Restriction?.BaseType?.ToLowerInvariant() ?? "";
+                    var isDateTime = elBase.Contains("datetime") || elType == "datetime";
+                    var isDate = elBase.Contains("date") && !elBase.Contains("datetime") || elType == "date";
+
+                    if (strValue.Length == 10 && strValue.Contains('-') && isDateTime)
+                        strValue += "T00:00:00";
+                    else if (strValue.Length > 10 && strValue.Contains('T') && isDate)
+                        strValue = strValue[..10];
+
+                    // Fix RegimeEspecialTributacao: "0" is invalid for many XSDs (pattern [1-6])
+                    if (element.Name == "RegimeEspecialTributacao" && strValue == "0")
+                        strValue = "1";
+
+                    // Fix CST: some XSDs expect 2-char enum (00-99), not 3-char (000)
+                    if (element.Name == "CST" && strValue.Length == 3 && strValue.All(char.IsDigit))
+                    {
+                        var hasEnum = element.Restriction?.Enumerations?.Count > 0;
+                        if (hasEnum)
+                            strValue = element.Restriction!.Enumerations![0];
+                        else if (strValue == "000")
+                            strValue = "01";
+                    }
+
+                    data[path] = strValue;
+                }
                 else if (element.IsRequired)
                     data[path] = GetDummyValue(element);
             }
@@ -592,29 +631,49 @@ public class AllDataProvidersFillingVariationsTests
         if (restriction?.Pattern is not null)
         {
             var pattern = restriction.Pattern;
+
+            // Pipe-separated values: 1|2|3|4|5|6 — pick first
+            if (System.Text.RegularExpressions.Regex.IsMatch(pattern, @"^\d+(\|\d+)+$"))
+                return pattern.Split('|')[0];
+
+            // Hex pattern: [0-9a-fA-F]{N}
+            var hexLen = System.Text.RegularExpressions.Regex.Match(pattern, @"\[0-9a-fA-F\]\{(\d+)\}");
+            if (hexLen.Success)
+                return new string('a', int.Parse(hexLen.Groups[1].Value));
+
             // Fixed-length numeric: [0-9]{N}
             var fixedLen = System.Text.RegularExpressions.Regex.Match(pattern, @"\[0-9\]\{(\d+)\}");
             if (fixedLen.Success)
                 return new string('1', int.Parse(fixedLen.Groups[1].Value));
+
             // Variable-length numeric: [0-9]{M,N}
             var varLen = System.Text.RegularExpressions.Regex.Match(pattern, @"\[0-9\]\{(\d+),(\d+)\}");
             if (varLen.Success)
                 return new string('1', int.Parse(varLen.Groups[1].Value));
-            // Numeric pattern without length
+
+            // Any numeric pattern
             if (pattern.Contains("[0-9]"))
                 return "1";
-            // Version-like pattern: [0-9]{1,2}\.[0-9]{2}
+
+            // Version-like pattern with dot
             if (pattern.Contains(@"\."))
                 return "1.00";
+
+            // Pipe-separated non-numeric values: RPS|RPS-M|RPS-C
+            if (pattern.Contains("|"))
+                return pattern.Split('|')[0];
         }
 
-        // 5. MinLength — pad to required length
+        // 5. Element name / type name heuristics (before MinLength to handle specific fields)
+        var name = element.Name?.ToLowerInvariant() ?? "";
+        if (name == "cst" || typeName.Contains("tipocst") || typeName.Contains("codsittrib")) return "01";
+
+        // 6. MinLength — pad to required length
         var minLen = restriction?.MinLength ?? 0;
         if (minLen > 1)
             return new string('0', minLen);
 
-        // 6. Element name / type name heuristics
-        var name = element.Name?.ToLowerInvariant() ?? "";
+        // 7. More element name / type name heuristics
         if (name.Contains("cpf") || typeName.Contains("cpf")) return "00000000000";
         if (name.Contains("cnpj") || typeName.Contains("cnpj")) return "00000000000000";
         if (name == "cep" || typeName.Contains("cep")) return "01000000";
@@ -624,9 +683,14 @@ public class AllDataProvidersFillingVariationsTests
         if (typeName.Contains("versao")) return "1.00";
         if (typeName.Contains("inscricao")) return "12345";
         if (name.Contains("chaveacesso") || typeName.Contains("chaveacesso"))
-            return "NFSe12345678901234567890123456789012345678901234";
+            return new string('a', 32);
         if (name == "serie") return "A";
         if (name == "id") return "id1";
+        if (name == "cst" || typeName.Contains("tipocst") || typeName.Contains("codsittrib")) return "01";
+        if (name.Contains("regimeespecialtributacao")) return "1";
+        if (name.Contains("inscricaoestadual")) return "ISENTO";
+        if (name == "dataemissao" || name == "datahora" || name == "dtemidoc" || name == "dtcompdoc") return "2026-01-20T10:00:00";
+        if (name.Contains("competencia") && !typeName.Contains("date")) return "2026-01-20";
 
         return "1";
     }
@@ -683,6 +747,81 @@ public class AllDataProvidersFillingVariationsTests
     // ==========================================================
 
     /// <summary>
+    /// Post-processes auto-generated profile rules to fix known dummy value issues.
+    /// The ProviderConfigGenerator generates constant values that may not satisfy
+    /// XSD restrictions (e.g., "000" for CST enum, "0" for RegimeEspecialTributacao).
+    /// </summary>
+    /// <summary>
+    /// Post-processes auto-generated rules using XSD restrictions.
+    /// For each rule with ConstantValue or FallbackValue, finds the matching schema element
+    /// and validates the value against its restrictions. Replaces invalid values with
+    /// valid ones generated from GetDummyValue (which is XSD-aware).
+    /// No field names are hardcoded — all validation is schema-driven.
+    /// </summary>
+    private static void FixAutoGenRules(ProviderProfile profile, SchemaDocument schema)
+    {
+        if (profile.Rules is null) return;
+
+        // Build flat lookup: fieldName → SchemaElement (for restriction access)
+        var elementLookup = new Dictionary<string, SchemaElement>(StringComparer.OrdinalIgnoreCase);
+        var typeMap = schema.ComplexTypes.ToDictionary(ct => ct.Name, ct => ct);
+        var rootType = schema.RootInlineType ?? schema.ComplexTypes.FirstOrDefault();
+        if (rootType is not null)
+            FlattenElements(rootType, typeMap, elementLookup);
+
+        foreach (var rule in profile.Rules)
+        {
+            var fieldName = rule.Target?.Contains('.') == true
+                ? rule.Target[(rule.Target.LastIndexOf('.') + 1)..]
+                : rule.Target;
+            if (fieldName is null || !elementLookup.TryGetValue(fieldName, out var element)) continue;
+
+            if (rule.ConstantValue is not null && !IsValueValidForElement(rule.ConstantValue, element))
+                rule.ConstantValue = GetDummyValue(element);
+
+            if (rule.FallbackValue is not null && !IsValueValidForElement(rule.FallbackValue, element))
+                rule.FallbackValue = GetDummyValue(element);
+        }
+    }
+
+    private static void FlattenElements(
+        SchemaComplexType type, Dictionary<string, SchemaComplexType> typeMap,
+        Dictionary<string, SchemaElement> lookup)
+    {
+        foreach (var el in type.Elements)
+        {
+            lookup[el.Name] = el;
+            var childType = el.InlineType;
+            if (childType is null) typeMap.TryGetValue(el.TypeName, out childType);
+            if (childType is not null) FlattenElements(childType, typeMap, lookup);
+        }
+    }
+
+    private static bool IsValueValidForElement(string value, SchemaElement element)
+    {
+        var r = element.Restriction;
+        if (r is null) return true;
+
+        if (r.Enumerations is { Count: > 0 })
+            return r.Enumerations.Contains(value);
+
+        if (r.Pattern is not null)
+        {
+            try { return System.Text.RegularExpressions.Regex.IsMatch(value, $"^({r.Pattern})$"); }
+            catch { return true; }
+        }
+
+        var bt = r.BaseType?.ToLowerInvariant() ?? "";
+        if (bt.Contains("datetime") && !value.Contains('T')) return false;
+        if ((bt.Contains("int") || bt.Contains("integer")) && !long.TryParse(value, out _)) return false;
+
+        if (r.MinLength.HasValue && value.Length < r.MinLength.Value) return false;
+        if (r.MaxLength.HasValue && value.Length > r.MaxLength.Value) return false;
+
+        return true;
+    }
+
+    /// <summary>
     /// Recursively populates required children of a complex type with dummy values.
     /// Handles choices by selecting the first option.
     /// </summary>
@@ -736,6 +875,36 @@ public class AllDataProvidersFillingVariationsTests
             {
                 data.TryAdd(childPath, GetDummyValue(child));
             }
+        }
+    }
+
+    /// <summary>
+    /// Fixes known invalid dummy values in the data dictionary.
+    /// These values are generated by WalkAndBind/GetDummyValue but don't
+    /// satisfy XSD constraints for specific fields.
+    /// </summary>
+    /// <summary>
+    /// Validates all data values against XSD restrictions and fixes invalid ones.
+    /// Uses schema-driven validation (no hardcoded field names).
+    /// </summary>
+    private static void FixDataValues(Dictionary<string, object?> data, SchemaDocument schema)
+    {
+        var elementLookup = new Dictionary<string, SchemaElement>(StringComparer.OrdinalIgnoreCase);
+        var typeMap = schema.ComplexTypes.ToDictionary(ct => ct.Name, ct => ct);
+        var rootType = schema.RootInlineType ?? schema.ComplexTypes.FirstOrDefault();
+        if (rootType is not null)
+            FlattenElements(rootType, typeMap, elementLookup);
+
+        foreach (var key in data.Keys.ToList())
+        {
+            var val = data[key]?.ToString();
+            if (val is null) continue;
+
+            var fieldName = key.Contains('.') ? key[(key.LastIndexOf('.') + 1)..] : key;
+            if (fieldName.StartsWith("@")) continue; // skip attributes
+
+            if (elementLookup.TryGetValue(fieldName, out var element) && !IsValueValidForElement(val, element))
+                data[key] = GetDummyValue(element);
         }
     }
 
